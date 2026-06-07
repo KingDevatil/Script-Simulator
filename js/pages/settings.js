@@ -1,0 +1,156 @@
+import { getSetting, setSetting } from '../db.js';
+import { navigate } from '../router.js';
+
+export async function render(container) {
+  const [apiUrl, apiKey, apiModel, memoryInterval, thinkingEnabled, reasoningEffort, temperature] = await Promise.all([
+    getSetting('api_url'), getSetting('api_key'),
+    getSetting('api_model'), getSetting('memory_interval'),
+    getSetting('thinking_enabled'), getSetting('reasoning_effort'),
+    getSetting('temperature')
+  ]);
+
+  const isThinking = thinkingEnabled !== false; // 默认开启
+
+  container.innerHTML = `
+    <div class="header">
+      <button class="header-btn" id="btn-back">←</button>
+      <h1>设置</h1>
+    </div>
+    <div class="page-scroll">
+      <div class="settings-section">
+        <h3>LLM API 配置</h3>
+        <div class="form-group">
+          <label class="form-label">API 地址</label>
+          <input class="form-input" id="f-url" value="${esc(apiUrl || 'https://api.deepseek.com/chat/completions')}" placeholder="https://api.deepseek.com/chat/completions">
+        </div>
+        <div class="form-group">
+          <label class="form-label">API Key</label>
+          <input class="form-input" id="f-key" type="password" value="${esc(apiKey || '')}" placeholder="sk-...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">模型名称</label>
+          <input class="form-input" id="f-model" value="${esc(apiModel || 'deepseek-v4-flash')}" placeholder="deepseek-v4-flash">
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>思考模式</h3>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="f-thinking" ${isThinking ? 'checked' : ''} style="width:16px;height:16px">
+            启用思考模式
+          </label>
+          <p style="font-size:12px;color:var(--text-dim);margin-top:4px">开启后模型会先推理再回答，剧情质量更高，但响应较慢且不支持 temperature 调节</p>
+        </div>
+        <div class="form-group" id="effort-group" style="${isThinking ? '' : 'display:none'}">
+          <label class="form-label">思考强度</label>
+          <select class="form-input" id="f-effort">
+            <option value="high" ${reasoningEffort !== 'max' ? 'selected' : ''}>high - 普通（推荐）</option>
+            <option value="max" ${reasoningEffort === 'max' ? 'selected' : ''}>max - 深度思考</option>
+          </select>
+        </div>
+        <div class="form-group" id="temp-group" style="${isThinking ? 'display:none' : ''}">
+          <label class="form-label">Temperature: <span id="temp-val">${temperature ?? 0.85}</span></label>
+          <input type="range" id="f-temp" min="0" max="2" step="0.05" value="${temperature ?? 0.85}" style="width:100%">
+          <p style="font-size:12px;color:var(--text-dim);margin-top:4px">越高越随机有创意，越低越稳定保守。思考模式下此参数无效</p>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>记忆系统</h3>
+        <div class="form-group">
+          <label class="form-label">自动总结间隔（轮数）</label>
+          <input class="form-input" id="f-memory" type="number" min="3" max="50" value="${memoryInterval || 10}">
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <h3>测试连接</h3>
+        <button class="btn btn-secondary btn-block" id="btn-test">测试 API 连接</button>
+        <p id="test-result" style="margin-top:8px;font-size:13px;color:var(--text-dim)"></p>
+      </div>
+
+      <button class="btn btn-primary btn-block" id="btn-save">保存设置</button>
+    </div>
+  `;
+
+  // Toggle thinking mode UI
+  container.querySelector('#f-thinking').onchange = e => {
+    const on = e.target.checked;
+    container.querySelector('#effort-group').style.display = on ? '' : 'none';
+    container.querySelector('#temp-group').style.display = on ? 'none' : '';
+  };
+
+  // Temperature slider
+  const tempSlider = container.querySelector('#f-temp');
+  const tempVal = container.querySelector('#temp-val');
+  tempSlider.oninput = () => { tempVal.textContent = tempSlider.value; };
+
+  container.querySelector('#btn-back').onclick = () => navigate('home');
+
+  container.querySelector('#btn-save').onclick = async () => {
+    await Promise.all([
+      setSetting('api_url', container.querySelector('#f-url').value.trim()),
+      setSetting('api_key', container.querySelector('#f-key').value.trim()),
+      setSetting('api_model', container.querySelector('#f-model').value.trim()),
+      setSetting('memory_interval', parseInt(container.querySelector('#f-memory').value) || 10),
+      setSetting('thinking_enabled', container.querySelector('#f-thinking').checked),
+      setSetting('reasoning_effort', container.querySelector('#f-effort').value),
+      setSetting('temperature', parseFloat(tempSlider.value))
+    ]);
+    alert('设置已保存');
+  };
+
+  container.querySelector('#btn-test').onclick = async () => {
+    const result = container.querySelector('#test-result');
+    result.textContent = '测试中...';
+    result.style.color = 'var(--text-dim)';
+
+    const url = container.querySelector('#f-url').value.trim();
+    const key = container.querySelector('#f-key').value.trim();
+    const model = container.querySelector('#f-model').value.trim();
+    const thinking = container.querySelector('#f-thinking').checked;
+    const effort = container.querySelector('#f-effort').value;
+
+    if (!url || !key) {
+      result.textContent = '✗ 请先填写 API 地址和 Key';
+      result.style.color = 'var(--accent)';
+      return;
+    }
+
+    const body = {
+      model: model || 'deepseek-v4-flash',
+      messages: [{ role: 'user', content: '回复"连接成功"' }],
+      max_tokens: 20
+    };
+    if (thinking) {
+      body.thinking = { type: 'enabled', reasoning_effort: effort };
+    }
+
+    try {
+      const fullUrl = url.endsWith('/chat/completions') ? url : url.replace(/\/+$/, '') + '/chat/completions';
+      result.textContent = `测试中... (${fullUrl})`;
+      const res = await fetch(fullUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${key}`
+        },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(`${res.status} ${res.statusText}: ${errText.slice(0, 200)}`);
+      }
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || '';
+      result.textContent = '✓ 连接成功' + (reply ? ` - "${reply.slice(0, 50)}"` : '');
+      result.style.color = '#4caf50';
+    } catch (err) {
+      result.textContent = '✗ ' + err.message;
+      result.style.color = 'var(--accent)';
+    }
+  };
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
