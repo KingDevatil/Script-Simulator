@@ -22,13 +22,13 @@
     ]
   },
   "dimensions": [
-    { "id": "love", "name": "爱意值", "scope": "对{{partner}}", "range": [0, 100], "initial": [85, 95] },
-    { "id": "trust", "name": "信任值", "scope": "对{{partner}}", "range": [0, 100], "initial": [85, 95] },
-    { "id": "suspicion", "name": "怀疑值", "scope": "{{partner}}对{{player}}", "range": [0, 100], "initial": [0, 10] },
-    { "id": "heartbeat", "name": "心动值", "scope": "对{{target}}", "range": [0, 100], "initial": [0, 0] },
-    { "id": "desire", "name": "欲望值", "scope": "对{{target}}", "range": [0, 100], "initial": [0, 0] },
-    { "id": "guilt", "name": "愧疚值", "scope": "{{player}}对{{partner}}", "range": [0, 100], "initial": [0, 0] },
-    { "id": "stress", "name": "压力值", "scope": "{{player}}自身", "range": [0, 100], "initial": [0, 0] }
+    { "id": "love", "name": "爱意值", "description": "玩家对现任的感情深度，影响是否愿意坦白或回归", "scope": "对{{partner}}", "range": [0, 100], "initial": [85, 95] },
+    { "id": "trust", "name": "信任值", "description": "现任对玩家的信任程度，低信任会触发试探和质问", "scope": "对{{partner}}", "range": [0, 100], "initial": [85, 95] },
+    { "id": "suspicion", "name": "怀疑值", "description": "现任对玩家反常行为的怀疑程度，高怀疑触发偷看手机、质问等事件", "scope": "{{partner}}对{{player}}", "range": [0, 100], "initial": [0, 10] },
+    { "id": "heartbeat", "name": "心动值", "description": "玩家对危险对象的心动程度，高心动触发暧昧和修罗场", "scope": "对{{target}}", "range": [0, 100], "initial": [0, 0] },
+    { "id": "desire", "name": "欲望值", "description": "玩家对危险对象的肉体欲望，高欲望触发逼迫和越界", "scope": "对{{target}}", "range": [0, 100], "initial": [0, 0] },
+    { "id": "guilt", "name": "愧疚值", "description": "玩家对现任的愧疚感，高愧疚触发崩溃和坦白结局", "scope": "{{player}}对{{partner}}", "range": [0, 100], "initial": [0, 0] },
+    { "id": "stress", "name": "压力值", "description": "玩家承受的精神压力，高压力导致失眠、崩溃等负面事件", "scope": "{{player}}自身", "range": [0, 100], "initial": [0, 0] }
   ],
   "characters": [
     {

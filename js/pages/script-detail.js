@@ -107,6 +107,7 @@ function renderDimensions() {
       html += `<div class="card" style="border-color:var(--accent)">
         <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${esc(d.id || '')}" data-dim="${i}" data-subfield="id"></div>
         <div class="form-group"><label class="form-label">名称</label><input class="form-input" value="${esc(d.name || '')}" data-dim="${i}" data-subfield="name"></div>
+        <div class="form-group"><label class="form-label">描述（这个数值代表什么）</label><input class="form-input" value="${esc(d.description || '')}" data-dim="${i}" data-subfield="description" placeholder="如：玩家对危险对象的心动程度"></div>
         <div class="form-group"><label class="form-label">作用对象（可选，支持宏如 {{target}}）</label><input class="form-input" value="${esc(d.scope || '')}" data-dim="${i}" data-subfield="scope" placeholder="如：对{{target}}"></div>
         <div style="display:flex;gap:8px">
           <div class="form-group" style="flex:1"><label class="form-label">范围 min</label><input class="form-input" type="number" value="${d.range?.[0] ?? 0}" data-dim="${i}" data-subfield="range_min"></div>
@@ -123,9 +124,13 @@ function renderDimensions() {
       </div>`;
     } else {
       html += `<div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>${esc(d.name || d.id)}</strong>${d.scope ? ` <span style="color:var(--accent);font-size:11px">${esc(d.scope)}</span>` : ''} <span style="color:var(--text-dim);font-size:12px">范围 ${d.range?.[0]}-${d.range?.[1]} 初始 ${d.initial?.[0]}-${d.initial?.[1]}</span></div>
-          <div style="display:flex;gap:4px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1;min-width:0">
+            <div><strong>${esc(d.name || d.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${d.range?.[0]}-${d.range?.[1]} 初始 ${d.initial?.[0]}-${d.initial?.[1]}</span></div>
+            ${d.scope ? `<div style="color:var(--accent);font-size:11px;margin-top:2px">${esc(d.scope)}</div>` : ''}
+            ${d.description ? `<div style="color:var(--text-dim);font-size:11px;margin-top:2px">${esc(d.description)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0">
             <button class="btn btn-sm btn-secondary" data-action="dim-edit" data-idx="${i}">编辑</button>
             <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="dim-delete" data-idx="${i}">&times;</button>
           </div>
@@ -820,9 +825,11 @@ function attachEvents(container) {
 function saveDimFromDOM(container, i) {
   const get = f => container.querySelector(`[data-dim="${i}"][data-subfield="${f}"]`)?.value;
   const scope = get('scope')?.trim();
+  const description = get('description')?.trim();
   script.dimensions[i] = {
     id: get('id') || `dim_${i}`,
     name: get('name') || '',
+    ...(description ? { description } : {}),
     ...(scope ? { scope } : {}),
     range: [Number(get('range_min') || 0), Number(get('range_max') || 100)],
     initial: [Number(get('initial_min') || 0), Number(get('initial_max') || 0)]
