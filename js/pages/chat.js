@@ -3,7 +3,7 @@ import { navigate } from '../router.js';
 import { chat } from '../modules/llm-client.js';
 import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
-import { extractValues, extractKeyEvents, extractNarrative, checkEventTriggers, checkStageTransition } from '../modules/script-engine.js';
+import { extractValues, extractKeyEvents, extractNarrative, checkEventTriggers, checkStageTransition, processEffects, addEventEffects } from '../modules/script-engine.js';
 
 let engine = null;
 let panelOpen = false;
@@ -129,7 +129,8 @@ export async function render(container, { sessionId }) {
         memories: engine.memoryMgr.getMemories(),
         recentMessages: engine.getRecentMessages(3),
         scenePrompt: buildScenePrompt(script, s),
-        playerInput: playerMsg
+        playerInput: playerMsg,
+        currentStage: s.currentStage
       });
 
       const aiResponse = await chat(
@@ -151,8 +152,12 @@ export async function render(container, { sessionId }) {
       const newVals = extractValues(aiResponse, script.dimensions);
       if (newVals) engine.updateValues(newVals);
 
-      const triggered = checkEventTriggers(script.events, s.values, s.currentStage);
+      // 处理持续效果（sticky 数值变化 + 过期清理）
+      processEffects(s);
+
+      const triggered = checkEventTriggers(script.events, s.values, s.currentStage, s.activeEffects);
       if (triggered.length > 0) {
+        triggered.forEach(ev => addEventEffects(s, ev));
         const nextStage = checkStageTransition(script.stages, s.values, s.currentStage);
         if (nextStage !== s.currentStage) s.currentStage = nextStage;
       }

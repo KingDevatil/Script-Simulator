@@ -14,7 +14,10 @@ export async function render(container) {
       <div class="section">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
           <h2 style="font-size:15px;color:var(--text-dim)">剧本库</h2>
-          <button class="btn btn-sm btn-secondary" id="btn-import">+ 导入剧本</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-secondary" id="btn-create">+ 新建剧本</button>
+            <button class="btn btn-sm btn-secondary" id="btn-import">导入剧本</button>
+          </div>
         </div>
         <div id="script-list"></div>
       </div>
@@ -33,9 +36,19 @@ export async function render(container) {
     scriptList.innerHTML = `
       <div class="empty-state" style="padding:30px">
         <div class="icon">📖</div>
-        <p>还没有剧本，导入一个 JSON 剧本文件开始吧</p>
-        <button class="btn btn-primary" id="btn-sample" style="margin-top:12px">加载示例剧本</button>
+        <p>还没有剧本，新建一个或加载示例开始吧</p>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-primary" id="btn-sample">加载示例剧本</button>
+          <button class="btn btn-secondary" id="btn-create-empty">新建剧本</button>
+        </div>
       </div>`;
+    container.querySelector('#btn-create-empty').onclick = async () => {
+      const { parseScript } = await import('../modules/script-engine.js');
+      const { saveScript } = await import('../db.js');
+      const newScript = parseScript({ name: '未命名剧本', description: '' });
+      await saveScript(newScript);
+      navigate('scriptDetail', { scriptId: newScript.id });
+    };
     container.querySelector('#btn-sample').onclick = async () => {
       try {
         let json;
@@ -84,6 +97,13 @@ export async function render(container) {
 
   // Events
   container.querySelector('#btn-settings').onclick = () => navigate('settings');
+  container.querySelector('#btn-create').onclick = async () => {
+    const { parseScript } = await import('../modules/script-engine.js');
+    const { saveScript } = await import('../db.js');
+    const newScript = parseScript({ name: '未命名剧本', description: '' });
+    await saveScript(newScript);
+    navigate('scriptDetail', { scriptId: newScript.id });
+  };
   container.querySelector('#btn-import').onclick = () => container.querySelector('#file-input').click();
   container.querySelector('#file-input').onchange = e => handleImport(e, scripts);
 

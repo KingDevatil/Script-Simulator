@@ -1,21 +1,64 @@
-export function buildPrompt({ script, values, memories, recentMessages, scenePrompt, playerInput }) {
+// ─── 宏替换 ───
+export function substituteMacros(text, ctx) {
+  if (!text || typeof text !== 'string') return text;
+  const { script, values, currentStage } = ctx;
+  const chars = script.characters || [];
+  const dims = script.dimensions || [];
+  const stages = script.stages || [];
+
+  const charMap = {};
+  chars.forEach(c => { charMap[c.id] = c.name; });
+
+  return text.replace(/\{\{(\w+)(?::([^}]*))?\}\}/g, (_, key, arg) => {
+    switch (key) {
+      case 'player': return charMap['player'] || '玩家';
+      case 'partner': return charMap['partner'] || '现任';
+      case 'target': return charMap['target'] || '危险对象';
+      case 'stage': return stages[currentStage]?.name || `阶段${(currentStage || 0) + 1}`;
+      case 'stage_num': return String((currentStage || 0) + 1);
+      case 'dim': {
+        if (!arg) return '';
+        const dim = dims.find(d => d.name === arg || d.id === arg);
+        if (!dim) return '';
+        const val = values?.[dim.id];
+        return val !== undefined ? String(val) : '';
+      }
+      case 'random': {
+        if (!arg) return '';
+        const choices = arg.split(',').map(s => s.trim()).filter(Boolean);
+        return choices.length ? choices[Math.floor(Math.random() * choices.length)] : '';
+      }
+      default: return `{{${key}${arg ? ':' + arg : ''}}}`;
+    }
+  });
+}
+
+function applyMacros(text, ctx) {
+  return substituteMacros(text, ctx);
+}
+
+export function buildPrompt({ script, values, memories, recentMessages, scenePrompt, playerInput, currentStage }) {
+  const macroCtx = { script, values, currentStage };
   const parts = [];
 
   // 1. Iron rules
   parts.push('【铁律 - 永远不可违反】');
   parts.push('- 你是角色本身，不要跳出角色');
   parts.push('- 不要用 AI 的口吻解释或评价剧情');
+  parts.push('- 涉及多个角色时，必须用角色名（如"现任""危险对象"）而非"他""她""你"，确保玩家能分清每句话的主体和对象');
+  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：现任："……"；危险对象："……"');
+  parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
   if (script.rules?.forbidden) {
-    script.rules.forbidden.forEach(r => parts.push(`- ${r}`));
+    script.rules.forbidden.forEach(r => parts.push(`- ${applyMacros(r, macroCtx)}`));
   }
   parts.push('');
 
   // 2. Writing style
   if (script.rules?.writing_style) {
     parts.push('【写作规范】');
-    parts.push(script.rules.writing_style);
+    parts.push(applyMacros(script.rules.writing_style, macroCtx));
     if (script.rules.requirements) {
-      script.rules.requirements.forEach(r => parts.push(`- ${r}`));
+      script.rules.requirements.forEach(r => parts.push(`- ${applyMacros(r, macroCtx)}`));
     }
     parts.push('');
   }
@@ -25,7 +68,7 @@ export function buildPrompt({ script, values, memories, recentMessages, scenePro
   const chars = script.characters || [];
   chars.forEach(c => {
     const val = values?.[c.id] ? `，当前状态：${JSON.stringify(values[c.id])}` : '';
-    parts.push(`${c.name}：${c.description}${val}`);
+    parts.push(`${c.name}：${applyMacros(c.description, macroCtx)}${val}`);
   });
   parts.push('');
 
@@ -34,7 +77,9 @@ export function buildPrompt({ script, values, memories, recentMessages, scenePro
     parts.push('【当前数值 - 用精确数字】');
     script.dimensions.forEach(d => {
       const v = values[d.id];
-      if (v !== undefined) parts.push(`${d.name}：${v}`);
+      if (v === undefined) return;
+      const scope = d.scope ? `（${applyMacros(d.scope, macroCtx)}）` : '';
+      parts.push(`${d.name}${scope}：${v}`);
     });
     parts.push('');
   }
@@ -92,7 +137,13 @@ export function buildPrompt({ script, values, memories, recentMessages, scenePro
 }
 
 export function buildSetupPrompt({ script, selections }) {
+  const macroCtx = { script, values: {}, currentStage: 0 };
   const parts = [];
+  parts.push('【铁律 - 永远不可违反】');
+  parts.push('- 涉及多个角色时，必须用角色名（如"现任""危险对象"）而非"他""她""你"，确保玩家能分清每句话的主体和对象');
+  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：现任："……"；危险对象："……"');
+  parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
+  parts.push('');
   parts.push('以下是玩家的开局选择：');
   script.setup?.forEach((step, i) => {
     const val = selections[i] || '随机';
