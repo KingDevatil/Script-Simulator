@@ -37,23 +37,34 @@ function applyMacros(text, ctx) {
   return substituteMacros(text, ctx);
 }
 
-export function buildPrompt({ script, values, memories, recentMessages, scenePrompt, playerInput, currentStage }) {
+export function buildPrompt({ script, values, selections, memories, recentMessages, scenePrompt, playerInput, currentStage }) {
   const macroCtx = { script, values, currentStage };
   const parts = [];
 
-  // 1. Iron rules
+  // 1. Initial settings (from user selections)
+  if (selections && Object.keys(selections).length) {
+    parts.push('【玩家初始设定 - 必须严格遵守，不可忽略或更改】');
+    script.setup?.forEach((step, i) => {
+      const val = selections[i];
+      if (val) parts.push(`- ${step.step}：${val}`);
+    });
+    parts.push('');
+  }
+
+  // 2. Iron rules
   parts.push('【铁律 - 永远不可违反】');
   parts.push('- 你是角色本身，不要跳出角色');
   parts.push('- 不要用 AI 的口吻解释或评价剧情');
-  parts.push('- 涉及多个角色时，必须用角色名（如"现任""危险对象"）而非"他""她""你"，确保玩家能分清每句话的主体和对象');
-  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：现任："……"；危险对象："……"');
+  parts.push('- 所有角色必须使用具体人名，禁止使用"现任""危险对象"等角色标签。如果开场已设定名字则沿用，未设定则现在起名并始终使用');
+  parts.push('- 涉及多个角色时，必须用角色人名而非"他""她""你"，确保玩家能分清每句话的主体和对象');
+  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：张明："……"；李薇："……"');
   parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
   if (script.rules?.forbidden) {
     script.rules.forbidden.forEach(r => parts.push(`- ${applyMacros(r, macroCtx)}`));
   }
   parts.push('');
 
-  // 2. Writing style
+  // 3. Writing style
   if (script.rules?.writing_style) {
     parts.push('【写作规范】');
     parts.push(applyMacros(script.rules.writing_style, macroCtx));
@@ -63,16 +74,19 @@ export function buildPrompt({ script, values, memories, recentMessages, scenePro
     parts.push('');
   }
 
-  // 3. Characters
+  // 4. Characters
   parts.push('【你扮演以下角色】');
   const chars = script.characters || [];
   chars.forEach(c => {
     const val = values?.[c.id] ? `，当前状态：${JSON.stringify(values[c.id])}` : '';
-    parts.push(`${c.name}：${applyMacros(c.description, macroCtx)}${val}`);
+    const nameNote = c.name === '现任' || c.name === '危险对象'
+      ? `（角色标签：${c.name}，你必须在开场时为该角色起一个具体的人名，后续对话中始终使用这个名字称呼该角色，不要用"现任""危险对象"等标签）`
+      : '';
+    parts.push(`${c.name}：${applyMacros(c.description, macroCtx)}${nameNote}${val}`);
   });
   parts.push('');
 
-  // 4. Numerical values
+  // 5. Numerical values
   if (script.dimensions?.length && values) {
     parts.push('【当前数值 - 用精确数字】');
     script.dimensions.forEach(d => {
@@ -111,12 +125,11 @@ export function buildPrompt({ script, values, memories, recentMessages, scenePro
   // 8. Output format
   parts.push('【输出格式要求】');
   parts.push('1. 输出剧情内容（200-400字，简洁有力，重对话和关键动作，不要大段环境描写）');
-  parts.push('2. 剧情结束后，必须给出 4-6 个选项供玩家选择，格式如下：');
+  parts.push('2. 剧情结束后，必须给出 3-4 个选项供玩家选择，格式如下：');
   parts.push('【选项】');
   parts.push('A. 选项内容');
   parts.push('B. 选项内容');
   parts.push('C. 选项内容');
-  parts.push('D. 选项内容');
   parts.push('选项应该体现不同的态度和策略（如：主动/被动、坦诚/隐瞒、进攻/退缩），让玩家有真正的选择空间。');
   parts.push('3. 选项之后，另起一行输出数值更新块：');
   parts.push('【数值更新】');
@@ -140,8 +153,9 @@ export function buildSetupPrompt({ script, selections }) {
   const macroCtx = { script, values: {}, currentStage: 0 };
   const parts = [];
   parts.push('【铁律 - 永远不可违反】');
-  parts.push('- 涉及多个角色时，必须用角色名（如"现任""危险对象"）而非"他""她""你"，确保玩家能分清每句话的主体和对象');
-  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：现任："……"；危险对象："……"');
+  parts.push('- 你必须为「现任」和「危险对象」各起一个具体的人名（中文名），并在后续所有对话中始终使用人名，禁止使用"现任""危险对象"等角色标签');
+  parts.push('- 涉及多个角色时，必须用角色人名而非"他""她""你"，确保玩家能分清每句话的主体和对象');
+  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：张明："……"；李薇："……"');
   parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
   parts.push('');
   parts.push('以下是玩家的开局选择：');
@@ -154,8 +168,8 @@ export function buildSetupPrompt({ script, selections }) {
   parts.push('');
   parts.push('第一部分：状态概览（简洁，3-5句）');
   parts.push('- 玩家是谁（职业、性格）');
-  parts.push('- 现任是谁（关系状态、性格）');
-  parts.push('- 危险对象是谁（身份、性格）');
+  parts.push('- 现任是谁（起一个人名、关系状态、性格）');
+  parts.push('- 危险对象是谁（起一个人名、身份、性格）');
   parts.push('- 当前场景背景（时间、地点）');
   parts.push('');
   parts.push('第二部分：开场事件（约200-300字）');
@@ -165,7 +179,7 @@ export function buildSetupPrompt({ script, selections }) {
   parts.push('输出格式：');
   parts.push('1. 先写状态概览');
   parts.push('2. 再写开场事件');
-  parts.push('3. 给出 4-6 个选项：');
+  parts.push('3. 给出 3-4 个选项：');
   parts.push('【选项】');
   parts.push('A. 选项内容');
   parts.push('B. 选项内容');

@@ -34,29 +34,27 @@ body {
 }
 
 /* ===== Desktop / Tablet ===== */
-@media (min-width: 500px) {
+@media (min-width: 768px) {
   body {
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 20px;
+    display: block;
   }
-  #app[data-page="phone"] {
-    width: 430px;
-    max-width: 430px;
-    max-height: 900px;
-    border-radius: 24px;
-    box-shadow: 0 0 60px rgba(0,0,0,0.5);
-    margin-top: 20px;
+  #app {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+    margin-top: 0;
   }
-  #app[data-page="editor"] {
-    width: 100%;
-    max-width: 860px;
-    border-radius: 16px;
-    box-shadow: 0 0 40px rgba(0,0,0,0.3);
+  .page-scroll {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 24px 32px;
   }
-  #app[data-page="editor"] .page-scroll {
-    padding: 20px 24px;
+  .chat-page {
+    max-width: 100%;
+  }
+  .chat-messages {
+    max-width: 800px;
+    margin: 0 auto;
   }
 }
 

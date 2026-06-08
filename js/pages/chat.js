@@ -96,7 +96,7 @@ export async function render(container, { sessionId }) {
     currentMsgIdx = Math.max(0, Math.min(msgs.length - 1, currentMsgIdx + dir));
     msgs[currentMsgIdx].scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  container.querySelector('#btn-send').onclick = sendMessage;
+  container.querySelector('#btn-send').onclick = () => sendMessage();
 
   // Load last AI message options if available
   renderOptions();
@@ -126,6 +126,7 @@ export async function render(container, { sessionId }) {
       const systemPrompt = buildPrompt({
         script,
         values: s.values,
+        selections: s.selections,
         memories: engine.memoryMgr.getMemories(),
         recentMessages: engine.getRecentMessages(3),
         scenePrompt: buildScenePrompt(script, s),
@@ -268,6 +269,8 @@ export async function render(container, { sessionId }) {
       if (m) opts.push({ label: `${m[1]}. ${m[2]}`, value: m[2] });
     }
     if (opts.length === 0) { optContainer.innerHTML = ''; return; }
+    // 最多显示4个选项
+    opts.splice(4);
 
     optContainer.innerHTML = opts.map(o =>
       `<button class="chat-option-btn" data-value="${esc(o.value)}">${esc(o.label)}</button>`
