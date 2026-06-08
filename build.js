@@ -36,7 +36,10 @@ const html = `<!DOCTYPE html>
 </body>
 </html>`;
 
-fs.writeFileSync(path.join(base, 'index.standalone.html'), html, 'utf8');
+const docsDir = path.join(base, 'docs');
+if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir, { recursive: true });
+const outPath = path.join(docsDir, 'index.html');
+fs.writeFileSync(outPath, html, 'utf8');
 
-const size = (fs.statSync(path.join(base, 'index.standalone.html')).size / 1024).toFixed(1);
-console.log(`Built: index.standalone.html (${size}KB)`);
+const size = (fs.statSync(outPath).size / 1024).toFixed(1);
+console.log(`Built: docs/index.html (${size}KB)`);
