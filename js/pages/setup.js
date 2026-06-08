@@ -1,4 +1,4 @@
-import { getScript } from '../db.js';
+import { getScript, getSetting } from '../db.js';
 import { navigate } from '../router.js';
 import { chat } from '../modules/llm-client.js';
 import { parseScript } from '../modules/script-engine.js';
@@ -9,6 +9,23 @@ import { saveSession } from '../db.js';
 export async function render(container, { scriptId }) {
   const script = await getScript(scriptId);
   if (!script) { navigate('home'); return; }
+
+  // 检查 LLM 配置
+  const [apiUrl, apiKey] = await Promise.all([getSetting('api_url'), getSetting('api_key')]);
+  if (!apiUrl || !apiKey) {
+    container.innerHTML = `
+      <div class="wizard-step">
+        <div class="icon" style="font-size:48px;margin-bottom:16px">⚙</div>
+        <h2>未配置 LLM</h2>
+        <p>请先在设置中配置 API 地址和 Key</p>
+        <button class="btn btn-primary" id="btn-go-settings">前往设置</button>
+        <button class="btn btn-secondary" style="margin-top:10px" id="btn-go-back">返回</button>
+      </div>
+    `;
+    container.querySelector('#btn-go-settings').onclick = () => navigate('settings');
+    container.querySelector('#btn-go-back').onclick = () => navigate('home');
+    return;
+  }
 
   const steps = script.setup || [];
   let currentStep = 0;

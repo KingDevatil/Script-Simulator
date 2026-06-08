@@ -48,6 +48,19 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
       const val = selections[i];
       if (val) parts.push(`- ${step.step}：${val}`);
     });
+    // 收集选项中定义的约束
+    const constraints = [];
+    script.setup?.forEach((step, i) => {
+      const val = selections[i];
+      if (!val) return;
+      const opt = (step.options || []).find(o => o.value === val);
+      if (opt?.constraints) constraints.push(...opt.constraints);
+    });
+    if (constraints.length) {
+      parts.push('');
+      parts.push('【剧情约束 - 必须严格遵守】');
+      constraints.forEach(c => parts.push(`- ${c}`));
+    }
     parts.push('');
   }
 
@@ -164,16 +177,30 @@ export function buildSetupPrompt({ script, selections }) {
     parts.push(`${step.step}：${val}`);
   });
   parts.push('');
+  // 收集选项中定义的约束
+  const constraints = [];
+  script.setup?.forEach((step, i) => {
+    const val = selections[i];
+    if (!val) return;
+    const opt = (step.options || []).find(o => o.value === val);
+    if (opt?.constraints) constraints.push(...opt.constraints);
+  });
+  if (constraints.length) {
+    parts.push('【剧情约束 - 必须严格遵守】');
+    constraints.forEach(c => parts.push(`- ${c}`));
+    parts.push('');
+  }
   parts.push('请根据以上选择生成开场。要求：');
   parts.push('');
   parts.push('第一部分：状态概览（简洁，3-5句）');
   parts.push('- 玩家是谁（职业、性格）');
-  parts.push('- 现任是谁（起一个人名、关系状态、性格）');
+  parts.push('- 现任是谁（起一个人名、当前在哪、关系状态、性格）');
   parts.push('- 危险对象是谁（起一个人名、身份、性格）');
-  parts.push('- 当前场景背景（时间、地点）');
+  parts.push('- 当前场景背景（时间、地点，注意关系类型对场景的影响）');
   parts.push('');
   parts.push('第二部分：开场事件（约200-300字）');
   parts.push('- 一个自然的场景切入，引出玩家的第一个选择');
+  parts.push('- 注意：如果关系类型是异地恋，开场时现任不应出现在现场');
   parts.push('- 不要大段描写，简洁有力');
   parts.push('');
   parts.push('输出格式：');
