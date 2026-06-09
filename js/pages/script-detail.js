@@ -857,11 +857,8 @@ function attachEvents(container) {
       const module = parts[0];
       const i = parseInt(parts[1]);
       
-      // 获取当前条件并转换为数组格式
-      let currentCond;
-      if (module === 'event') currentCond = script.events[i].trigger;
-      else if (module === 'stage') currentCond = script.stages[i].transition;
-      else if (module === 'ending') currentCond = script.endings[i].condition;
+      // 从DOM收集当前已输入的条件（而不是从script对象读取旧值）
+      const currentCond = collectConditions(prefix);
       
       // 转换为数组以便添加
       let conditions = [];
@@ -897,11 +894,8 @@ function attachEvents(container) {
       const module = parts[0];
       const i = parseInt(parts[1]);
       
-      // 获取当前条件
-      let currentCond;
-      if (module === 'event') currentCond = script.events[i].trigger;
-      else if (module === 'stage') currentCond = script.stages[i].transition;
-      else if (module === 'ending') currentCond = script.endings[i].condition;
+      // 从DOM收集当前已输入的条件（而不是从script对象读取旧值）
+      const currentCond = collectConditions(prefix);
       
       // 转换为数组以便删除
       let conditions = [];
