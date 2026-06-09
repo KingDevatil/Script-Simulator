@@ -46,7 +46,11 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
     parts.push('【玩家初始设定 - 必须严格遵守，不可忽略或更改】');
     script.setup?.forEach((step, i) => {
       const val = selections[i];
-      if (val) parts.push(`- ${step.step}：${val}`);
+      if (val) {
+        const opt = (step.options || []).find(o => o.value === val);
+        const desc = opt?.description ? `（${opt.description}）` : '';
+        parts.push(`- ${step.step}：${val}${desc}`);
+      }
     });
     // 收集选项中定义的约束
     const constraints = [];
@@ -65,12 +69,14 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
   }
 
   // 2. Iron rules
+  const allChars = script.characters || [];
+  const nonPlayerChars = allChars.filter(c => c.id !== 'player');
   parts.push('【铁律 - 永远不可违反】');
   parts.push('- 你是角色本身，不要跳出角色');
   parts.push('- 不要用 AI 的口吻解释或评价剧情');
-  parts.push('- 所有角色必须使用具体人名，禁止使用"现任""危险对象"等角色标签。如果开场已设定名字则沿用，未设定则现在起名并始终使用');
-  parts.push('- 涉及多个角色时，必须用角色人名而非"他""她""你"，确保玩家能分清每句话的主体和对象');
-  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：张明："……"；李薇："……"');
+  parts.push('- 角色身份标签（如"现任""危险对象"）是系统标识，必须始终保留。你可以为角色起人名，但人名只是别名，身份标签才是角色的唯一标识');
+  parts.push('- 第一次提到角色时，必须使用"人名（身份标签）"格式，如"张明（现任）"。后续可用人名，但数值更新和关键事件中必须同时标注身份');
+  parts.push('- 对话场景中，每句话前必须标注说话人名字');
   parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
   if (script.rules?.forbidden) {
     script.rules.forbidden.forEach(r => parts.push(`- ${applyMacros(r, macroCtx)}`));
@@ -92,16 +98,17 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
   const chars = script.characters || [];
   chars.forEach(c => {
     const val = values?.[c.id] ? `，当前状态：${JSON.stringify(values[c.id])}` : '';
-    const nameNote = c.name === '现任' || c.name === '危险对象'
-      ? `（角色标签：${c.name}，你必须在开场时为该角色起一个具体的人名，后续对话中始终使用这个名字称呼该角色，不要用"现任""危险对象"等标签）`
-      : '';
-    parts.push(`${c.name}：${applyMacros(c.description, macroCtx)}${nameNote}${val}`);
+    const isPlayer = c.id === 'player';
+    const roleNote = isPlayer ? '' : `【身份标签：${c.name}】`;
+    const nameNote = isPlayer ? '' : '，你需要在开场时为该角色起一个具体人名，但身份标签必须始终保留';
+    parts.push(`${roleNote}${c.name}：${applyMacros(c.description, macroCtx)}${nameNote}${val}`);
   });
   parts.push('');
 
   // 5. Numerical values
   if (script.dimensions?.length && values) {
     parts.push('【当前数值 - 用精确数字】');
+    parts.push('（数值中的身份标签是系统标识，与角色人名对应关系见上方角色列表）');
     script.dimensions.forEach(d => {
       const v = values[d.id];
       if (v === undefined) return;
@@ -165,16 +172,24 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
 export function buildSetupPrompt({ script, selections }) {
   const macroCtx = { script, values: {}, currentStage: 0 };
   const parts = [];
+  // 动态获取非玩家角色
+  const nonPlayerChars = (script.characters || []).filter(c => c.id !== 'player');
+  const charNames = nonPlayerChars.map(c => `「${c.name}」`).join('和');
+
   parts.push('【铁律 - 永远不可违反】');
-  parts.push('- 你必须为「现任」和「危险对象」各起一个具体的人名（中文名），并在后续所有对话中始终使用人名，禁止使用"现任""危险对象"等角色标签');
+  parts.push(`- 你必须为${charNames}各起一个具体的人名（中文名）`);
+  parts.push('- 角色身份标签（如"现任""危险对象"）是系统标识，必须始终保留。人名只是别名，身份标签才是角色的唯一标识');
+  parts.push('- 第一次提到角色时，必须使用"人名（身份标签）"格式，如"张明（现任）"');
   parts.push('- 涉及多个角色时，必须用角色人名而非"他""她""你"，确保玩家能分清每句话的主体和对象');
-  parts.push('- 对话场景中，每句话前必须标注说话人名字，如：张明："……"；李薇："……"');
+  parts.push('- 对话场景中，每句话前必须标注说话人名字');
   parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
   parts.push('');
   parts.push('以下是玩家的开局选择：');
   script.setup?.forEach((step, i) => {
     const val = selections[i] || '随机';
-    parts.push(`${step.step}：${val}`);
+    const opt = (step.options || []).find(o => o.value === val);
+    const desc = opt?.description ? `（${opt.description}）` : '';
+    parts.push(`${step.step}：${val}${desc}`);
   });
   parts.push('');
   // 收集选项中定义的约束
@@ -194,13 +209,14 @@ export function buildSetupPrompt({ script, selections }) {
   parts.push('');
   parts.push('第一部分：状态概览（简洁，3-5句）');
   parts.push('- 玩家是谁（职业、性格）');
-  parts.push('- 现任是谁（起一个人名、当前在哪、关系状态、性格）');
-  parts.push('- 危险对象是谁（起一个人名、身份、性格）');
+  nonPlayerChars.forEach(c => {
+    parts.push(`- ${c.name}是谁（起一个人名，格式"人名（${c.name}）"、身份、性格）`);
+  });
   parts.push('- 当前场景背景（时间、地点，注意关系类型对场景的影响）');
   parts.push('');
   parts.push('第二部分：开场事件（约200-300字）');
   parts.push('- 一个自然的场景切入，引出玩家的第一个选择');
-  parts.push('- 注意：如果关系类型是异地恋，开场时现任不应出现在现场');
+  parts.push('- 场景和角色互动必须符合玩家选择的关系状态、职业等设定');
   parts.push('- 不要大段描写，简洁有力');
   parts.push('');
   parts.push('输出格式：');

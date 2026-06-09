@@ -7,8 +7,9 @@ const base = __dirname;
 // Read CSS
 const css = fs.readFileSync(path.join(base, 'css/style.css'), 'utf8');
 
-// Read sample script
-const sampleScript = fs.readFileSync(path.join(base, 'data/scripts/dangerous-relationships.json'), 'utf8');
+// Read sample script (optional)
+const sampleScriptPath = path.join(base, 'data/scripts/dangerous-relationships.json');
+const sampleScript = fs.existsSync(sampleScriptPath) ? fs.readFileSync(sampleScriptPath, 'utf8') : '{}';
 
 // Bundle JS
 execSync(`npx esbuild js/main.js --bundle --format=iife --outfile=index.standalone.js --minify`, { cwd: base, stdio: 'inherit' });

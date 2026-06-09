@@ -419,10 +419,13 @@ function renderConditionEditor(condObj, prefix) {
 function renderOptionEditor(options, setupIdx) {
   let html = '<div class="option-list">';
   options.forEach((opt, oi) => {
-    html += `<div class="option-row" data-setup-idx="${setupIdx}" data-opt-idx="${oi}">
-      <input class="form-input" style="flex:1;font-size:12px" placeholder="显示文本" value="${esc(opt.label || '')}" data-setup="${setupIdx}" data-opt="${oi}" data-opt-field="label">
-      <input class="form-input" style="flex:1;font-size:12px" placeholder="实际值" value="${esc(opt.value || '')}" data-setup="${setupIdx}" data-opt="${oi}" data-opt-field="value">
-      <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="opt-remove" data-setup-idx="${setupIdx}" data-opt-idx="${oi}">&times;</button>
+    html += `<div class="option-row" data-setup-idx="${setupIdx}" data-opt-idx="${oi}" style="flex-direction:column;gap:4px">
+      <div style="display:flex;gap:4px;width:100%">
+        <input class="form-input" style="flex:1;font-size:12px" placeholder="显示文本" value="${esc(opt.label || '')}" data-setup="${setupIdx}" data-opt="${oi}" data-opt-field="label">
+        <input class="form-input" style="flex:1;font-size:12px" placeholder="实际值" value="${esc(opt.value || '')}" data-setup="${setupIdx}" data-opt="${oi}" data-opt-field="value">
+        <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="opt-remove" data-setup-idx="${setupIdx}" data-opt-idx="${oi}">&times;</button>
+      </div>
+      <input class="form-input" style="width:100%;font-size:11px" placeholder="描述（可选，帮助LLM理解此选项的含义，如：两人不住在一起，见面需要约时间）" value="${esc(opt.description || '')}" data-setup="${setupIdx}" data-opt="${oi}" data-opt-field="description">
     </div>`;
   });
   html += `</div>
@@ -507,7 +510,12 @@ function collectOptions(setupIdx) {
     const oi = row.dataset.optIdx;
     const label = document.querySelector(`[data-setup="${setupIdx}"][data-opt="${oi}"][data-opt-field="label"]`)?.value?.trim();
     const value = document.querySelector(`[data-setup="${setupIdx}"][data-opt="${oi}"][data-opt-field="value"]`)?.value?.trim();
-    if (label) opts.push({ label, value: value || label });
+    const description = document.querySelector(`[data-setup="${setupIdx}"][data-opt="${oi}"][data-opt-field="description"]`)?.value?.trim();
+    if (label) {
+      const opt = { label, value: value || label };
+      if (description) opt.description = description;
+      opts.push(opt);
+    }
   });
   return opts;
 }
