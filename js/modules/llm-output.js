@@ -308,7 +308,7 @@ function normalizeOptions(options) {
       return {
         label: String(opt.label || String.fromCharCode(65 + index)).trim().slice(0, 3),
         text,
-        value: String(opt.value || text).trim()
+        value: text
       };
     })
     .filter(Boolean)
