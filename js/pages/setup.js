@@ -3,7 +3,7 @@ import { navigate } from '../router.js';
 import { chat } from '../modules/llm-client.js';
 import { createSession, createGameEngine } from '../modules/session.js';
 import { buildSetupPrompt } from '../modules/prompt-builder.js';
-import { buildRepairPrompt, parseLLMTurn } from '../modules/llm-output.js';
+import { buildRepairPrompt, formatTurnForStorage, parseLLMTurn } from '../modules/llm-output.js';
 import { advanceStage, checkEnding } from '../modules/script-engine.js';
 
 export async function render(container, { scriptId }) {
@@ -120,7 +120,8 @@ export async function render(container, { scriptId }) {
         }
       }
 
-      engine.addAIMessage(opening, parsedResult.turn, parsedResult.status);
+      const displayOpening = formatTurnForStorage(parsedResult.turn) || opening;
+      engine.addAIMessage(displayOpening, parsedResult.turn, parsedResult.status);
       const newVals = parsedResult.turn.values && Object.keys(parsedResult.turn.values).length ? parsedResult.turn.values : null;
       if (newVals) engine.updateValues(newVals);
       session.currentStage = advanceStage(script.stages, session.values, session.currentStage);

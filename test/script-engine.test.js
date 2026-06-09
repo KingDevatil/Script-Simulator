@@ -9,7 +9,7 @@ import {
   evaluateCondition,
   initializeValues
 } from '../js/modules/script-engine.js';
-import { parseLLMTurn } from '../js/modules/llm-output.js';
+import { getMessageTurn, parseLLMTurn } from '../js/modules/llm-output.js';
 import { createGameEngine, createSession } from '../js/modules/session.js';
 import { substituteMacros } from '../js/modules/prompt-builder.js';
 
@@ -90,6 +90,45 @@ test('LLM turn parser accepts JSON blocks and clamps values', () => {
   assert.equal(parsed.status, 'json');
   assert.equal(parsed.turn.values.trust, 100);
   assert.equal(parsed.turn.options[0].text, 'go');
+});
+
+test('message display reparses JSON content when saved parsed data is incomplete', () => {
+  const message = {
+    role: 'ai',
+    content: JSON.stringify({
+      narrative: 'story text',
+      options: [{ label: 'A', text: 'move', value: 'move' }],
+      values: { trust: 12 },
+      keyEvent: null,
+      stageHint: null
+    }),
+    parsed: { narrative: '', options: [], values: {}, keyEvent: null, stageHint: null }
+  };
+  const turn = getMessageTurn(message, script);
+  assert.equal(turn.narrative, 'story text');
+  assert.equal(turn.options[0].text, 'move');
+});
+
+test('LLM turn parser salvages JSON-like output for display', () => {
+  const raw = `{
+    "narrative": "story
+text",
+    "options": [
+      { "label": "A", "text": "observe", "value": "observe" },
+      { "label": "B", "text": "act", "value": "act" }
+    ],
+    "values": {
+      "trust": 12,
+      "danger": 3,
+    },
+    "keyEvent": null,
+    "stageHint": "next"
+  }`;
+  const parsed = parseLLMTurn(raw, script);
+  assert.equal(parsed.status, 'json-like');
+  assert.equal(parsed.turn.narrative, 'story\ntext');
+  assert.equal(parsed.turn.options.length, 2);
+  assert.equal(parsed.turn.values.trust, 12);
 });
 
 test('macro substitution reads characters, stages and dimensions', () => {

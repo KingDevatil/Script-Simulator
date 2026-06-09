@@ -4,12 +4,18 @@ import { chat } from '../modules/llm-client.js';
 import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
 import { addEventEffects, advanceStage, checkEnding, checkEventTriggers, extractNarrative, extractValues, processEffects } from '../modules/script-engine.js';
-import { buildRepairPrompt, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
+import { buildRepairPrompt, formatTurnForStorage, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
 import { showConfirm } from '../modules/dialog.js';
 
 let engine = null;
 let panelOpen = false;
 let prevValues = {};
+const FALLBACK_OPTIONS = [
+  { label: 'A', text: '先观察局势，再决定下一步。', value: '先观察局势，再决定下一步。' },
+  { label: 'B', text: '主动开口试探对方的反应。', value: '主动开口试探对方的反应。' },
+  { label: 'C', text: '先稳住情绪，避免暴露真实意图。', value: '先稳住情绪，避免暴露真实意图。' },
+  { label: 'D', text: '直接采取行动，推进当前局面。', value: '直接采取行动，推进当前局面。' }
+];
 
 export async function render(container, { sessionId }) {
   const session = await getSession(sessionId);
@@ -24,9 +30,9 @@ export async function render(container, { sessionId }) {
   container.innerHTML = `
     <div class="chat-page">
       <div class="header">
-        <button class="header-btn" id="btn-back-chat">←</button>
+        <button class="header-btn editor-back-btn" id="btn-back-chat">返回</button>
         <h1 style="font-size:15px">${esc(script.name)}</h1>
-        <button class="header-btn" id="btn-menu">⋯</button>
+        <button class="header-btn editor-action-btn" id="btn-menu">主页</button>
       </div>
       <div class="numerical-toggle" id="num-toggle">▲ 数值面板</div>
       <div class="numerical-panel" id="num-panel"></div>
@@ -44,13 +50,14 @@ export async function render(container, { sessionId }) {
         <div class="chat-options" id="chat-options"></div>
         <div class="chat-row">
           <textarea class="chat-textarea" id="chat-input" placeholder="输入你的行动..." rows="1"></textarea>
-          <button class="chat-send" id="btn-send">↑</button>
+          <button class="chat-send" id="btn-send">发送</button>
         </div>
       </div>
     </div>
   `;
 
   const msgContainer = container.querySelector('#messages');
+  const input = container.querySelector('#chat-input');
   let currentMsgIdx = -1;
 
   renderNumericalPanel();
@@ -70,7 +77,6 @@ export async function render(container, { sessionId }) {
   };
 
   // Input handling
-  const input = container.querySelector('#chat-input');
   input.onkeydown = e => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   };
@@ -170,7 +176,8 @@ export async function render(container, { sessionId }) {
       if (parsedResult.warnings?.length) console.warn('LLM output warnings:', parsedResult.warnings);
 
       const turn = parsedResult.turn;
-      engine.addAIMessage(aiResponse, turn, parsedResult.status);
+      const displayResponse = formatTurnForStorage(turn) || aiResponse;
+      engine.addAIMessage(displayResponse, turn, parsedResult.status);
 
       const beforeValues = { ...s.values };
       const beforeStage = s.currentStage;
@@ -227,6 +234,7 @@ export async function render(container, { sessionId }) {
   }
 
   function setSendingState(isSending) {
+    if (!input) return;
     input.disabled = isSending || s.ended;
     container.querySelector('#btn-send').disabled = isSending || s.ended;
     container.querySelectorAll('.chat-option-btn').forEach(btn => { btn.disabled = isSending; });
@@ -334,8 +342,8 @@ export async function render(container, { sessionId }) {
     if (!lastAI) { optContainer.innerHTML = ''; return; }
 
     const turn = getMessageTurn(lastAI, script);
-    const opts = (turn.options || []).map(o => ({ label: `${o.label}. ${o.text}`, value: o.value || o.text }));
-    if (opts.length === 0) { optContainer.innerHTML = ''; return; }
+    const sourceOptions = (turn.options || []).length ? turn.options : FALLBACK_OPTIONS;
+    const opts = sourceOptions.map(o => ({ label: `${o.label}. ${o.text}`, value: o.value || o.text }));
     // 最多显示4个选项
     opts.splice(4);
 

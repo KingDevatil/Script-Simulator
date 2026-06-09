@@ -134,6 +134,9 @@ export function buildSetupPrompt({ script, selections }) {
   parts.push('- 一个自然的场景切入，引出玩家的第一个选择');
   parts.push('- 场景和角色互动必须符合玩家选择的关系状态、职业等设定');
   parts.push('- 不要大段描写，简洁有力');
+  parts.push('- 开场不能只给叙事，必须给玩家当下立刻可执行的交互选项');
+  parts.push('- 选项必须是具体行动，不要写成抽象态度或总结句');
+  parts.push('- 选项最多 4 个，并且每个选项要体现明显不同的策略偏向');
   parts.push('');
   parts.push(...buildOutputProtocol(script, { opening: true }));
 

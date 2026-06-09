@@ -21,9 +21,17 @@ import * as settings from './pages/settings.js';
     console.error('DB init failed:', e);
   }
 
-  // Register service worker
+  // Keep the local preview from getting stuck on an older bundled HTML.
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => reg.update())
+      .catch(() => {});
   }
 
   navigate('home');

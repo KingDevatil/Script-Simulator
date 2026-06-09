@@ -17,6 +17,16 @@ export function parseLLMTurn(rawText, script = {}) {
     }
   }
 
+  const jsonLike = normalizeJsonLikeTurn(text, script);
+  if (jsonLike.turn.narrative || jsonLike.turn.options.length) {
+    return {
+      status: 'json-like',
+      turn: jsonLike.turn,
+      errors,
+      warnings: jsonLike.warnings
+    };
+  }
+
   const legacy = normalizeLegacyTurn(text, script);
   return {
     status: legacy.turn.narrative ? 'legacy' : 'fallback',
@@ -31,6 +41,8 @@ export function buildRepairPrompt(rawText, script = {}) {
   return [
     '下面的模型输出不是合法 JSON，或不符合指定 schema。',
     '不要续写剧情，不要解释原因，只把原输出修复为一个 JSON 对象。',
+    '如果原输出缺少 options，必须补出 2-4 个可交互选项。',
+    '选项最多 4 个，而且每个选项必须有明显不同的行动偏向，不能只是同义改写。',
     'schema:',
     '{',
     '  "narrative": "剧情正文字符串",',
@@ -64,8 +76,24 @@ export function formatTurnForStorage(turn) {
 }
 
 export function getMessageTurn(message, script = {}) {
-  if (message?.parsed) return message.parsed;
-  return parseLLMTurn(message?.content || '', script).turn;
+  const parsedFromContent = parseLLMTurn(message?.content || '', script);
+  if (parsedFromContent.status === 'json' && isUsableTurn(parsedFromContent.turn)) {
+    return parsedFromContent.turn;
+  }
+  if (message?.parsed && isUsableTurn(message.parsed) && !looksLikeJsonPayload(message.parsed.narrative)) {
+    return message.parsed;
+  }
+  if (isUsableTurn(parsedFromContent.turn)) return parsedFromContent.turn;
+  return message?.parsed || parsedFromContent.turn;
+}
+
+function isUsableTurn(turn) {
+  return !!(turn && (turn.narrative || turn.options?.length));
+}
+
+function looksLikeJsonPayload(text) {
+  const value = String(text || '').trim();
+  return value.startsWith('{') || value.startsWith('```json') || value.includes('"narrative"');
 }
 
 function collectJsonCandidates(text) {
@@ -131,6 +159,106 @@ function normalizeLegacyTurn(text, script) {
     keyEvent: extractKeyEvents(text),
     stageHint: null
   }, script, 'legacy');
+}
+
+function normalizeJsonLikeTurn(text, script) {
+  if (!String(text || '').includes('"narrative"')) {
+    return normalizeTurn({}, script, 'json-like');
+  }
+  return normalizeTurn({
+    narrative: readJsonLikeString(text, 'narrative'),
+    options: readJsonLikeOptions(text),
+    values: readJsonLikeValues(text),
+    keyEvent: readJsonLikeString(text, 'keyEvent'),
+    stageHint: readJsonLikeString(text, 'stageHint')
+  }, script, 'json-like');
+}
+
+function readJsonLikeString(text, key) {
+  const source = String(text || '');
+  const keyIndex = source.indexOf(`"${key}"`);
+  if (keyIndex < 0) return '';
+  const colonIndex = source.indexOf(':', keyIndex);
+  if (colonIndex < 0) return '';
+  const afterColon = source.slice(colonIndex + 1).trimStart();
+  if (afterColon.startsWith('null') || afterColon.startsWith('undefined')) return '';
+  let quoteIndex = source.indexOf('"', colonIndex + 1);
+  if (quoteIndex < 0) return '';
+  let value = '';
+  let escaped = false;
+  for (let i = quoteIndex + 1; i < source.length; i++) {
+    const ch = source[i];
+    if (escaped) {
+      value += ch;
+      escaped = false;
+      continue;
+    }
+    if (ch === '\\') {
+      escaped = true;
+      continue;
+    }
+    if (ch === '"') return value.trim();
+    value += ch;
+  }
+  return value.trim();
+}
+
+function readJsonLikeOptions(text) {
+  const source = String(text || '');
+  const optionsIndex = source.indexOf('"options"');
+  if (optionsIndex < 0) return [];
+  const arrayStart = source.indexOf('[', optionsIndex);
+  if (arrayStart < 0) return [];
+
+  const options = [];
+  let depth = 0;
+  let objectStart = -1;
+  let inString = false;
+  let escaped = false;
+  for (let i = arrayStart; i < source.length; i++) {
+    const ch = source[i];
+    if (inString) {
+      if (escaped) escaped = false;
+      else if (ch === '\\') escaped = true;
+      else if (ch === '"') inString = false;
+      continue;
+    }
+    if (ch === '"') {
+      inString = true;
+      continue;
+    }
+    if (ch === '{') {
+      if (depth === 0) objectStart = i;
+      depth++;
+    } else if (ch === '}') {
+      depth--;
+      if (depth === 0 && objectStart >= 0) {
+        const rawObject = source.slice(objectStart, i + 1);
+        const label = readJsonLikeString(rawObject, 'label');
+        const textValue = readJsonLikeString(rawObject, 'text');
+        const value = readJsonLikeString(rawObject, 'value') || textValue;
+        if (textValue || value) options.push({ label, text: textValue || value, value });
+        objectStart = -1;
+      }
+    } else if (ch === ']' && depth === 0) {
+      break;
+    }
+  }
+  return options;
+}
+
+function readJsonLikeValues(text) {
+  const source = String(text || '');
+  const valuesIndex = source.indexOf('"values"');
+  if (valuesIndex < 0) return {};
+  const objectStart = source.indexOf('{', valuesIndex);
+  if (objectStart < 0) return {};
+  const objectText = extractBalancedObject(source.slice(objectStart)) || '';
+  const values = {};
+  for (const match of objectText.matchAll(/"([^"]+)"\s*:\s*(-?\d+(?:\.\d+)?)/g)) {
+    values[match[1]] = Number(match[2]);
+  }
+  return values;
 }
 
 function normalizeTurn(data, script, status) {
@@ -199,8 +327,8 @@ function normalizeOptions(options) {
 
 function extractLegacyOptions(text) {
   const block = String(text || '').match(/【选项】([\s\S]*?)(?=【|$)/);
-  if (!block) return [];
-  return block[1].split('\n').map(line => {
+  const lines = block ? block[1].split('\n') : String(text || '').split('\n');
+  return lines.map(line => {
     const m = line.match(/^([A-Z])[.、)）]\s*(.+)/);
     return m ? { label: m[1], text: m[2].trim(), value: m[2].trim() } : null;
   }).filter(Boolean).slice(0, 4);
