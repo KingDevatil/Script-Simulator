@@ -31,6 +31,7 @@ export function createGameEngine(session, script) {
   if (session.memoryState) memoryMgr.loadState(session.memoryState);
   session.activeEffects = session.activeEffects || [];
   session.eventState = session.eventState || {};
+  session.timeline = session.timeline || [];
   session.snapshots = session.snapshots || [];
   session.rngState = session.rngState || session.seed || 1;
   if (!session.snapshots.length) createSnapshot('initial');
@@ -56,6 +57,16 @@ export function createGameEngine(session, script) {
     Object.assign(session.values, clamped.values);
   }
 
+  function addTimelineEntry(entry) {
+    session.timeline = session.timeline || [];
+    session.timeline.push({
+      messageCount: session.messages.length,
+      timestamp: Date.now(),
+      ...entry
+    });
+    if (session.timeline.length > 120) session.timeline.splice(0, session.timeline.length - 120);
+  }
+
   function nextRandom() {
     const next = nextSeedValue(session.rngState || session.seed || 1);
     session.rngState = next.seed;
@@ -70,6 +81,7 @@ export function createGameEngine(session, script) {
       currentStage: session.currentStage || 0,
       activeEffects: JSON.parse(JSON.stringify(session.activeEffects || [])),
       eventState: JSON.parse(JSON.stringify(session.eventState || {})),
+      timeline: JSON.parse(JSON.stringify(session.timeline || [])),
       rngState: session.rngState,
       ended: !!session.ended,
       ending: session.ending ? JSON.parse(JSON.stringify(session.ending)) : null,
@@ -92,6 +104,7 @@ export function createGameEngine(session, script) {
     session.currentStage = snapshot.currentStage || 0;
     session.activeEffects = JSON.parse(JSON.stringify(snapshot.activeEffects || []));
     session.eventState = JSON.parse(JSON.stringify(snapshot.eventState || {}));
+    session.timeline = JSON.parse(JSON.stringify(snapshot.timeline || []));
     session.rngState = snapshot.rngState || session.seed || 1;
     session.ended = !!snapshot.ended;
     session.ending = snapshot.ending ? JSON.parse(JSON.stringify(snapshot.ending)) : null;
@@ -117,6 +130,7 @@ export function createGameEngine(session, script) {
     addAIMessage,
     updateValues,
     nextRandom,
+    addTimelineEntry,
     createSnapshot,
     restoreToMessage,
     save

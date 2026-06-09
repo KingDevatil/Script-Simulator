@@ -6,6 +6,7 @@ export async function render(container) {
   const sessions = await getAllSessions();
   const sortedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
   const lastSession = sortedSessions[0];
+  const sessionStats = buildSessionStats(sessions);
 
   container.innerHTML = `
     <div class="header home-header">
@@ -94,6 +95,10 @@ export async function render(container) {
   } else {
     scriptList.innerHTML = scripts.map(s => `
       <article class="card home-card" data-script-id="${s.id}">
+        ${(() => {
+          const stats = sessionStats.get(s.id) || { count: 0, latest: null };
+          return `<div class="card-meta-line">${stats.count} 个会话${stats.latest ? ` · 最近 ${formatTime(stats.latest)}` : ''}</div>`;
+        })()}
         <div class="card-main">
           <h3>${esc(s.name)}</h3>
           <p>${esc(s.description || '暂无描述')}</p>
@@ -101,6 +106,7 @@ export async function render(container) {
             <span class="card-tag">${(s.dimensions || []).length} 维度</span>
             <span class="card-tag">${(s.stages || []).length} 阶段</span>
             <span class="card-tag">${(s.characters || []).length} 角色</span>
+            <span class="card-tag">${(s.events || []).length} 事件</span>
           </div>
         </div>
         <div class="card-actions">
@@ -117,9 +123,13 @@ export async function render(container) {
   } else {
     sessionList.innerHTML = sortedSessions.map(s => `
       <article class="card home-card" data-session-id="${s.id}">
-        <div class="card-main">
-          <h3>${esc(s.scriptName || '未知剧本')}</h3>
-          <p>阶段 ${(s.currentStage || 0) + 1} · ${(s.messages || []).length} 条消息</p>
+          <div class="card-main">
+            <h3>${esc(s.scriptName || '未知剧本')}</h3>
+          <p>阶段 ${(s.currentStage || 0) + 1} · ${(s.messages || []).length} 条消息${s.ended ? ' · 已结束' : ''}</p>
+          <div class="card-tags">
+            ${s.seed ? `<span class="card-tag">seed ${s.seed}</span>` : ''}
+            ${(s.timeline || []).length ? `<span class="card-tag">${s.timeline.length} 状态变更</span>` : ''}
+          </div>
           <p class="card-time">${new Date(s.updatedAt).toLocaleString()}</p>
         </div>
         <div class="card-actions">
@@ -169,24 +179,56 @@ export async function render(container) {
   };
 }
 
+function buildSessionStats(sessions) {
+  const stats = new Map();
+  sessions.forEach(session => {
+    const current = stats.get(session.scriptId) || { count: 0, latest: null };
+    current.count += 1;
+    current.latest = Math.max(current.latest || 0, session.updatedAt || 0);
+    stats.set(session.scriptId, current);
+  });
+  return stats;
+}
+
 async function handleImport(e) {
   const file = e.target.files?.[0];
   if (!file) return;
+  let text = '';
   try {
-    const text = await file.text();
+    text = await file.text();
     const json = JSON.parse(text);
     const { parseScript } = await import('../modules/script-engine.js');
-    const { assertValidScript, formatValidationResult, validateScript } = await import('../modules/script-validator.js');
+    const { formatValidationResult, validateScript } = await import('../modules/script-validator.js');
     const { saveScript } = await import('../db.js');
     const script = parseScript(json);
     const validation = validateScript(script);
-    assertValidScript(script);
+    if (!validation.ok) {
+      const err = new Error(formatValidationResult(validation));
+      err.validation = validation;
+      throw err;
+    }
     if (validation.warnings.length && !confirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
     await saveScript(script);
     navigate('home');
   } catch (err) {
-    alert('导入失败: ' + err.message);
+    alert(formatImportError(err, text));
   }
+}
+
+function formatImportError(err, text = '') {
+  if (err.validation) return `导入失败：schema 校验未通过\n\n${err.message}`;
+  if (err instanceof SyntaxError) return `导入失败：JSON 解析错误\n\n${jsonErrorLocation(err, text)}${err.message}`;
+  return `导入失败：${err.message}`;
+}
+
+function jsonErrorLocation(err, text) {
+  const match = String(err.message).match(/position\s+(\d+)/i);
+  if (!match || !text) return '';
+  const pos = Number(match[1]);
+  const before = text.slice(0, pos);
+  const line = before.split('\n').length;
+  const column = before.length - before.lastIndexOf('\n');
+  return `位置：第 ${line} 行，第 ${column} 列\n`;
 }
 
 async function handleBranch(sessionId) {

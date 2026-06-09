@@ -171,6 +171,8 @@ export async function render(container, { sessionId }) {
       const turn = parsedResult.turn;
       engine.addAIMessage(aiResponse, turn, parsedResult.status);
 
+      const beforeValues = { ...s.values };
+      const beforeStage = s.currentStage;
       const newVals = turn.values && Object.keys(turn.values).length ? turn.values : null;
       if (newVals) engine.updateValues(newVals);
 
@@ -190,6 +192,14 @@ export async function render(container, { sessionId }) {
         s.ending = ending;
         if (script.stages?.length) s.currentStage = script.stages.length - 1;
       }
+
+      engine.addTimelineEntry({
+        values: diffValues(beforeValues, s.values),
+        events: triggered.map(ev => ev.name),
+        stageFrom: beforeStage,
+        stageTo: s.currentStage,
+        ending: ending ? ending.name : null
+      });
 
       const keyEvent = turn.keyEvent;
       if (keyEvent) showMemoryPrompt();
@@ -294,7 +304,26 @@ export async function render(container, { sessionId }) {
     panel.innerHTML = script.dimensions.map(d => {
       const v = s.values[d.id];
       return `<div class="num-row"><span class="num-label">${esc(d.name)}</span><span class="num-value">${v ?? '-'}</span></div>`;
-    }).join('');
+    }).join('') + renderTimeline();
+  }
+
+  function renderTimeline() {
+    const items = (s.timeline || []).slice(-12).reverse();
+    if (!items.length) return '<div class="state-timeline"><div class="timeline-title">状态时间线</div><p class="timeline-empty">暂无状态变化</p></div>';
+    return `<div class="state-timeline">
+      <div class="timeline-title">状态时间线</div>
+      ${items.map(item => {
+        const valueText = (item.values || []).map(v => `${v.name} ${v.from}→${v.to}`).join(' · ');
+        const stageText = item.stageTo !== item.stageFrom ? `阶段 ${Number(item.stageFrom) + 1}→${Number(item.stageTo) + 1}` : '';
+        const eventText = item.events?.length ? `事件：${item.events.join('、')}` : '';
+        const endingText = item.ending ? `结局：${item.ending}` : '';
+        const detail = [valueText, stageText, eventText, endingText].filter(Boolean).join('<br>');
+        return `<div class="timeline-item">
+          <span class="timeline-dot"></span>
+          <div><div class="timeline-time">${new Date(item.timestamp).toLocaleTimeString()}</div><div class="timeline-detail">${detail || '无显著变化'}</div></div>
+        </div>`;
+      }).join('')}
+    </div>`;
   }
 
   function renderOptions() {
@@ -377,6 +406,15 @@ export async function render(container, { sessionId }) {
     const stage = script.stages?.[s.currentStage];
     const stageName = stage?.name || `阶段 ${s.currentStage + 1}`;
     return `阶段：${s.currentStage + 1}/${script.stages?.length || '?'} - ${stageName}`;
+  }
+
+  function diffValues(before, after) {
+    return (script.dimensions || []).filter(d => before[d.id] !== after[d.id]).map(d => ({
+      id: d.id,
+      name: d.name || d.id,
+      from: before[d.id] ?? '-',
+      to: after[d.id] ?? '-'
+    }));
   }
 
   // Back button

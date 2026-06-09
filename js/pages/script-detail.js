@@ -1,7 +1,7 @@
 import { getScript, saveScript } from '../db.js';
 import { navigate } from '../router.js';
 import { parseScript } from '../modules/script-engine.js';
-import { assertValidScript, formatValidationResult, validateScript } from '../modules/script-validator.js';
+import { formatValidationResult, validateScript } from '../modules/script-validator.js';
 
 let script = {};
 let openSections = new Set(['basic','rules','dimensions','characters','events','stages','endings','setup']);
@@ -34,6 +34,7 @@ function renderPage(container) {
       </div>
     </div>
     <div class="page-scroll" id="editor-scroll">
+      ${renderValidationPanel()}
       ${renderSection('basic', '基本信息', renderBasicInfo(), 'editor-full')}
       ${renderSection('rules', '写作规则', renderRules(), 'editor-full')}
       <div class="editor-grid">
@@ -49,6 +50,27 @@ function renderPage(container) {
     <input type="file" id="file-import" accept=".json" style="display:none">
   `;
   attachEvents(container);
+}
+
+function renderValidationPanel() {
+  const result = validateScript(parseScript(script));
+  const errorCount = result.errors.length;
+  const warningCount = result.warnings.length;
+  const status = errorCount ? `${errorCount} 个错误` : warningCount ? `${warningCount} 个警告` : '校验通过';
+  const cls = errorCount ? 'error' : warningCount ? 'warning' : 'ok';
+  return `<div class="validation-panel ${cls}" id="validation-panel">
+    <div class="validation-head">
+      <strong>${status}</strong>
+      <button class="btn btn-sm btn-secondary" data-action="validate-now">重新校验</button>
+    </div>
+    ${renderValidationList('错误', result.errors)}
+    ${renderValidationList('警告', result.warnings)}
+  </div>`;
+}
+
+function renderValidationList(label, items) {
+  if (!items?.length) return '';
+  return `<div class="validation-list"><span>${label}</span>${items.map(item => `<p>${esc(item)}</p>`).join('')}</div>`;
 }
 
 function renderSection(key, title, content, extraClass) {
@@ -564,7 +586,11 @@ function attachEvents(container) {
     syncFieldsToScript(container);
     const parsed = parseScript(script);
     const validation = validateScript(parsed);
-    assertValidScript(parsed);
+    if (!validation.ok) {
+      alert(`保存失败：剧本校验未通过\n\n${formatValidationResult(validation)}`);
+      rerender(container);
+      return;
+    }
     if (validation.warnings.length && !confirm(`保存校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
     await saveScript(parsed);
     alert('已保存');
@@ -584,17 +610,18 @@ function attachEvents(container) {
   container.querySelector('#file-import').onchange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    let text = '';
     try {
-      const text = await file.text();
+      text = await file.text();
       const json = JSON.parse(text);
       script = parseScript(json);
       const validation = validateScript(script);
-      assertValidScript(script);
+      if (!validation.ok) throwValidationError(validation);
       if (validation.warnings.length && !confirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
       script.id = (await getScript(script.id))?.id || script.id;
       editingItems = {};
       rerender(container);
-    } catch (err) { alert('导入失败: ' + err.message); }
+    } catch (err) { alert(formatImportError(err, '导入失败', text)); }
   };
 
   // 折叠面板
@@ -839,14 +866,18 @@ function attachEvents(container) {
     // ── JSON 同步 ──
     else if (action === 'json-apply') {
       try {
-        const json = JSON.parse(container.querySelector('#f-json').value);
+        const text = container.querySelector('#f-json').value;
+        const json = JSON.parse(text);
         script = parseScript(json);
         const validation = validateScript(script);
-        assertValidScript(script);
+        if (!validation.ok) throwValidationError(validation);
         if (validation.warnings.length && !confirm(`JSON 校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
         editingItems = {};
         rerender(container);
-      } catch (err) { alert('JSON 解析失败: ' + err.message); }
+      } catch (err) { alert(formatImportError(err, 'JSON 同步失败', container.querySelector('#f-json').value)); }
+    } else if (action === 'validate-now') {
+      syncFieldsToScript(container);
+      rerender(container);
     }
   };
   container.addEventListener('click', clickHandler);
@@ -934,4 +965,26 @@ function setNestedValue(obj, path, val) {
   const last = keys.pop();
   const target = keys.reduce((o, k) => o[k], obj);
   target[last] = val;
+}
+
+function throwValidationError(validation) {
+  const err = new Error(formatValidationResult(validation));
+  err.validation = validation;
+  throw err;
+}
+
+function formatImportError(err, title, text = '') {
+  if (err.validation) return `${title}：schema 校验未通过\n\n${formatValidationResult(err.validation)}`;
+  if (err instanceof SyntaxError) return `${title}：JSON 解析错误\n\n${jsonErrorLocation(err, text)}${err.message}`;
+  return `${title}：${err.message}`;
+}
+
+function jsonErrorLocation(err, text) {
+  const match = String(err.message).match(/position\s+(\d+)/i);
+  if (!match || !text) return '';
+  const pos = Number(match[1]);
+  const before = text.slice(0, pos);
+  const line = before.split('\n').length;
+  const column = before.length - before.lastIndexOf('\n');
+  return `位置：第 ${line} 行，第 ${column} 列\n`;
 }

@@ -1,6 +1,15 @@
 import { getSetting, setSetting } from '../db.js';
 import { navigate } from '../router.js';
 
+const MODEL_PRESETS = [
+  { id: '', label: '自定义配置', url: '', model: '', thinking: null, effort: 'high', temperature: 0.85, proxy: false },
+  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-flash', thinking: false, effort: 'high', temperature: 0.85, proxy: false },
+  { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-pro', thinking: true, effort: 'high', temperature: 0.85, proxy: false },
+  { id: 'deepseek-v4-pro-max', label: 'DeepSeek V4 Pro 深度思考', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-pro', thinking: true, effort: 'max', temperature: 0.85, proxy: false },
+  { id: 'openai-gpt-4o-mini', label: 'OpenAI GPT-4o mini', url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini', thinking: false, effort: 'high', temperature: 0.7, proxy: false },
+  { id: 'proxy', label: '后端代理', url: '/api/chat/completions', model: 'deepseek-v4-flash', thinking: false, effort: 'high', temperature: 0.85, proxy: true }
+];
+
 export async function render(container) {
   const [apiUrl, apiKey, apiModel, memoryInterval, thinkingEnabled, reasoningEffort, temperature, apiProxyEnabled] = await Promise.all([
     getSetting('api_url'), getSetting('api_key'),
@@ -20,6 +29,12 @@ export async function render(container) {
     <div class="page-scroll">
       <div class="settings-section">
         <h3>LLM API 配置</h3>
+        <div class="form-group">
+          <label class="form-label">模型预设</label>
+          <select class="form-input" id="f-preset">
+            ${MODEL_PRESETS.map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('')}
+          </select>
+        </div>
         <div class="form-group">
           <label class="form-label">API 地址</label>
           <input class="form-input" id="f-url" value="${esc(apiUrl || 'https://api.deepseek.com/chat/completions')}" placeholder="https://api.deepseek.com/chat/completions">
@@ -92,6 +107,21 @@ export async function render(container) {
     const keyInput = container.querySelector('#f-key');
     keyInput.disabled = e.target.checked;
     if (e.target.checked) keyInput.value = '';
+  };
+  container.querySelector('#f-preset').onchange = e => {
+    const preset = MODEL_PRESETS.find(p => p.id === e.target.value);
+    if (!preset || !preset.id) return;
+    container.querySelector('#f-url').value = preset.url;
+    container.querySelector('#f-model').value = preset.model;
+    container.querySelector('#f-proxy').checked = preset.proxy;
+    container.querySelector('#f-proxy').dispatchEvent(new Event('change'));
+    if (preset.thinking !== null) {
+      container.querySelector('#f-thinking').checked = preset.thinking;
+      container.querySelector('#f-thinking').dispatchEvent(new Event('change'));
+    }
+    container.querySelector('#f-effort').value = preset.effort;
+    tempSlider.value = preset.temperature;
+    tempVal.textContent = String(preset.temperature);
   };
 
   // Temperature slider
