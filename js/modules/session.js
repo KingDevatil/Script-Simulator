@@ -1,21 +1,24 @@
 import { saveSession } from '../db.js';
 import { createMemoryManager } from './memory.js';
+import { clampValues, initializeValues, nextSeedValue } from './script-engine.js';
 
-export function createSession(script, selections = {}) {
-  const values = {};
-  (script.dimensions || []).forEach(d => {
-    values[d.id] = d.initial?.[0] ?? 50;
-  });
+export function createSession(script, selections = {}, seed = null) {
+  const init = initializeValues(script.dimensions || [], seed || script.seed);
 
   return {
     id: crypto.randomUUID(),
     scriptId: script.id,
     scriptName: script.name,
     selections,
-    values,
+    values: init.values,
+    seed: init.seed,
+    rngState: init.seed,
     messages: [],
     currentStage: 0,
     activeEffects: [],
+    eventState: {},
+    ended: false,
+    ending: null,
     snapshots: [],
     memoryState: null,
     createdAt: Date.now(),
@@ -27,7 +30,9 @@ export function createGameEngine(session, script) {
   const memoryMgr = createMemoryManager();
   if (session.memoryState) memoryMgr.loadState(session.memoryState);
   session.activeEffects = session.activeEffects || [];
+  session.eventState = session.eventState || {};
   session.snapshots = session.snapshots || [];
+  session.rngState = session.rngState || session.seed || 1;
   if (!session.snapshots.length) createSnapshot('initial');
 
   function getRecentMessages(count = 3) {
@@ -46,7 +51,15 @@ export function createGameEngine(session, script) {
 
   function updateValues(newVals) {
     if (!newVals) return;
-    Object.assign(session.values, newVals);
+    const clamped = clampValues(newVals, script.dimensions || []);
+    if (clamped.warnings.length) console.warn('Value clamp:', clamped.warnings);
+    Object.assign(session.values, clamped.values);
+  }
+
+  function nextRandom() {
+    const next = nextSeedValue(session.rngState || session.seed || 1);
+    session.rngState = next.seed;
+    return next.value;
   }
 
   function createSnapshot(reason = 'manual') {
@@ -56,6 +69,10 @@ export function createGameEngine(session, script) {
       values: { ...session.values },
       currentStage: session.currentStage || 0,
       activeEffects: JSON.parse(JSON.stringify(session.activeEffects || [])),
+      eventState: JSON.parse(JSON.stringify(session.eventState || {})),
+      rngState: session.rngState,
+      ended: !!session.ended,
+      ending: session.ending ? JSON.parse(JSON.stringify(session.ending)) : null,
       memoryState: memoryMgr.getState(),
       timestamp: Date.now()
     });
@@ -74,6 +91,10 @@ export function createGameEngine(session, script) {
     session.values = { ...snapshot.values };
     session.currentStage = snapshot.currentStage || 0;
     session.activeEffects = JSON.parse(JSON.stringify(snapshot.activeEffects || []));
+    session.eventState = JSON.parse(JSON.stringify(snapshot.eventState || {}));
+    session.rngState = snapshot.rngState || session.seed || 1;
+    session.ended = !!snapshot.ended;
+    session.ending = snapshot.ending ? JSON.parse(JSON.stringify(snapshot.ending)) : null;
     if (snapshot.memoryState) memoryMgr.loadState(snapshot.memoryState);
     session.memoryState = memoryMgr.getState();
     session.snapshots = snapshots.filter(item => item.messageCount <= messageCount);
@@ -95,6 +116,7 @@ export function createGameEngine(session, script) {
     addPlayerMessage,
     addAIMessage,
     updateValues,
+    nextRandom,
     createSnapshot,
     restoreToMessage,
     save

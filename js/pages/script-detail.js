@@ -190,6 +190,19 @@ function renderEvents() {
         </div>
         <div class="form-group"><label class="form-label">描述</label><textarea class="form-input" rows="2" data-event="${i}" data-subfield="description">${esc(e.description || '')}</textarea></div>
         <div class="form-group">
+          <label class="form-label">触发限制</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <label class="form-label" style="font-size:11px;display:flex;align-items:center;gap:6px;min-width:90px">
+              <input type="checkbox" ${e.once ? 'checked' : ''} data-event="${i}" data-subfield="once" style="width:16px;height:16px">
+              仅触发一次
+            </label>
+            <div style="flex:1;min-width:120px">
+              <label class="form-label" style="font-size:11px">最大触发次数</label>
+              <input class="form-input" type="number" min="0" placeholder="空=不限" value="${e.maxTriggers ?? ''}" data-event="${i}" data-subfield="maxTriggers">
+            </div>
+          </div>
+        </div>
+        <div class="form-group">
           <label class="form-label">持续效果</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <div style="flex:1;min-width:120px">
@@ -198,7 +211,7 @@ function renderEvents() {
             </div>
             <div style="flex:1;min-width:120px">
               <label class="form-label" style="font-size:11px">Cooldown 冷却轮数</label>
-              <input class="form-input" type="number" min="0" placeholder="0=不启用" value="${e.effects?.cooldown || ''}" data-event="${i}" data-subfield="cooldown">
+              <input class="form-input" type="number" min="0" placeholder="0=不启用" value="${e.cooldown || e.effects?.cooldown || ''}" data-event="${i}" data-subfield="cooldown">
             </div>
           </div>
         </div>
@@ -870,12 +883,17 @@ function saveEventFromDOM(container, i) {
   const stickyDur = Number(get('sticky_duration') || 0);
   const cooldown = Number(get('cooldown') || 0);
   if (stickyDur > 0) effects.sticky = { dims: {}, duration: stickyDur };
-  if (cooldown > 0) effects.cooldown = cooldown;
+  const once = !!container.querySelector(`[data-event="${i}"][data-subfield="once"]`)?.checked;
+  const maxTriggersRaw = get('maxTriggers');
+  const maxTriggers = maxTriggersRaw === '' || maxTriggersRaw === undefined ? null : Number(maxTriggersRaw);
   script.events[i] = {
     name: get('name') || '',
     stage: Number(get('stage') || 0),
     trigger: collectConditions(`event_${i}_trigger`),
     description: get('description') || '',
+    ...(once ? { once } : {}),
+    ...(maxTriggers != null && maxTriggers > 0 ? { maxTriggers } : {}),
+    ...(cooldown > 0 ? { cooldown } : {}),
     ...(Object.keys(effects).length > 0 ? { effects } : {})
   };
 }

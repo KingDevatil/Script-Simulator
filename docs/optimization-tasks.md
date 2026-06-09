@@ -31,6 +31,8 @@
 
 ## P1：核心玩法一致性
 
+状态：已落地。实现包括 seed 初始化、数值 clamp、事件 `once/cooldown/maxTriggers`、连续阶段推进、结局判定与结束态渲染。
+
 1. **数值初始化支持区间随机与 seed**
    - 当前只取初始区间下限。需要明确支持固定值或区间随机，并保存 seed 以便复现。
 
@@ -47,6 +49,8 @@
    - 当前结局配置存在，但聊天流程中没有明显的结束状态与结局渲染。
 
 ## P2：工程化
+
+状态：已落地基础版本。实现包括 `package.json`/lockfile、`lint/test/build/check` 命令、纯函数测试、prompt 拆分、LLM adapter timeout/abort/retry、PWA 静态资源清单与图标。
 
 1. **补齐 `package.json` 与 lockfile**
    - 固定 esbuild、lint、test、build 命令，避免依赖 `npx` 临时下载。

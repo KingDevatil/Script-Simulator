@@ -3,7 +3,7 @@ import { navigate } from '../router.js';
 import { chat } from '../modules/llm-client.js';
 import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
-import { extractValues, extractNarrative, checkEventTriggers, checkStageTransition, processEffects, addEventEffects } from '../modules/script-engine.js';
+import { addEventEffects, advanceStage, checkEnding, checkEventTriggers, extractNarrative, extractValues, processEffects } from '../modules/script-engine.js';
 import { buildRepairPrompt, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
 
 let engine = null;
@@ -54,6 +54,7 @@ export async function render(container, { sessionId }) {
 
   renderNumericalPanel();
   renderMessages();
+  renderEnding();
 
   // Auto-scroll
   msgContainer.scrollTop = msgContainer.scrollHeight;
@@ -104,7 +105,7 @@ export async function render(container, { sessionId }) {
 
   async function sendMessage(content) {
     const msg = content || input.value.trim();
-    if (!msg || engine._sending) return;
+    if (!msg || engine._sending || s.ended) return;
     input.value = '';
     input.style.height = 'auto';
     container.querySelector('#chat-options').innerHTML = '';
@@ -174,13 +175,20 @@ export async function render(container, { sessionId }) {
       if (newVals) engine.updateValues(newVals);
 
       // 处理持续效果（sticky 数值变化 + 过期清理）
-      processEffects(s);
+      processEffects(s, script.dimensions || []);
 
-      const triggered = checkEventTriggers(script.events, s.values, s.currentStage, s.activeEffects);
+      const triggered = checkEventTriggers(script.events, s.values, s.currentStage, s.activeEffects, s.eventState, () => engine.nextRandom());
       if (triggered.length > 0) {
         triggered.forEach(ev => addEventEffects(s, ev));
-        const nextStage = checkStageTransition(script.stages, s.values, s.currentStage);
+        const nextStage = advanceStage(script.stages, s.values, s.currentStage);
         if (nextStage !== s.currentStage) s.currentStage = nextStage;
+      }
+
+      const ending = checkEnding(script.endings, s.values);
+      if (ending) {
+        s.ended = true;
+        s.ending = ending;
+        if (script.stages?.length) s.currentStage = script.stages.length - 1;
       }
 
       const keyEvent = turn.keyEvent;
@@ -190,6 +198,7 @@ export async function render(container, { sessionId }) {
       await engine.save();
       renderMessages();
       renderNumericalPanel();
+      renderEnding();
       renderOptions();
       // 选项渲染后再次滚动到底部
       requestAnimationFrame(() => {
@@ -207,8 +216,8 @@ export async function render(container, { sessionId }) {
   }
 
   function setSendingState(isSending) {
-    input.disabled = isSending;
-    container.querySelector('#btn-send').disabled = isSending;
+    input.disabled = isSending || s.ended;
+    container.querySelector('#btn-send').disabled = isSending || s.ended;
     container.querySelectorAll('.chat-option-btn').forEach(btn => { btn.disabled = isSending; });
   }
 
@@ -290,6 +299,7 @@ export async function render(container, { sessionId }) {
 
   function renderOptions() {
     const optContainer = container.querySelector('#chat-options');
+    if (s.ended) { optContainer.innerHTML = ''; return; }
     const lastAI = [...s.messages].reverse().find(m => m.role === 'ai');
     if (!lastAI) { optContainer.innerHTML = ''; return; }
 
@@ -329,6 +339,24 @@ export async function render(container, { sessionId }) {
     div.textContent = text;
     msgContainer.appendChild(div);
     msgContainer.scrollTop = msgContainer.scrollHeight;
+  }
+
+  function renderEnding() {
+    const area = container.querySelector('#memory-prompt-area');
+    if (!s.ended || !s.ending) {
+      if (area.dataset.mode === 'ending') area.innerHTML = '';
+      area.dataset.mode = '';
+      setSendingState(false);
+      return;
+    }
+    area.dataset.mode = 'ending';
+    area.innerHTML = `
+      <div class="msg msg-system">
+        <strong>${esc(s.ending.name || '结局')}</strong><br>
+        ${esc(s.ending.description || '本次模拟已结束。')}
+      </div>
+    `;
+    setSendingState(false);
   }
 
   function showMemoryPrompt() {

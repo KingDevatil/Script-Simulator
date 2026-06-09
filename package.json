@@ -1,0 +1,15 @@
+{
+  "name": "script-simulator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "lint": "node scripts/lint.mjs",
+    "test": "node --test",
+    "check": "npm run lint && npm run test && npm run build"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.5"
+  }
+}

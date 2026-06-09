@@ -1,11 +1,5 @@
-const CACHE_NAME = 'script-simulator-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/style.css',
-  '/js/main.js',
-  '/manifest.json'
-];
+const CACHE_NAME = 'script-simulator-1780990310365';
+const ASSETS = ["/","/index.html","/css/style.css","/js/main.js","/manifest.json","/assets/icon-192.png","/assets/icon-512.png"];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_NAME).then(c => c.addAll(ASSETS)));
@@ -23,7 +17,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
-  );
+  const url = new URL(e.request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+  e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
 });

@@ -27,6 +27,14 @@ export function validateScript(script) {
     if (event.stage !== undefined && !isStageIndex(event.stage, stages.length)) {
       errors.push(`事件 ${event.name || index + 1} 的 stage 超出阶段范围`);
     }
+    ['cooldown', 'maxTriggers'].forEach(key => {
+      if (event[key] !== undefined && (!Number.isInteger(Number(event[key])) || Number(event[key]) < 0)) {
+        errors.push(`事件 ${event.name || index + 1} 的 ${key} 必须是非负整数`);
+      }
+    });
+    if (event.once !== undefined && typeof event.once !== 'boolean') {
+      errors.push(`事件 ${event.name || index + 1} 的 once 必须是布尔值`);
+    }
     validateCondition(event.trigger, dimIds, `事件 ${event.name || index + 1} 触发条件`, errors);
     validateEffectDims(event.effects, dimIds, `事件 ${event.name || index + 1}`, errors);
   });

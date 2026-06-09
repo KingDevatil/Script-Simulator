@@ -34,25 +34,61 @@ function buildBody(config, messages, { stream = false, maxTokens = 2048 } = {}) 
   return body;
 }
 
-export async function chat(messages, { onChunk } = {}) {
+export async function chat(messages, { onChunk, signal, timeoutMs = 60000, retries } = {}) {
   const config = await getApiConfig();
-  const res = await fetch(config.url, {
-    method: 'POST',
-    headers: authHeaders(config),
-    body: JSON.stringify(buildBody(config, messages, { stream: !!onChunk }))
-  });
+  const attempts = retries ?? (onChunk ? 0 : 1);
+  return requestWithRetry(async attemptSignal => {
+    const res = await fetch(config.url, {
+      method: 'POST',
+      headers: authHeaders(config),
+      signal: attemptSignal,
+      body: JSON.stringify(buildBody(config, messages, { stream: !!onChunk }))
+    });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`API 错误 ${res.status}: ${err}`);
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`API 错误 ${res.status}: ${err}`);
+    }
+
+    if (onChunk) return streamResponse(res, onChunk);
+
+    const data = await res.json();
+    const msg = data.choices[0].message;
+    return msg.content || '';
+  }, { retries: attempts, signal, timeoutMs });
+}
+
+async function requestWithRetry(run, { retries = 0, signal, timeoutMs = 60000 } = {}) {
+  let lastError = null;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(new Error('LLM 请求超时')), timeoutMs);
+    const abort = () => controller.abort(signal.reason);
+    if (signal) {
+      if (signal.aborted) controller.abort(signal.reason);
+      else signal.addEventListener('abort', abort, { once: true });
+    }
+    try {
+      return await run(controller.signal);
+    } catch (err) {
+      lastError = err;
+      if (controller.signal.aborted || attempt >= retries) throw normalizeRequestError(err);
+      await delay(500 * (attempt + 1));
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener?.('abort', abort);
+    }
   }
+  throw normalizeRequestError(lastError);
+}
 
-  if (onChunk) return streamResponse(res, onChunk);
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
-  const data = await res.json();
-  const msg = data.choices[0].message;
-  // 思考模式下 content 可能在不同字段
-  return msg.content || '';
+function normalizeRequestError(err) {
+  if (err?.name === 'AbortError') return new Error('LLM 请求已取消或超时');
+  return err instanceof Error ? err : new Error(String(err));
 }
 
 async function streamResponse(res, onChunk) {
@@ -89,24 +125,27 @@ async function streamResponse(res, onChunk) {
   return full;
 }
 
-export async function summarize(messages) {
+export async function summarize(messages, { signal, timeoutMs = 30000, retries = 1 } = {}) {
   const config = await getApiConfig();
-  const res = await fetch(config.url, {
-    method: 'POST',
-    headers: authHeaders(config),
-    body: JSON.stringify(buildBody(config, [
-      { role: 'system', content: '你是一个对话摘要助手。将以下对话压缩为1-2句话的摘要，包含关键事实、情感变化和数值变化趋势。只输出摘要，不要解释。' },
-      ...messages
-    ], { maxTokens: 200 }))
-  });
+  return requestWithRetry(async attemptSignal => {
+    const res = await fetch(config.url, {
+      method: 'POST',
+      headers: authHeaders(config),
+      signal: attemptSignal,
+      body: JSON.stringify(buildBody(config, [
+        { role: 'system', content: '你是一个对话摘要助手。将以下对话压缩为1-2句话的摘要，包含关键事实、情感变化和数值变化趋势。只输出摘要，不要解释。' },
+        ...messages
+      ], { maxTokens: 200 }))
+    });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`API 错误 ${res.status}: ${err}`);
-  }
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`API 错误 ${res.status}: ${err}`);
+    }
 
-  const data = await res.json();
-  return data.choices[0].message.content;
+    const data = await res.json();
+    return data.choices[0].message.content;
+  }, { retries, signal, timeoutMs });
 }
 
 function authHeaders(config) {

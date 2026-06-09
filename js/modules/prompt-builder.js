@@ -1,37 +1,8 @@
-// ─── 宏替换 ───
-export function substituteMacros(text, ctx) {
-  if (!text || typeof text !== 'string') return text;
-  const { script, values, currentStage } = ctx;
-  const chars = script.characters || [];
-  const dims = script.dimensions || [];
-  const stages = script.stages || [];
+import { appendMemories, appendRecentMessages, appendSelections } from './prompt-context.js';
+import { substituteMacros } from './prompt-macros.js';
+import { buildOutputProtocol } from './output-protocol.js';
 
-  const charMap = {};
-  chars.forEach(c => { charMap[c.id] = c.name; });
-
-  return text.replace(/\{\{(\w+)(?::([^}]*))?\}\}/g, (_, key, arg) => {
-    switch (key) {
-      case 'player': return charMap['player'] || '玩家';
-      case 'partner': return charMap['partner'] || '现任';
-      case 'target': return charMap['target'] || '危险对象';
-      case 'stage': return stages[currentStage]?.name || `阶段${(currentStage || 0) + 1}`;
-      case 'stage_num': return String((currentStage || 0) + 1);
-      case 'dim': {
-        if (!arg) return '';
-        const dim = dims.find(d => d.name === arg || d.id === arg);
-        if (!dim) return '';
-        const val = values?.[dim.id];
-        return val !== undefined ? String(val) : '';
-      }
-      case 'random': {
-        if (!arg) return '';
-        const choices = arg.split(',').map(s => s.trim()).filter(Boolean);
-        return choices.length ? choices[Math.floor(Math.random() * choices.length)] : '';
-      }
-      default: return `{{${key}${arg ? ':' + arg : ''}}}`;
-    }
-  });
-}
+export { substituteMacros };
 
 function applyMacros(text, ctx) {
   return substituteMacros(text, ctx);
@@ -41,32 +12,7 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
   const macroCtx = { script, values, currentStage };
   const parts = [];
 
-  // 1. Initial settings (from user selections)
-  if (selections && Object.keys(selections).length) {
-    parts.push('【玩家初始设定 - 必须严格遵守，不可忽略或更改】');
-    script.setup?.forEach((step, i) => {
-      const val = selections[i];
-      if (val) {
-        const opt = (step.options || []).find(o => o.value === val);
-        const desc = opt?.description ? `（${opt.description}）` : '';
-        parts.push(`- ${step.step}：${val}${desc}`);
-      }
-    });
-    // 收集选项中定义的约束
-    const constraints = [];
-    script.setup?.forEach((step, i) => {
-      const val = selections[i];
-      if (!val) return;
-      const opt = (step.options || []).find(o => o.value === val);
-      if (opt?.constraints) constraints.push(...opt.constraints);
-    });
-    if (constraints.length) {
-      parts.push('');
-      parts.push('【剧情约束 - 必须严格遵守】');
-      constraints.forEach(c => parts.push(`- ${c}`));
-    }
-    parts.push('');
-  }
+  appendSelections(parts, script, selections);
 
   // 2. Iron rules
   const allChars = script.characters || [];
@@ -118,22 +64,8 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
     parts.push('');
   }
 
-  // 5. Memories
-  if (memories?.length) {
-    parts.push('【记忆摘要】');
-    memories.forEach((m, i) => parts.push(`${i + 1}. ${m}`));
-    parts.push('');
-  }
-
-  // 6. Recent conversation
-  if (recentMessages?.length) {
-    parts.push('【最近对话】');
-    recentMessages.forEach(m => {
-      const role = m.role === 'player' ? '玩家' : 'AI';
-      parts.push(`[${role}]：${m.content}`);
-    });
-    parts.push('');
-  }
+  appendMemories(parts, memories);
+  appendRecentMessages(parts, recentMessages);
 
   // 7. Scene
   if (scenePrompt) {
@@ -142,24 +74,7 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
     parts.push('');
   }
 
-  // 8. Output format
-  parts.push('【输出格式要求】');
-  parts.push('只输出一个合法 JSON 对象，不要 Markdown，不要代码块，不要解释。');
-  parts.push('JSON schema:');
-  parts.push('{');
-  parts.push('  "narrative": "剧情内容，200-400字，简洁有力，重对话和关键动作，不要大段环境描写",');
-  parts.push('  "options": [');
-  parts.push('    {"label": "A", "text": "选项内容", "value": "玩家选择时发送给系统的文本"}');
-  parts.push('  ],');
-  parts.push('  "values": {"维度ID": 数字},');
-  parts.push('  "keyEvent": null,');
-  parts.push('  "stageHint": null');
-  parts.push('}');
-  parts.push('options 必须有 3-4 个，体现不同态度和策略（主动/被动、坦诚/隐瞒、进攻/退缩）。');
-  parts.push(`values 只能使用这些维度 ID：${(script.dimensions || []).map(d => d.id).join(', ') || '无'}`);
-  parts.push('values 填写本轮后的绝对值，不要填写增量；数值必须在各自 range 内。');
-  parts.push('keyEvent 只有发生重大转折、冲突或情感爆发时才填字符串，否则为 null。');
-  parts.push('stageHint 只是剧情阶段建议；不确定时填 null。');
+  parts.push(...buildOutputProtocol(script));
   parts.push('');
 
   // 9. Player input
@@ -194,7 +109,6 @@ export function buildSetupPrompt({ script, selections }) {
     parts.push(`${step.step}：${val}${desc}`);
   });
   parts.push('');
-  // 收集选项中定义的约束
   const constraints = [];
   script.setup?.forEach((step, i) => {
     const val = selections[i];
@@ -221,18 +135,7 @@ export function buildSetupPrompt({ script, selections }) {
   parts.push('- 场景和角色互动必须符合玩家选择的关系状态、职业等设定');
   parts.push('- 不要大段描写，简洁有力');
   parts.push('');
-  parts.push('输出格式：');
-  parts.push('只输出一个合法 JSON 对象，不要 Markdown，不要代码块，不要解释。');
-  parts.push('{');
-  parts.push('  "narrative": "先写状态概览，再写开场事件",');
-  parts.push('  "options": [');
-  parts.push('    {"label": "A", "text": "选项内容", "value": "玩家选择时发送给系统的文本"}');
-  parts.push('  ],');
-  parts.push('  "values": {"维度ID": 数字},');
-  parts.push('  "keyEvent": null,');
-  parts.push('  "stageHint": null');
-  parts.push('}');
-  parts.push(`values 只能使用这些维度 ID：${(script.dimensions || []).map(d => d.id).join(', ') || '无'}`);
+  parts.push(...buildOutputProtocol(script, { opening: true }));
 
   return parts.join('\n');
 }

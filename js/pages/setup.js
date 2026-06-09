@@ -4,6 +4,7 @@ import { chat } from '../modules/llm-client.js';
 import { createSession, createGameEngine } from '../modules/session.js';
 import { buildSetupPrompt } from '../modules/prompt-builder.js';
 import { buildRepairPrompt, parseLLMTurn } from '../modules/llm-output.js';
+import { advanceStage, checkEnding } from '../modules/script-engine.js';
 
 export async function render(container, { scriptId }) {
   const script = await getScript(scriptId);
@@ -122,6 +123,13 @@ export async function render(container, { scriptId }) {
       engine.addAIMessage(opening, parsedResult.turn, parsedResult.status);
       const newVals = parsedResult.turn.values && Object.keys(parsedResult.turn.values).length ? parsedResult.turn.values : null;
       if (newVals) engine.updateValues(newVals);
+      session.currentStage = advanceStage(script.stages, session.values, session.currentStage);
+      const ending = checkEnding(script.endings, session.values);
+      if (ending) {
+        session.ended = true;
+        session.ending = ending;
+        if (script.stages?.length) session.currentStage = script.stages.length - 1;
+      }
       engine.createSnapshot('after-opening');
       await engine.save();
 
