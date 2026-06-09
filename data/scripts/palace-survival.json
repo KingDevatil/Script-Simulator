@@ -1,0 +1,302 @@
+{
+  "name": "宫廷生存录",
+  "description": "你以低位入宫，在后宫与朝堂的暗流中步步为营。每一次请安、每一次对视、每一次跪拜都可能是生死转折。活下来，往上爬，或者找到一条离开这里的路。",
+  "rules": {
+    "writing_style": "古风宫廷文，半文半白。对话偏古雅但不拗口，叙述偏细腻但不拖沓。重氛围铺垫、眼神描写、语气停顿和潜台词。当前阶段：{{stage}}。",
+    "forbidden": [
+      "禁止现代网络用语",
+      "禁止角色无端暴露真实意图",
+      "禁止无铺垫的突然背叛或示好",
+      "禁止跳过日常宫廷细节直接推进大事件",
+      "所有对话必须有潜台词，不能直白说心里话"
+    ],
+    "requirements": [
+      "每轮必须有宫廷日常细节（请安、用膳、赏花、梳妆等）",
+      "每轮必须体现等级尊卑（跪拜、行礼、称谓）",
+      "重要情绪变化必须通过动作、眼神或沉默体现",
+      "每轮必须给玩家可执行的选择"
+    ]
+  },
+  "dimensions": [
+    {
+      "id": "favor",
+      "name": "圣宠值",
+      "description": "皇帝对你的宠爱程度，影响你在后宫的地位和安全",
+      "scope": "{{player}}受皇帝恩宠",
+      "range": [0, 100],
+      "initial": [5, 15]
+    },
+    {
+      "id": "threat",
+      "name": "威胁值",
+      "description": "你被后宫势力针对和暗算的程度",
+      "scope": "后宫对{{player}}的敌意",
+      "range": [0, 100],
+      "initial": [10, 25]
+    },
+    {
+      "id": "intrigue",
+      "name": "权谋值",
+      "description": "你掌握的秘密、把柄和政治筹码",
+      "scope": "{{player}}的政治资本",
+      "range": [0, 100],
+      "initial": [0, 5]
+    },
+    {
+      "id": "trust",
+      "name": "信任值",
+      "description": "你在宫中建立的人脉和信任关系",
+      "scope": "宫中人脉对{{player}}的信任",
+      "range": [0, 100],
+      "initial": [10, 20]
+    },
+    {
+      "id": "health",
+      "name": "安危值",
+      "description": "你的身心健康状态，低值会导致判断力下降",
+      "scope": "{{player}}自身状态",
+      "range": [0, 100],
+      "initial": [70, 85]
+    },
+    {
+      "id": "faction",
+      "name": "派系值",
+      "description": "你站队的程度，高值代表深度绑定某一方势力",
+      "scope": "{{player}}的政治立场",
+      "range": [0, 100],
+      "initial": [0, 0]
+    }
+  ],
+  "characters": [
+    {
+      "id": "player",
+      "name": "玩家",
+      "description": "刚入宫的低位嫔妃或女官。聪明但经验不足，有自己的底线和目标。需要在后宫的明争暗斗中找到生存之道。"
+    },
+    {
+      "id": "emperor",
+      "name": "皇帝",
+      "description": "表面温和实则深不可测。享受后宫争宠但厌恶失控。对{{player}}有初始好感但不会轻易袒护。有自己的政治考量，不会被感情左右重大决策。"
+    },
+    {
+      "id": "consort",
+      "name": "贵妃",
+      "description": "后宫实际掌权者，家族势力庞大。表面端庄大方，实则心狠手辣。视{{player}}为潜在威胁，会用各种手段打压。不会亲自动手，擅长借刀杀人。"
+    },
+    {
+      "id": "eunuch",
+      "name": "太监总管",
+      "description": "宫中的信息中枢，各方势力都要巴结他。中立但逐利，谁出价高就帮谁。掌握很多秘密，但不会轻易透露。对{{player}}的态度取决于利益交换。"
+    }
+  ],
+  "events": [
+    {
+      "name": "贵妃刁难",
+      "stages": [0, 1],
+      "trigger": { "threat": { "min": 30, "probability": 0.4 } },
+      "description": "贵妃在请安时当众刁难{{player}}，或在用膳时安排座位羞辱",
+      "effects": {
+        "sticky": { "dims": { "threat": 3, "health": -2 }, "duration": 2 },
+        "cooldown": 3
+      }
+    },
+    {
+      "name": "皇帝召见",
+      "stages": [0, 1, 2],
+      "trigger": { "favor": { "min": 25, "probability": 0.3 } },
+      "description": "皇帝单独召见{{player}}，或在御花园偶遇并交谈",
+      "effects": {
+        "sticky": { "dims": { "favor": 5, "threat": 3 }, "duration": 2 },
+        "cooldown": 4
+      }
+    },
+    {
+      "name": "宫女告密",
+      "stages": [1, 2],
+      "trigger": {
+        "op": "and",
+        "conditions": [
+          { "dim": "intrigue", "min": 30 },
+          { "dim": "trust", "max": 40 }
+        ]
+      },
+      "description": "{{player}}身边的宫女被贵妃收买，开始向外传递消息",
+      "effects": {
+        "sticky": { "dims": { "threat": 5 }, "duration": 3 },
+        "cooldown": 5
+      }
+    },
+    {
+      "name": "太监示好",
+      "trigger": { "intrigue": { "min": 20, "probability": 0.3 } },
+      "description": "太监总管主动向{{player}}透露一些宫廷秘辛，暗示可以合作",
+      "once": true
+    },
+    {
+      "name": "下毒未遂",
+      "stages": [2, 3],
+      "trigger": {
+        "op": "and",
+        "conditions": [
+          { "dim": "threat", "min": 60 },
+          { "dim": "favor", "min": 40 }
+        ]
+      },
+      "description": "{{player}}的膳食中被人下毒，幸被及时发现",
+      "effects": {
+        "sticky": { "dims": { "health": -10, "threat": 8 }, "duration": 3 },
+        "cooldown": 6
+      }
+    },
+    {
+      "name": "派系拉拢",
+      "stages": [1, 2],
+      "trigger": { "favor": { "min": 35, "probability": 0.3 } },
+      "description": "某方势力主动向{{player}}示好，希望拉拢入伙",
+      "once": true
+    },
+    {
+      "name": "深夜召见",
+      "stages": [2, 3],
+      "trigger": {
+        "op": "and",
+        "conditions": [
+          { "dim": "favor", "min": 55 },
+          { "dim": "threat", "min": 40 }
+        ]
+      },
+      "description": "皇帝深夜召见{{player}}，既是恩宠也是危险信号",
+      "effects": {
+        "sticky": { "dims": { "favor": 8, "threat": 5 }, "duration": 2 },
+        "cooldown": 5
+      }
+    },
+    {
+      "name": "冷宫边缘",
+      "stages": [2, 3],
+      "trigger": {
+        "op": "and",
+        "conditions": [
+          { "dim": "threat", "min": 75 },
+          { "dim": "favor", "max": 30 }
+        ]
+      },
+      "description": "贵妃联合朝臣弹劾{{player}}，皇帝开始动摇",
+      "effects": {
+        "sticky": { "dims": { "health": -5, "threat": 5 }, "duration": 3 },
+        "cooldown": 6
+      }
+    }
+  ],
+  "stages": [
+    { "name": "初入宫廷" },
+    { "name": "站队抉择", "transition": { "favor": { "min": 25 } } },
+    { "name": "权力博弈", "transition": { "intrigue": { "min": 40 } } },
+    { "name": "生死危机", "transition": { "threat": { "min": 70 } } },
+    { "name": "结局" }
+  ],
+  "endings": [
+    {
+      "name": "HE-晋封贵妃",
+      "condition": {
+        "op": "and",
+        "conditions": [
+          { "dim": "favor", "min": 75 },
+          { "dim": "intrigue", "min": 50 },
+          { "dim": "threat", "max": 40 }
+        ]
+      },
+      "description": "你凭借智慧和恩宠，在后宫站稳脚跟，被册封为贵妃。"
+    },
+    {
+      "name": "HE-出宫归隐",
+      "condition": {
+        "op": "and",
+        "conditions": [
+          { "dim": "trust", "min": 70 },
+          { "dim": "intrigue", "min": 60 },
+          { "dim": "favor", "max": 30 }
+        ]
+      },
+      "description": "你找到机会假死出宫，带着秘密和积蓄远走他乡。"
+    },
+    {
+      "name": "NE-冷宫余生",
+      "condition": {
+        "op": "and",
+        "conditions": [
+          { "dim": "threat", "min": 80 },
+          { "dim": "favor", "max": 20 }
+        ]
+      },
+      "description": "你被打入冷宫，从此与世隔绝。"
+    },
+    {
+      "name": "BE-赐死",
+      "condition": { "threat": { "min": 95 } },
+      "description": "你被诬陷谋反，皇帝下旨赐死。"
+    },
+    {
+      "name": "OE-权倾朝野",
+      "condition": {
+        "op": "and",
+        "conditions": [
+          { "dim": "intrigue", "min": 80 },
+          { "dim": "faction", "min": 70 },
+          { "dim": "trust", "min": 40 }
+        ]
+      },
+      "description": "你成为后宫和朝堂的实际操控者，皇帝不过是你的棋子。"
+    }
+  ],
+  "setup": [
+    {
+      "step": "你的出身",
+      "description": "这决定了你在宫中的起点和可利用的资源",
+      "options": [
+        { "label": "官宦世家", "value": "官宦世家", "description": "父亲是朝廷命官，有家族背景但容易被牵连" },
+        { "label": "富商之女", "value": "富商之女", "description": "家财万贯但社会地位低，需要用钱开路" },
+        { "label": "平民入宫", "value": "平民入宫", "description": "无依无靠，但也没有把柄可抓" },
+        { "label": "罪臣之后", "value": "罪臣之后", "description": "身份敏感，一旦暴露就是死罪" }
+      ],
+      "allow_custom": true
+    },
+    {
+      "step": "入宫方式",
+      "description": "这会影响你初始的人脉和处境",
+      "options": [
+        { "label": "选秀入宫", "value": "选秀入宫", "description": "正规途径，有册封但竞争激烈" },
+        { "label": "宫女晋升", "value": "宫女晋升", "description": "从底层做起，熟悉宫中规矩但起点低" },
+        { "label": "皇帝特召", "value": "皇帝特召", "description": "因才艺或美貌被破格召入，初始恩宠高但树大招风" }
+      ]
+    },
+    {
+      "step": "你的目标",
+      "description": "这会影响你的行为倾向和选择偏好",
+      "options": [
+        { "label": "活下去", "value": "活下去", "description": "只想平安度日，不争不抢" },
+        { "label": "往上爬", "value": "往上爬", "description": "要成为后宫最有权势的女人" },
+        { "label": "报仇雪恨", "value": "报仇雪恨", "description": "入宫是为了查清家族冤案" },
+        { "label": "找到出路", "value": "找到出路", "description": "想找到离开皇宫的方法" }
+      ]
+    },
+    {
+      "step": "初始阵营倾向",
+      "description": "你对宫中两大势力的第一印象",
+      "options": [
+        { "label": "倾向贵妃", "value": "倾向贵妃", "description": "贵妃势力大，跟着她比较安全" },
+        { "label": "倾向皇后", "value": "倾向皇后", "description": "皇后才是正统，虽然势弱但名正言顺" },
+        { "label": "保持中立", "value": "保持中立", "description": "不站队，谁也不得罪" },
+        { "label": "自成一派", "value": "自成一派", "description": "不依附任何人，靠自己闯出一片天" }
+      ]
+    },
+    {
+      "step": "情欲浓度",
+      "options": [
+        { "label": "纯权谋向", "value": "纯权谋向：无感情线，专注政治博弈" },
+        { "label": "隐晦暧昧", "value": "隐晦暧昧：有情感暗流但点到为止" },
+        { "label": "情感纠葛", "value": "情感纠葛：有多条感情线交织" }
+      ]
+    }
+  ]
+}
