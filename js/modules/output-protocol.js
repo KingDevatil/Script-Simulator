@@ -14,11 +14,17 @@ export function buildOutputProtocol(script, { opening = false } = {}) {
   parts.push('  "keyEvent": null,');
   parts.push('  "stageHint": null');
   parts.push('}');
+  parts.push('options 最多 4 个，少于 4 个也可以，绝对不要超过 4 个。');
+  parts.push('不要为了凑数生成相似选项；每个选项都必须有明显不同的行动偏向。');
+  parts.push('优先让选项覆盖不同策略，例如：坦诚沟通、回避拖延、试探观察、主动推进、示弱安抚、强硬切断。');
+  parts.push('不同选项之间不能只是语气轻重不同，必须在目标、态度或风险取向上有实质差异。');
   if (!opening) {
-    parts.push('options 必须有 3-4 个，体现不同态度和策略（主动/被动、坦诚/隐瞒、进攻/退缩）。');
+    parts.push('常规情况下给 3-4 个选项；如果当前场景天然选择空间很小，可以只给 2 个，但仍要保持偏向差异。');
     parts.push('values 填写本轮后的绝对值，不要填写增量；数值必须在各自 range 内。');
     parts.push('keyEvent 只有发生重大转折、冲突或情感爆发时才填字符串，否则为 null。');
     parts.push('stageHint 只是剧情阶段建议；不确定时填 null。');
+  } else {
+    parts.push('开场事件后的首轮选项也必须遵守以上规则：最多 4 个，并且每个选项偏向明显不同。');
   }
   parts.push(`values 只能使用这些维度 ID：${(script.dimensions || []).map(d => d.id).join(', ') || '无'}`);
   return parts;

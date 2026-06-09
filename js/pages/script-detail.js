@@ -1,6 +1,6 @@
 import { getScript, saveScript } from '../db.js';
 import { navigate } from '../router.js';
-import { parseScript } from '../modules/script-engine.js';
+import { getEventStages, parseScript } from '../modules/script-engine.js';
 import { formatValidationResult, validateScript } from '../modules/script-validator.js';
 import { showAlert, showConfirm } from '../modules/dialog.js';
 
@@ -207,9 +207,14 @@ function renderEvents() {
   events.forEach((e, i) => {
     const editing = editingItems[`event_${i}`];
     if (editing) {
+      const stageText = formatEventStageInput(e);
       html += `<div class="card" style="border-color:var(--accent)">
         <div class="form-group"><label class="form-label">事件名称</label><input class="form-input" value="${esc(e.name || '')}" data-event="${i}" data-subfield="name"></div>
-        <div class="form-group"><label class="form-label">所属阶段 (0-${(script.stages?.length || 1) - 1})</label><input class="form-input" type="number" min="0" value="${e.stage ?? 0}" data-event="${i}" data-subfield="stage"></div>
+        <div class="form-group">
+          <label class="form-label">所属阶段</label>
+          <input class="form-input" value="${esc(stageText)}" data-event="${i}" data-subfield="stage_targets" placeholder="留空=全阶段；单个如 0；多个如 0,2,3">
+          <div style="color:var(--text-dim);font-size:11px;margin-top:6px">支持单个阶段、多个阶段，留空表示全阶段。当前阶段范围：0-${(script.stages?.length || 1) - 1}</div>
+        </div>
         <div class="form-group"><label class="form-label">触发条件</label>
           ${renderConditionEditor(e.trigger || {}, `event_${i}_trigger`)}
         </div>
@@ -247,11 +252,12 @@ function renderEvents() {
       </div>`;
     } else {
       const condStr = formatCondition(e.trigger);
+      const stageLabel = formatEventStageLabel(e);
       html += `<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
             <strong>${esc(e.name || '未命名')}</strong>
-            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">阶段 ${e.stage ?? 0} &middot; ${condStr}</div>
+            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${stageLabel}${condStr ? ` &middot; ${condStr}` : ''}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
             <button class="btn btn-sm btn-secondary" data-action="event-edit" data-idx="${i}">编辑</button>
@@ -470,6 +476,17 @@ function renderOptionEditor(options, setupIdx) {
   html += `</div>
     <button class="btn btn-sm btn-secondary" data-action="opt-add" data-setup-idx="${setupIdx}" style="margin-top:6px;font-size:12px">+ 添加选项</button>`;
   return html;
+}
+
+function formatEventStageInput(event) {
+  const stages = getEventStages(event);
+  return stages.length ? stages.join(',') : '';
+}
+
+function formatEventStageLabel(event) {
+  const stages = getEventStages(event);
+  if (!stages.length) return '全阶段';
+  return `阶段 ${stages.join('、')}`;
 }
 
 // 格式化条件为可读文本
@@ -704,7 +721,7 @@ function attachEvents(container) {
 
     // ── 事件 ──
     else if (action === 'event-add') {
-      script.events.push({ name: '', stage: 0, trigger: {}, description: '' });
+      script.events.push({ name: '', trigger: {}, description: '' });
       const k = `event_${script.events.length - 1}`;
       editingItems[k] = true;
       newItems.add(k);
@@ -923,16 +940,28 @@ function saveEventFromDOM(container, i) {
   const once = !!container.querySelector(`[data-event="${i}"][data-subfield="once"]`)?.checked;
   const maxTriggersRaw = get('maxTriggers');
   const maxTriggers = maxTriggersRaw === '' || maxTriggersRaw === undefined ? null : Number(maxTriggersRaw);
+  const stageTargets = parseEventStageTargets(get('stage_targets'));
   script.events[i] = {
     name: get('name') || '',
-    stage: Number(get('stage') || 0),
     trigger: collectConditions(`event_${i}_trigger`),
     description: get('description') || '',
     ...(once ? { once } : {}),
     ...(maxTriggers != null && maxTriggers > 0 ? { maxTriggers } : {}),
     ...(cooldown > 0 ? { cooldown } : {}),
-    ...(Object.keys(effects).length > 0 ? { effects } : {})
+    ...(Object.keys(effects).length > 0 ? { effects } : {}),
+    ...(stageTargets.length === 1 ? { stage: stageTargets[0] } : {}),
+    ...(stageTargets.length > 1 ? { stages: stageTargets } : {})
   };
+}
+
+function parseEventStageTargets(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return [];
+  return [...new Set(raw
+    .split(',')
+    .map(part => Number(part.trim()))
+    .filter(Number.isInteger)
+  )].sort((a, b) => a - b);
 }
 
 function saveStageFromDOM(container, i) {

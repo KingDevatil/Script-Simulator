@@ -15,6 +15,21 @@ export function parseScript(json) {
   };
 }
 
+export function getEventStages(event) {
+  if (!event || typeof event !== 'object') return [];
+  if (Array.isArray(event.stages)) {
+    return [...new Set(event.stages.map(v => Number(v)).filter(Number.isInteger))];
+  }
+  if (event.stage === undefined || event.stage === null || event.stage === '') return [];
+  return Number.isInteger(Number(event.stage)) ? [Number(event.stage)] : [];
+}
+
+export function isEventActiveInStage(event, currentStage) {
+  const stages = getEventStages(event);
+  if (!stages.length) return true;
+  return stages.includes(Number(currentStage));
+}
+
 export function createSeed() {
   if (globalThis.crypto?.getRandomValues) {
     const data = new Uint32Array(1);
@@ -135,7 +150,7 @@ export function checkEventTriggers(events, values, currentStage, activeEffects, 
   const triggered = [];
   for (const event of events) {
     const state = eventState[event.name] || { count: 0 };
-    if (event.stage !== undefined && event.stage !== currentStage) continue;
+    if (!isEventActiveInStage(event, currentStage)) continue;
     if (!event.trigger) continue;
     if (event.once && state.count > 0) continue;
     if (event.maxTriggers !== undefined && state.count >= event.maxTriggers) continue;

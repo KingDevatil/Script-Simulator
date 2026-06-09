@@ -24,8 +24,21 @@ export function validateScript(script) {
 
   events.forEach((event, index) => {
     if (!event.name) warnings.push(`事件 ${index + 1} 缺少名称`);
-    if (event.stage !== undefined && !isStageIndex(event.stage, stages.length)) {
-      errors.push(`事件 ${event.name || index + 1} 的 stage 超出阶段范围`);
+    const eventStages = getEventStages(event);
+    if (event.stage !== undefined && event.stages !== undefined) {
+      warnings.push(`事件 ${event.name || index + 1} 同时包含 stage 和 stages，将优先使用 stages`);
+    }
+    if (event.stages !== undefined && !Array.isArray(event.stages)) {
+      errors.push(`事件 ${event.name || index + 1} 的 stages 必须是数组`);
+    }
+    if (Array.isArray(event.stages) && event.stages.length === 0) {
+      warnings.push(`事件 ${event.name || index + 1} 的 stages 为空，将视为全阶段`);
+    }
+    if (event.stages !== undefined && Array.isArray(event.stages) && event.stages.some(v => !Number.isInteger(Number(v)))) {
+      errors.push(`事件 ${event.name || index + 1} 的 stages 必须全部是整数`);
+    }
+    if (eventStages.some(stage => !isStageIndex(stage, stages.length))) {
+      errors.push(`事件 ${event.name || index + 1} 的阶段配置超出阶段范围`);
     }
     ['cooldown', 'maxTriggers'].forEach(key => {
       if (event[key] !== undefined && (!Number.isInteger(Number(event[key])) || Number(event[key]) < 0)) {
@@ -48,6 +61,14 @@ export function validateScript(script) {
   });
 
   return { ok: errors.length === 0, errors, warnings };
+}
+
+function getEventStages(event) {
+  if (Array.isArray(event?.stages)) {
+    return [...new Set(event.stages.map(v => Number(v)).filter(Number.isInteger))];
+  }
+  if (event?.stage === undefined || event.stage === null || event.stage === '') return [];
+  return Number.isInteger(Number(event.stage)) ? [Number(event.stage)] : [];
 }
 
 export function assertValidScript(script) {

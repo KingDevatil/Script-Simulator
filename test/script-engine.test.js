@@ -67,6 +67,18 @@ test('events obey once, cooldown and maxTriggers', () => {
   assert.equal(checkEventTriggers([repeat], session.values, 0, session.activeEffects, session.eventState).length, 0);
 });
 
+test('events support multiple stages and all stages', () => {
+  const multiStage = { name: 'M', stages: [0, 2], trigger: { trust: { min: 10 } } };
+  const allStage = { name: 'A', trigger: { trust: { min: 10 } } };
+  const values = { trust: 20 };
+
+  assert.equal(checkEventTriggers([multiStage], values, 0, [], {}).length, 1);
+  assert.equal(checkEventTriggers([multiStage], values, 1, [], {}).length, 0);
+  assert.equal(checkEventTriggers([multiStage], values, 2, [], {}).length, 1);
+  assert.equal(checkEventTriggers([allStage], values, 0, [], {}).length, 1);
+  assert.equal(checkEventTriggers([allStage], values, 2, [], {}).length, 1);
+});
+
 test('stage advancement can cross multiple stages and endings are detected', () => {
   const values = { trust: 50, danger: 10 };
   assert.equal(advanceStage(script.stages, values, 0), 2);
