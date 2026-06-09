@@ -852,8 +852,10 @@ function attachEvents(container) {
     // ── 条件 ──
     else if (action === 'cond-add') {
       const prefix = btn.dataset.condPrefix;
-      const [module, idxStr] = prefix.split('_');
-      const i = parseInt(idxStr);
+      // prefix格式: event_0_trigger 或 stage_0_transition 或 ending_0_condition
+      const parts = prefix.split('_');
+      const module = parts[0];
+      const i = parseInt(parts[1]);
       
       // 获取当前条件并转换为数组格式
       let currentCond;
@@ -869,17 +871,17 @@ function attachEvents(container) {
         // 旧格式转换
         for (const [dimId, val] of Object.entries(currentCond)) {
           if (dimId === 'op' || dimId === 'conditions') continue;
-          conditions.push({ dim: dimId, ...val });
+          if (typeof val === 'object') {
+            conditions.push({ dim: dimId, min: val.min, max: val.max, probability: val.probability });
+          }
         }
       }
       
       // 添加空条件
       conditions.push({ dim: '', min: undefined, max: undefined, probability: undefined });
       
-      // 保存回对象
-      const newCond = conditions.length === 1 
-        ? { [conditions[0].dim || '']: { min: conditions[0].min, max: conditions[0].max, probability: conditions[0].probability } }
-        : { op: 'and', conditions };
+      // 保存回对象（多条件用新格式）
+      const newCond = { op: 'and', conditions };
       
       if (module === 'event') script.events[i].trigger = newCond;
       else if (module === 'stage') script.stages[i].transition = newCond;
@@ -890,8 +892,10 @@ function attachEvents(container) {
     } else if (action === 'cond-remove') {
       const prefix = btn.dataset.condPrefix;
       const ci = parseInt(btn.dataset.condIdx);
-      const [module, idxStr] = prefix.split('_');
-      const i = parseInt(idxStr);
+      // prefix格式: event_0_trigger 或 stage_0_transition 或 ending_0_condition
+      const parts = prefix.split('_');
+      const module = parts[0];
+      const i = parseInt(parts[1]);
       
       // 获取当前条件
       let currentCond;
@@ -906,7 +910,9 @@ function attachEvents(container) {
       } else if (currentCond && typeof currentCond === 'object') {
         for (const [dimId, val] of Object.entries(currentCond)) {
           if (dimId === 'op' || dimId === 'conditions') continue;
-          conditions.push({ dim: dimId, ...val });
+          if (typeof val === 'object') {
+            conditions.push({ dim: dimId, min: val.min, max: val.max, probability: val.probability });
+          }
         }
       }
       
@@ -919,8 +925,6 @@ function attachEvents(container) {
       let newCond;
       if (conditions.length === 0) {
         newCond = {};
-      } else if (conditions.length === 1) {
-        newCond = { [conditions[0].dim || '']: { min: conditions[0].min, max: conditions[0].max, probability: conditions[0].probability } };
       } else {
         const opEl = document.querySelector(`[data-cond-op="${prefix}"]:checked`);
         newCond = { op: opEl?.value || 'and', conditions };
