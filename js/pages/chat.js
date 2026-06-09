@@ -5,6 +5,7 @@ import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
 import { addEventEffects, advanceStage, checkEnding, checkEventTriggers, extractNarrative, extractValues, processEffects } from '../modules/script-engine.js';
 import { buildRepairPrompt, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
+import { showConfirm } from '../modules/dialog.js';
 
 let engine = null;
 let panelOpen = false;
@@ -422,8 +423,8 @@ export async function render(container, { sessionId }) {
     engine.save();
     navigate('home');
   };
-  container.querySelector('#btn-menu').onclick = () => {
-    if (confirm('返回首页？当前进度会自动保存。')) {
+  container.querySelector('#btn-menu').onclick = async () => {
+    if (await showConfirm('返回首页？当前进度会自动保存。', { title: '返回首页', confirmText: '返回' })) {
       engine.save();
       navigate('home');
     }

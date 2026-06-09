@@ -1,5 +1,6 @@
 import { getAllScripts, getAllSessions, deleteScript, deleteSession } from '../db.js';
 import { navigate } from '../router.js';
+import { showAlert, showConfirm } from '../modules/dialog.js';
 
 export async function render(container) {
   const scripts = await getAllScripts();
@@ -69,11 +70,7 @@ export async function render(container) {
         </div>
       </div>`;
     container.querySelector('#btn-create-empty').onclick = async () => {
-      const { parseScript } = await import('../modules/script-engine.js');
-      const { saveScript } = await import('../db.js');
-      const newScript = parseScript({ name: '未命名剧本', description: '' });
-      await saveScript(newScript);
-      navigate('scriptDetail', { scriptId: newScript.id });
+      navigate('scriptDetail', { draft: true });
     };
     container.querySelector('#btn-sample').onclick = async () => {
       try {
@@ -89,7 +86,7 @@ export async function render(container) {
         await saveScript(parseScript(json));
         render(container);
       } catch (err) {
-        alert('加载失败: ' + err.message);
+        await showAlert('加载失败: ' + err.message, { title: '加载失败', tone: 'danger' });
       }
     };
   } else {
@@ -112,7 +109,7 @@ export async function render(container) {
         <div class="card-actions">
           <button class="btn btn-sm btn-primary" data-action="play">开始</button>
           <button class="btn btn-sm btn-secondary" data-action="edit">编辑</button>
-          <button class="btn btn-sm btn-ghost" data-action="delete">删除</button>
+          <button class="btn btn-sm btn-danger" data-action="delete">删除</button>
         </div>
       </article>
     `).join('');
@@ -135,7 +132,7 @@ export async function render(container) {
         <div class="card-actions">
           <button class="btn btn-sm btn-primary" data-action="resume">继续</button>
           <button class="btn btn-sm btn-secondary" data-action="branch">复制分支</button>
-          <button class="btn btn-sm btn-ghost" data-action="delete">删除</button>
+          <button class="btn btn-sm btn-danger" data-action="delete">删除</button>
         </div>
       </article>
     `).join('');
@@ -143,11 +140,7 @@ export async function render(container) {
 
   container.querySelector('#btn-settings').onclick = () => navigate('settings');
   container.querySelector('#btn-create').onclick = async () => {
-    const { parseScript } = await import('../modules/script-engine.js');
-    const { saveScript } = await import('../db.js');
-    const newScript = parseScript({ name: '未命名剧本', description: '' });
-    await saveScript(newScript);
-    navigate('scriptDetail', { scriptId: newScript.id });
+    navigate('scriptDetail', { draft: true });
   };
   container.querySelector('#btn-import').onclick = () => container.querySelector('#file-input').click();
   container.querySelector('#file-input').onchange = e => handleImport(e);
@@ -159,7 +152,7 @@ export async function render(container) {
     const action = e.target.dataset.action;
     if (action === 'play') navigate('setup', { scriptId: id });
     else if (action === 'edit') navigate('scriptDetail', { scriptId: id });
-    else if (action === 'delete' && confirm('确定删除这个剧本吗？相关会话不会自动删除。')) {
+    else if (action === 'delete' && await showConfirm('确定删除这个剧本吗？相关会话不会自动删除。', { title: '删除剧本', tone: 'danger', confirmText: '删除' })) {
       await deleteScript(id);
       render(container);
     }
@@ -172,7 +165,7 @@ export async function render(container) {
     const action = e.target.dataset.action;
     if (action === 'resume') navigate('chat', { sessionId: id });
     else if (action === 'branch') handleBranch(id);
-    else if (action === 'delete' && confirm('确定删除这个会话吗？此操作无法撤销。')) {
+    else if (action === 'delete' && await showConfirm('确定删除这个会话吗？此操作无法撤销。', { title: '删除会话', tone: 'danger', confirmText: '删除' })) {
       await deleteSession(id);
       render(container);
     }
@@ -207,11 +200,11 @@ async function handleImport(e) {
       err.validation = validation;
       throw err;
     }
-    if (validation.warnings.length && !confirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
+    if (validation.warnings.length && !await showConfirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`, { title: '导入警告', confirmText: '继续导入' })) return;
     await saveScript(script);
     navigate('home');
   } catch (err) {
-    alert(formatImportError(err, text));
+    await showAlert(formatImportError(err, text), { title: '导入失败', tone: 'danger' });
   }
 }
 

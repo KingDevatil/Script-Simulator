@@ -10,15 +10,22 @@
   <title>剧本模拟器</title>
   <link rel="manifest" href="/manifest.json">
   <style>:root {
-  --bg: #1a1a2e;
-  --bg-card: #16213e;
-  --bg-input: #0f3460;
-  --text: #e6e6e6;
-  --text-dim: #8892a4;
-  --accent: #e94560;
-  --accent-soft: rgba(233, 69, 96, 0.15);
-  --border: #2a2a4a;
-  --radius: 12px;
+  --bg: #10131a;
+  --bg-elevated: #171b24;
+  --bg-card: #1d2330;
+  --bg-input: #111722;
+  --text: #f3f0e8;
+  --text-dim: #a4acb8;
+  --text-muted: #747f8f;
+  --accent: #ff5f6d;
+  --accent-strong: #ff7a59;
+  --accent-soft: rgba(255, 95, 109, 0.14);
+  --success: #65c18c;
+  --warning: #f0b84f;
+  --border: rgba(255, 255, 255, 0.1);
+  --border-strong: rgba(255, 255, 255, 0.18);
+  --shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
+  --radius: 8px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --content-max: 960px;
   --reader-max: 760px;
@@ -29,7 +36,9 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #0d0d1a;
+  background:
+    radial-gradient(circle at top left, rgba(255, 95, 109, 0.12), transparent 34%),
+    linear-gradient(135deg, #0b0d12 0%, #151922 56%, #10131a 100%);
   color: var(--text);
   min-height: 100vh;
   min-height: 100dvh;
@@ -41,7 +50,9 @@ body {
   width: 100%;
   height: 100vh;
   height: 100dvh;
-  background: var(--bg);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0) 180px),
+    var(--bg);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -114,6 +125,7 @@ body {
   padding-bottom: calc(16px + var(--safe-bottom));
   width: 100%;
   min-height: 0;
+  scrollbar-color: rgba(255,255,255,0.2) transparent;
   scrollbar-gutter: stable both-edges;
 }
 
@@ -124,12 +136,14 @@ body {
   padding: 12px 16px;
   gap: 12px;
   border-bottom: 1px solid var(--border);
+  background: rgba(16, 19, 26, 0.9);
+  backdrop-filter: blur(14px);
   flex-shrink: 0;
   min-height: 57px;
 }
 .header h1 {
   font-size: 18px;
-  font-weight: 600;
+  font-weight: 700;
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -137,34 +151,39 @@ body {
   white-space: nowrap;
 }
 .header-btn {
-  background: none; border: none; color: var(--text-dim);
+  background: rgba(255,255,255,0.035); border: 1px solid transparent; color: var(--text-dim);
   font-size: 20px; cursor: pointer; padding: 4px 8px;
   min-width: var(--tap-size);
   min-height: var(--tap-size);
-  border-radius: 10px;
+  border-radius: var(--radius);
+  transition: background 0.18s, border-color 0.18s, color 0.18s, transform 0.18s;
 }
-.header-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.header-btn:hover { color: var(--text); background: rgba(255,255,255,0.075); border-color: var(--border); }
+.header-btn:active { transform: translateY(1px); }
 
 /* ===== Cards ===== */
 .card {
-  background: var(--bg-card);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01)), var(--bg-card);
   border-radius: var(--radius);
   padding: 16px;
   margin-bottom: 12px;
   border: 1px solid var(--border);
   cursor: pointer;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s, transform 0.2s, box-shadow 0.2s;
 }
-.card:hover { border-color: var(--accent); }
-.card h3 { font-size: 16px; margin-bottom: 6px; }
+.card:hover { border-color: rgba(255, 95, 109, 0.55); box-shadow: 0 10px 28px rgba(0,0,0,0.18); transform: translateY(-1px); }
+.card h3 { font-size: 16px; margin-bottom: 6px; letter-spacing: 0; }
 .card p { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
 .card-tag {
-  display: inline-block;
-  background: var(--accent-soft);
-  color: var(--accent);
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  background: rgba(255,255,255,0.055);
+  color: var(--text-dim);
   font-size: 11px;
   padding: 2px 8px;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
   margin-top: 8px;
 }
 
@@ -186,12 +205,23 @@ body {
   text-align: center;
   white-space: normal;
 }
-.btn-primary { background: var(--accent); color: #fff; }
-.btn-primary:hover { filter: brightness(1.1); }
-.btn-secondary { background: var(--bg-input); color: var(--text); border: 1px solid var(--border); }
-.btn-secondary:hover { border-color: var(--accent); }
+.btn-primary { background: linear-gradient(135deg, var(--accent), var(--accent-strong)); color: #fff; box-shadow: 0 10px 22px rgba(255, 95, 109, 0.22); }
+.btn-primary:hover { filter: brightness(1.08); box-shadow: 0 12px 28px rgba(255, 95, 109, 0.3); }
+.btn-secondary { background: rgba(255,255,255,0.045); color: var(--text); border: 1px solid var(--border); }
+.btn-secondary:hover { border-color: rgba(255, 95, 109, 0.52); background: rgba(255,255,255,0.07); }
 .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid transparent; }
 .btn-ghost:hover { color: var(--accent); background: var(--accent-soft); }
+.btn-danger {
+  background: rgba(255, 95, 109, 0.055);
+  color: #ffb0a0;
+  border: 1px solid rgba(255, 95, 109, 0.42);
+}
+.btn-danger:hover {
+  color: #fff;
+  background: rgba(255, 95, 109, 0.16);
+  border-color: rgba(255, 95, 109, 0.7);
+}
+.btn:active { transform: translateY(1px); }
 .btn:disabled,
 .chat-send:disabled,
 .chat-option-btn:disabled,
@@ -206,7 +236,15 @@ body {
 /* ===== Home ===== */
 .home-header {
   align-items: flex-start;
-  padding: 16px;
+  padding: 18px 16px;
+}
+.home-header > div {
+  flex: 1;
+  min-width: 0;
+}
+.home-header #btn-settings {
+  flex-shrink: 0;
+  margin-left: auto;
 }
 .home-header h1 { line-height: 1.2; }
 .home-header p {
@@ -217,17 +255,17 @@ body {
 .home-scroll {
   display: flex;
   flex-direction: column;
-  gap: 22px;
+  gap: 24px;
 }
 .home-summary {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
 }
 .summary-item {
   min-width: 0;
-  padding: 12px;
-  background: var(--bg-card);
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012)), var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
@@ -235,7 +273,7 @@ body {
 .summary-value {
   display: block;
   color: var(--text);
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
   line-height: 1.2;
   overflow: hidden;
@@ -245,7 +283,7 @@ body {
 .summary-label {
   display: block;
   margin-top: 4px;
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-size: 12px;
 }
 .home-section {
@@ -261,8 +299,10 @@ body {
 }
 .section-toolbar h2 {
   color: var(--text);
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 .toolbar-actions {
   display: flex;
@@ -288,7 +328,7 @@ body {
   cursor: default;
 }
 .card-meta-line {
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-size: 11px;
   margin-bottom: -6px;
 }
@@ -325,8 +365,8 @@ body {
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-  padding: 20px;
-  background: var(--bg-card);
+  padding: 22px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.01)), var(--bg-elevated);
   border: 1px dashed var(--border);
   border-radius: var(--radius);
 }
@@ -334,7 +374,7 @@ body {
   padding: 3px 8px;
   border-radius: 999px;
   background: var(--accent-soft);
-  color: var(--accent);
+  color: #ffb0a0;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -359,9 +399,23 @@ body {
   }
   .summary-wide { grid-column: auto; }
   .home-card {
-    flex-direction: row;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    justify-content: space-between;
+    align-items: center;
+    column-gap: 16px;
+    row-gap: 10px;
+  }
+  .card-meta-line {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+  .card-main {
+    grid-column: 1;
+  }
+  .card-actions {
+    grid-column: 2;
+    grid-row: 2;
   }
   .card-actions {
     flex-shrink: 0;
@@ -371,7 +425,7 @@ body {
 
 /* ===== Form ===== */
 .form-group { margin-bottom: 20px; }
-.form-label { display: block; font-size: 13px; color: var(--text-dim); margin-bottom: 8px; }
+.form-label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 8px; font-weight: 650; }
 .form-input {
   width: 100%;
   padding: 12px 16px;
@@ -381,12 +435,23 @@ body {
   color: var(--text);
   font-size: 15px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
   min-height: var(--tap-size);
 }
-.form-input:focus { border-color: var(--accent); }
+.form-input:focus { border-color: rgba(255, 95, 109, 0.72); background: #121a28; box-shadow: 0 0 0 3px rgba(255, 95, 109, 0.12); }
 .form-input::placeholder { color: var(--text-dim); }
-select.form-input { appearance: none; }
+select.form-input {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--text-dim) 50%),
+    linear-gradient(135deg, var(--text-dim) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 50%,
+    calc(100% - 12px) 50%;
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 36px;
+}
 textarea.form-input { line-height: 1.55; resize: vertical; }
 
 /* ===== Setup Wizard ===== */
@@ -395,13 +460,13 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 24px 20px;
+  padding: 28px 20px;
   flex: 1;
   overflow-y: auto;
   width: 100%;
 }
-.wizard-step h2 { font-size: 22px; margin-bottom: 8px; }
-.wizard-step p { color: var(--text-dim); margin-bottom: 24px; font-size: 14px; }
+.wizard-step h2 { font-size: 24px; margin-bottom: 8px; line-height: 1.25; }
+.wizard-step p { color: var(--text-dim); margin-bottom: 24px; font-size: 14px; max-width: 560px; }
 .wizard-options { width: 100%; max-width: 400px; }
 .wizard-option {
   display: block;
@@ -418,7 +483,7 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
   transition: all 0.2s;
 }
 .wizard-option:hover, .wizard-option.selected {
-  border-color: var(--accent);
+  border-color: rgba(255, 95, 109, 0.68);
   background: var(--accent-soft);
 }
 .wizard-progress {
@@ -431,7 +496,7 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
   border-radius: 50%;
   background: var(--border);
 }
-.wizard-dot.active { background: var(--accent); }
+.wizard-dot.active { background: var(--accent); box-shadow: 0 0 0 5px rgba(255, 95, 109, 0.12); }
 .wizard-dot.done { background: var(--text-dim); }
 .wizard-nav {
   display: flex;
@@ -584,7 +649,9 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
   flex-shrink: 0;
   position: sticky;
   bottom: 0;
-  background: var(--bg);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0) 180px),
+    var(--bg);
   z-index: 5;
 }
 .chat-input-bar > * {
@@ -740,6 +807,71 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
 .empty-state p { font-size: 14px; margin-bottom: 20px; }
 
 /* ===== Editor Sections ===== */
+.editor-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.editor-back-btn,
+.editor-action-btn,
+.editor-save-btn {
+  width: auto;
+  min-width: 0;
+  padding: 0 13px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+.editor-back-btn {
+  color: var(--text);
+}
+.editor-action-btn {
+  color: var(--text-dim);
+}
+.editor-save-btn {
+  color: #fff;
+  border-color: rgba(255, 95, 109, 0.38);
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 10px 22px rgba(255, 95, 109, 0.22);
+}
+.editor-save-btn:hover {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+#app[data-page="editor"]:has(.editor-section .card[style*="border-color:var(--accent)"])::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 19;
+  background: rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(4px);
+}
+.editor-section .card[style*="border-color:var(--accent)"] {
+  position: fixed;
+  left: 50%;
+  top: 76px;
+  z-index: 20;
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100dvh - 104px);
+  margin: 0;
+  overflow-y: auto;
+  cursor: default;
+  transform: translateX(-50%);
+  box-shadow: var(--shadow);
+}
+.editor-section .card[style*="border-color:var(--accent)"]:hover {
+  transform: translateX(-50%);
+}
+.editor-section .card[style*="border-color:var(--accent)"] > div:last-child {
+  position: sticky;
+  bottom: -16px;
+  margin: 16px -16px -16px;
+  padding: 12px 16px;
+  background: rgba(29, 35, 48, 0.96);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+}
 .editor-section {
   margin-bottom: 8px;
   border: 1px solid var(--border);
@@ -1029,33 +1161,201 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
     max-width: var(--content-max);
   }
 }
+
+/* ===== Visual Refresh Layer ===== */
+.chat-nav-btn {
+  background: rgba(29, 35, 48, 0.88);
+}
+.chat-nav-btn:hover {
+  border-color: rgba(255, 95, 109, 0.58);
+}
+.msg-ai {
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012)), var(--bg-card);
+}
+.msg-player {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 10px 28px rgba(255, 95, 109, 0.16);
+}
+.msg-values {
+  background: rgba(255,255,255,0.055);
+  border: 1px solid var(--border);
+}
+.timeline-dot {
+  background: var(--accent-strong);
+}
+.chat-input-bar {
+  background: rgba(16, 19, 26, 0.94);
+  backdrop-filter: blur(14px);
+}
+.chat-option-btn {
+  background: rgba(255,255,255,0.045);
+  border-radius: 999px;
+}
+.chat-option-btn:hover {
+  border-color: rgba(255, 95, 109, 0.58);
+}
+.chat-textarea:focus {
+  border-color: rgba(255, 95, 109, 0.68);
+  box-shadow: 0 0 0 3px rgba(255, 95, 109, 0.12);
+}
+.chat-send {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  box-shadow: 0 10px 22px rgba(255, 95, 109, 0.22);
+}
+.numerical-panel {
+  background: rgba(23, 27, 36, 0.96);
+}
+.numerical-toggle {
+  background: rgba(255,255,255,0.018);
+}
+.num-row {
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.settings-section {
+  margin-bottom: 18px;
+}
+.settings-section h3 {
+  color: var(--text);
+  margin-bottom: 14px;
+}
+.typing-indicator {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.editor-section {
+  background: rgba(29, 35, 48, 0.72);
+}
+.section-header {
+  background: rgba(255,255,255,0.025);
+}
+.section-header:hover {
+  background: rgba(255,255,255,0.055);
+}
+.validation-panel {
+  background: var(--bg-elevated);
+}
+.validation-panel.ok {
+  border-color: rgba(101, 193, 140, 0.5);
+}
+.validation-panel.warning {
+  border-color: rgba(240, 184, 79, 0.55);
+}
+.field-tag {
+  background: rgba(255,255,255,0.055);
+  color: #ffb0a0;
+  border: 1px solid var(--border);
+}
+
+/* ===== Dialog ===== */
+.dialog-host {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+.dialog-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(7, 10, 16, 0.68);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+.dialog-panel {
+  width: min(460px, calc(100vw - 32px));
+  background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.015)), var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.34);
+  overflow: hidden;
+}
+.dialog-default {
+  border-color: var(--border-strong);
+}
+.dialog-danger {
+  border-color: rgba(255, 95, 109, 0.42);
+}
+.dialog-body {
+  padding: 20px 20px 16px;
+}
+.dialog-title {
+  font-size: 18px;
+  line-height: 1.25;
+  margin-bottom: 10px;
+}
+.dialog-message {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px 20px;
+  background: rgba(255,255,255,0.02);
+}
+
+@media (max-width: 767px) {
+  .dialog-overlay {
+    padding: 14px;
+    align-items: flex-end;
+  }
+  .dialog-panel {
+    width: 100%;
+  }
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+  .dialog-actions .btn {
+    width: 100%;
+  }
+}
 </style>
 </head>
 <body>
   <div id="app"></div>
   <script>window.__SAMPLE_SCRIPT__ = {};</script>
-  <script>(()=>{var Pt=Object.defineProperty;var qe=(e,a)=>()=>(e&&(a=e(e=0)),a);var Te=(e,a)=>{for(var n in a)Pt(e,n,{get:a[n],enumerable:!0})};var Y={};Te(Y,{deleteScript:()=>Ae,deleteSession:()=>De,getAllScripts:()=>je,getAllSessions:()=>Ce,getScript:()=>B,getSession:()=>Pe,getSessionsByScript:()=>Dt,getSetting:()=>q,init:()=>Oe,saveScript:()=>Le,saveSession:()=>ze,setSetting:()=>D});function Oe(){return new Promise((e,a)=>{let n=indexedDB.open(zt,1);n.onupgradeneeded=t=>{let s=t.target.result;s.objectStoreNames.contains("scripts")||s.createObjectStore("scripts",{keyPath:"id"}),s.objectStoreNames.contains("sessions")||s.createObjectStore("sessions",{keyPath:"id"}).createIndex("scriptId","scriptId",{unique:!1}),s.objectStoreNames.contains("settings")||s.createObjectStore("settings",{keyPath:"key"})},n.onsuccess=t=>{Ie=t.target.result,e(Ie)},n.onerror=t=>a(t.target.error)})}function P(e,a="readonly"){return Ie.transaction(e,a).objectStore(e)}function z(e){return new Promise((a,n)=>{e.onsuccess=()=>a(e.result),e.onerror=()=>n(e.error)})}async function je(){return z(P("scripts").getAll())}async function B(e){return z(P("scripts").get(e))}async function Le(e){return z(P("scripts","readwrite").put(e))}async function Ae(e){return z(P("scripts","readwrite").delete(e))}async function Ce(){return z(P("sessions").getAll())}async function Pe(e){return z(P("sessions").get(e))}async function ze(e){return z(P("sessions","readwrite").put(e))}async function De(e){return z(P("sessions","readwrite").delete(e))}async function Dt(e){let n=P("sessions").index("scriptId");return z(n.getAll(e))}async function q(e){let a=await z(P("settings").get(e));return a?a.value:null}async function D(e,a){return z(P("settings","readwrite").put({key:e,value:a}))}var zt,Ie,I=qe(()=>{zt="ScriptSimulator",Ie=null});var ce={};Te(ce,{addEventEffects:()=>Be,advanceStage:()=>ie,checkEnding:()=>re,checkEventTriggers:()=>Re,checkStageTransition:()=>it,clampValue:()=>ye,clampValues:()=>Je,createSeed:()=>nt,createSeededRandom:()=>at,evaluateCondition:()=>se,extractKeyEvents:()=>Fe,extractNarrative:()=>le,extractValues:()=>oe,initializeValues:()=>He,nextSeedValue:()=>he,parseScript:()=>te,processEffects:()=>Ve,resolveInitialValue:()=>st});function te(e){return{id:e.id||crypto.randomUUID(),name:e.name||"\u672A\u547D\u540D\u5267\u672C",description:e.description||"",cover:e.cover||"",rules:e.rules||{writing_style:"",forbidden:[],requirements:[]},dimensions:e.dimensions||[],characters:e.characters||[],events:e.events||[],stages:e.stages||[],endings:e.endings||[],setup:e.setup||[],createdAt:Date.now()}}function nt(){if(globalThis.crypto?.getRandomValues){let e=new Uint32Array(1);return globalThis.crypto.getRandomValues(e),e[0]||Date.now()}return Date.now()}function he(e){let a=Number(e)||1;a=a+1831565813>>>0;let n=Math.imul(a^a>>>15,1|a);return n^=n+Math.imul(n^n>>>7,61|n),{seed:a,value:((n^n>>>14)>>>0)/4294967296}}function at(e){let a=Number(e)||1;return()=>{let n=he(a);return a=n.seed,n.value}}function He(e=[],a=nt()){let n={},t=at(a);return e.forEach(s=>{n[s.id]=st(s.initial,t),n[s.id]=ye(n[s.id],s)}),{values:n,seed:a}}function st(e,a=Math.random){if(Array.isArray(e)){let t=Number(e[0]??50),s=Number(e[1]??t);if(!Number.isFinite(t)||!Number.isFinite(s))return 50;if(t===s)return Math.round(t);let i=Math.min(t,s),o=Math.max(t,s);return Math.round(i+a()*(o-i))}let n=Number(e);return Number.isFinite(n)?Math.round(n):50}function ye(e,a){let n=Number(a?.range?.[0]??-1/0),t=Number(a?.range?.[1]??1/0),s=Number(e);return Number.isFinite(s)?Math.max(n,Math.min(t,Math.round(s))):null}function Je(e,a=[]){let n=new Map(a.map(i=>[i.id,i])),t={},s=[];for(let[i,o]of Object.entries(e||{})){let l=n.get(i);if(!l)continue;let c=ye(o,l);c!==null&&(c!==Number(o)&&s.push(`\u7EF4\u5EA6 ${i} \u5DF2\u9650\u5236\u5230\u8303\u56F4 ${l.range?.[0]}-${l.range?.[1]}`),t[i]=c)}return{values:t,warnings:s}}function se(e,a,n=Math.random){if(!e)return!1;if(e.op){let t=(e.conditions||[]).map(s=>se(s,a,n));switch(e.op){case"and":return t.every(Boolean);case"or":return t.some(Boolean);case"not":return t.length?!t[0]:!1;default:return!1}}if(e.dim){let t=a[e.dim];return!(t===void 0||e.min!==void 0&&t<e.min||e.max!==void 0&&t>e.max||e.probability!==void 0&&n()>e.probability)}for(let[t,s]of Object.entries(e)){let i=a[t];if(i===void 0||s.min!==void 0&&i<s.min||s.max!==void 0&&i>s.max||s.probability!==void 0&&n()>s.probability)return!1}return!0}function Re(e,a,n,t,s={},i=Math.random){let o=new Set;t&&t.forEach(c=>{c.type==="cooldown"&&o.add(c.eventName)});let l=[];for(let c of e){let r=s[c.name]||{count:0};c.stage!==void 0&&c.stage!==n||c.trigger&&(c.once&&r.count>0||c.maxTriggers!==void 0&&r.count>=c.maxTriggers||o.has(c.name)||se(c.trigger,a,i)&&l.push(c))}return l}function Ve(e,a=[]){if(!e.activeEffects||e.activeEffects.length===0)return;let n=new Map(a.map(s=>[s.id,s])),t=[];e.activeEffects.forEach((s,i)=>{if(s.type==="sticky"&&s.dims)for(let[o,l]of Object.entries(s.dims)){let c=(e.values[o]||0)+l;e.values[o]=n.has(o)?ye(c,n.get(o)):c}s.remaining--,s.remaining<=0&&t.push(i)});for(let s=t.length-1;s>=0;s--)e.activeEffects.splice(t[s],1)}function Be(e,a){e.eventState=e.eventState||{};let n=e.eventState[a.name]||{count:0};n.count+=1,n.lastTriggeredAt=Date.now(),e.eventState[a.name]=n,e.activeEffects||(e.activeEffects=[]),a.effects?.sticky&&e.activeEffects.push({eventName:a.name,type:"sticky",dims:a.effects.sticky.dims||{},remaining:a.effects.sticky.duration||3});let t=a.cooldown||a.effects?.cooldown;t&&e.activeEffects.push({eventName:a.name,type:"cooldown",remaining:t})}function it(e,a,n){if(n>=e.length-1)return n;let t=e[n+1];return t?.transition&&se(t.transition,a)?n+1:n}function ie(e,a,n){let t=n;for(;t<(e||[]).length-1;){let s=it(e,a,t);if(s===t)break;t=s}return t}function re(e=[],a={}){return e.find(n=>se(n.condition,a))||null}function oe(e,a){let n={},t=e.match(/【数值更新】([\s\S]*?)(?=【|$)/);if(!t)return null;let s=t[1];for(let i of a){let o=new RegExp(`${i.name}\\s*[\uFF1A:]?\\s*(\\d+)`),l=s.match(o);l&&(n[i.id]=parseInt(l[1],10))}return Object.keys(n).length?n:null}function Fe(e){let a=e.match(/【关键事件】(.+)/);return a?a[1].trim():null}function le(e){return e.replace(/【选项】[\s\S]*$/,"").replace(/【数值更新】[\s\S]*$/,"").replace(/【关键事件】[\s\S]*$/,"").trim()}var H=qe(()=>{});var ct={};Te(ct,{assertValidScript:()=>Rt,formatValidationResult:()=>F,validateScript:()=>W});function W(e){let a=[],n=[],t=Array.isArray(e?.dimensions)?e.dimensions:[],s=Array.isArray(e?.characters)?e.characters:[],i=Array.isArray(e?.events)?e.events:[],o=Array.isArray(e?.stages)?e.stages:[],l=Array.isArray(e?.endings)?e.endings:[];(!e||typeof e!="object")&&a.push("\u5267\u672C\u5FC5\u987B\u662F JSON \u5BF9\u8C61"),e?.name||n.push("\u7F3A\u5C11\u5267\u672C\u540D\u79F0"),rt(t,"\u7EF4\u5EA6",a),rt(s,"\u89D2\u8272",a),s.some(r=>r.id==="player")||a.push("\u5FC5\u987B\u5305\u542B id \u4E3A player \u7684\u73A9\u5BB6\u89D2\u8272");let c=new Set(t.map(r=>r.id).filter(Boolean));return t.forEach((r,d)=>{r.id||a.push(`\u7EF4\u5EA6 ${d+1} \u7F3A\u5C11 id`),r.name||a.push(`\u7EF4\u5EA6 ${r.id||d+1} \u7F3A\u5C11\u540D\u79F0`),ot(r.range)||a.push(`\u7EF4\u5EA6 ${r.id||d+1} \u7684 range \u5FC5\u987B\u662F\u4E24\u4E2A\u6570\u5B57`),ot(r.initial)||n.push(`\u7EF4\u5EA6 ${r.id||d+1} \u7F3A\u5C11\u5408\u6CD5 initial\uFF0C\u5C06\u4F7F\u7528\u9ED8\u8BA4\u503C`)}),i.forEach((r,d)=>{r.name||n.push(`\u4E8B\u4EF6 ${d+1} \u7F3A\u5C11\u540D\u79F0`),r.stage!==void 0&&!Vt(r.stage,o.length)&&a.push(`\u4E8B\u4EF6 ${r.name||d+1} \u7684 stage \u8D85\u51FA\u9636\u6BB5\u8303\u56F4`),["cooldown","maxTriggers"].forEach(g=>{r[g]!==void 0&&(!Number.isInteger(Number(r[g]))||Number(r[g])<0)&&a.push(`\u4E8B\u4EF6 ${r.name||d+1} \u7684 ${g} \u5FC5\u987B\u662F\u975E\u8D1F\u6574\u6570`)}),r.once!==void 0&&typeof r.once!="boolean"&&a.push(`\u4E8B\u4EF6 ${r.name||d+1} \u7684 once \u5FC5\u987B\u662F\u5E03\u5C14\u503C`),$e(r.trigger,c,`\u4E8B\u4EF6 ${r.name||d+1} \u89E6\u53D1\u6761\u4EF6`,a),Bt(r.effects,c,`\u4E8B\u4EF6 ${r.name||d+1}`,a)}),o.forEach((r,d)=>{$e(r.transition,c,`\u9636\u6BB5 ${r.name||d+1} \u8FC7\u6E21\u6761\u4EF6`,a)}),l.forEach((r,d)=>{$e(r.condition,c,`\u7ED3\u5C40 ${r.name||d+1} \u6761\u4EF6`,a)}),{ok:a.length===0,errors:a,warnings:n}}function Rt(e){let a=W(e);if(!a.ok){let n=new Error(a.errors.join(`
-`));throw n.validation=a,n}return a}function F(e){let a=[];return e.errors?.length&&(a.push("\u9519\u8BEF:"),e.errors.forEach(n=>a.push(`- ${n}`))),e.warnings?.length&&(a.push("\u8B66\u544A:"),e.warnings.forEach(n=>a.push(`- ${n}`))),a.join(`
-`)||"\u6821\u9A8C\u901A\u8FC7"}function rt(e,a,n){let t=new Set;e.forEach((s,i)=>{s.id&&(t.has(s.id)&&n.push(`${a} id \u91CD\u590D: ${s.id}`),t.add(s.id),/^[A-Za-z_][A-Za-z0-9_-]*$/.test(s.id)||n.push(`${a} ${i+1} \u7684 id \u53EA\u80FD\u4F7F\u7528\u82F1\u6587\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u77ED\u6A2A\u7EBF\uFF0C\u5E76\u4E14\u4E0D\u80FD\u4EE5\u6570\u5B57\u5F00\u5934`))})}function ot(e){return Array.isArray(e)&&e.length===2&&e.every(a=>Number.isFinite(Number(a)))}function Vt(e,a){let n=Number(e);return Number.isInteger(n)&&n>=0&&(a===0||n<a)}function $e(e,a,n,t){if(!(!e||typeof e!="object"||!Object.keys(e).length)){if(e.op){if(["and","or","not"].includes(e.op)||t.push(`${n} \u4F7F\u7528\u672A\u77E5 op: ${e.op}`),!Array.isArray(e.conditions)){t.push(`${n} \u7684 conditions \u5FC5\u987B\u662F\u6570\u7EC4`);return}e.conditions.forEach((s,i)=>$e(s,a,`${n}.${i+1}`,t));return}if(e.dim){a.has(e.dim)||t.push(`${n} \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${e.dim}`),lt(e,n,t);return}for(let[s,i]of Object.entries(e))a.has(s)||t.push(`${n} \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${s}`),i&&typeof i=="object"&&lt(i,`${n}.${s}`,t)}}function lt(e,a,n){if(["min","max","probability"].forEach(t=>{e[t]!==void 0&&!Number.isFinite(Number(e[t]))&&n.push(`${a}.${t} \u5FC5\u987B\u662F\u6570\u5B57`)}),e.probability!==void 0){let t=Number(e.probability);(t<0||t>1)&&n.push(`${a}.probability \u5FC5\u987B\u5728 0 \u5230 1 \u4E4B\u95F4`)}}function Bt(e,a,n,t){let s=e?.sticky?.dims;if(!(!s||typeof s!="object"))for(let[i,o]of Object.entries(s))a.has(i)||t.push(`${n} \u7684\u6301\u7EED\u6548\u679C\u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${i}`),Number.isFinite(Number(o))||t.push(`${n} \u7684\u6301\u7EED\u6548\u679C ${i} \u5FC5\u987B\u662F\u6570\u5B57`)}var Ue=qe(()=>{});I();var Ht=()=>document.getElementById("app"),ve=null,tt={},Jt=new Set(["scriptDetail"]);function ee(e,a){tt[e]=a}function w(e,a={}){ve&&ve.destroy&&ve.destroy();let n=Ht();n.setAttribute("data-page",Jt.has(e)?"editor":"phone"),n.innerHTML="",ve={destroy:tt[e](n,a)?.destroy||null}}I();async function de(e){let a=await je(),n=await Ce(),t=[...n].sort((c,r)=>r.updatedAt-c.updatedAt),s=t[0],i=Ft(n);e.innerHTML=`
+  <script>(()=>{var Vt=Object.defineProperty;var Ie=(e,n)=>()=>(e&&(n=e(e=0)),n);var Le=(e,n)=>{for(var a in n)Vt(e,a,{get:n[a],enumerable:!0})};var ye={};Le(ye,{deleteScript:()=>De,deleteSession:()=>Ve,getAllScripts:()=>Ce,getAllSessions:()=>ze,getScript:()=>F,getSession:()=>He,getSessionsByScript:()=>Bt,getSetting:()=>N,init:()=>Ae,saveScript:()=>Pe,saveSession:()=>Je,setSetting:()=>H});function Ae(){return new Promise((e,n)=>{let a=indexedDB.open(Rt,1);a.onupgradeneeded=t=>{let s=t.target.result;s.objectStoreNames.contains("scripts")||s.createObjectStore("scripts",{keyPath:"id"}),s.objectStoreNames.contains("sessions")||s.createObjectStore("sessions",{keyPath:"id"}).createIndex("scriptId","scriptId",{unique:!1}),s.objectStoreNames.contains("settings")||s.createObjectStore("settings",{keyPath:"key"})},a.onsuccess=t=>{je=t.target.result,e(je)},a.onerror=t=>n(t.target.error)})}function P(e,n="readonly"){return je.transaction(e,n).objectStore(e)}function D(e){return new Promise((n,a)=>{e.onsuccess=()=>n(e.result),e.onerror=()=>a(e.error)})}async function Ce(){return D(P("scripts").getAll())}async function F(e){return D(P("scripts").get(e))}async function Pe(e){return D(P("scripts","readwrite").put(e))}async function De(e){return D(P("scripts","readwrite").delete(e))}async function ze(){return D(P("sessions").getAll())}async function He(e){return D(P("sessions").get(e))}async function Je(e){return D(P("sessions","readwrite").put(e))}async function Ve(e){return D(P("sessions","readwrite").delete(e))}async function Bt(e){let a=P("sessions").index("scriptId");return D(a.getAll(e))}async function N(e){let n=await D(P("settings").get(e));return n?n.value:null}async function H(e,n){return D(P("settings","readwrite").put({key:e,value:n}))}var Rt,je,j=Ie(()=>{Rt="ScriptSimulator",je=null});var Ge={};Le(Ge,{addEventEffects:()=>Ke,advanceStage:()=>oe,checkEnding:()=>le,checkEventTriggers:()=>Fe,checkStageTransition:()=>dt,clampValue:()=>Se,clampValues:()=>Be,createSeed:()=>ot,createSeededRandom:()=>lt,evaluateCondition:()=>re,extractKeyEvents:()=>We,extractNarrative:()=>de,extractValues:()=>ce,initializeValues:()=>Re,nextSeedValue:()=>xe,parseScript:()=>Q,processEffects:()=>Ue,resolveInitialValue:()=>ct});function Q(e){return{id:e.id||crypto.randomUUID(),name:e.name||"\u672A\u547D\u540D\u5267\u672C",description:e.description||"",cover:e.cover||"",rules:e.rules||{writing_style:"",forbidden:[],requirements:[]},dimensions:e.dimensions||[],characters:e.characters||[],events:e.events||[],stages:e.stages||[],endings:e.endings||[],setup:e.setup||[],createdAt:Date.now()}}function ot(){if(globalThis.crypto?.getRandomValues){let e=new Uint32Array(1);return globalThis.crypto.getRandomValues(e),e[0]||Date.now()}return Date.now()}function xe(e){let n=Number(e)||1;n=n+1831565813>>>0;let a=Math.imul(n^n>>>15,1|n);return a^=a+Math.imul(a^a>>>7,61|a),{seed:n,value:((a^a>>>14)>>>0)/4294967296}}function lt(e){let n=Number(e)||1;return()=>{let a=xe(n);return n=a.seed,a.value}}function Re(e=[],n=ot()){let a={},t=lt(n);return e.forEach(s=>{a[s.id]=ct(s.initial,t),a[s.id]=Se(a[s.id],s)}),{values:a,seed:n}}function ct(e,n=Math.random){if(Array.isArray(e)){let t=Number(e[0]??50),s=Number(e[1]??t);if(!Number.isFinite(t)||!Number.isFinite(s))return 50;if(t===s)return Math.round(t);let i=Math.min(t,s),l=Math.max(t,s);return Math.round(i+n()*(l-i))}let a=Number(e);return Number.isFinite(a)?Math.round(a):50}function Se(e,n){let a=Number(n?.range?.[0]??-1/0),t=Number(n?.range?.[1]??1/0),s=Number(e);return Number.isFinite(s)?Math.max(a,Math.min(t,Math.round(s))):null}function Be(e,n=[]){let a=new Map(n.map(i=>[i.id,i])),t={},s=[];for(let[i,l]of Object.entries(e||{})){let c=a.get(i);if(!c)continue;let o=Se(l,c);o!==null&&(o!==Number(l)&&s.push(`\u7EF4\u5EA6 ${i} \u5DF2\u9650\u5236\u5230\u8303\u56F4 ${c.range?.[0]}-${c.range?.[1]}`),t[i]=o)}return{values:t,warnings:s}}function re(e,n,a=Math.random){if(!e)return!1;if(e.op){let t=(e.conditions||[]).map(s=>re(s,n,a));switch(e.op){case"and":return t.every(Boolean);case"or":return t.some(Boolean);case"not":return t.length?!t[0]:!1;default:return!1}}if(e.dim){let t=n[e.dim];return!(t===void 0||e.min!==void 0&&t<e.min||e.max!==void 0&&t>e.max||e.probability!==void 0&&a()>e.probability)}for(let[t,s]of Object.entries(e)){let i=n[t];if(i===void 0||s.min!==void 0&&i<s.min||s.max!==void 0&&i>s.max||s.probability!==void 0&&a()>s.probability)return!1}return!0}function Fe(e,n,a,t,s={},i=Math.random){let l=new Set;t&&t.forEach(o=>{o.type==="cooldown"&&l.add(o.eventName)});let c=[];for(let o of e){let r=s[o.name]||{count:0};o.stage!==void 0&&o.stage!==a||o.trigger&&(o.once&&r.count>0||o.maxTriggers!==void 0&&r.count>=o.maxTriggers||l.has(o.name)||re(o.trigger,n,i)&&c.push(o))}return c}function Ue(e,n=[]){if(!e.activeEffects||e.activeEffects.length===0)return;let a=new Map(n.map(s=>[s.id,s])),t=[];e.activeEffects.forEach((s,i)=>{if(s.type==="sticky"&&s.dims)for(let[l,c]of Object.entries(s.dims)){let o=(e.values[l]||0)+c;e.values[l]=a.has(l)?Se(o,a.get(l)):o}s.remaining--,s.remaining<=0&&t.push(i)});for(let s=t.length-1;s>=0;s--)e.activeEffects.splice(t[s],1)}function Ke(e,n){e.eventState=e.eventState||{};let a=e.eventState[n.name]||{count:0};a.count+=1,a.lastTriggeredAt=Date.now(),e.eventState[n.name]=a,e.activeEffects||(e.activeEffects=[]),n.effects?.sticky&&e.activeEffects.push({eventName:n.name,type:"sticky",dims:n.effects.sticky.dims||{},remaining:n.effects.sticky.duration||3});let t=n.cooldown||n.effects?.cooldown;t&&e.activeEffects.push({eventName:n.name,type:"cooldown",remaining:t})}function dt(e,n,a){if(a>=e.length-1)return a;let t=e[a+1];return t?.transition&&re(t.transition,n)?a+1:a}function oe(e,n,a){let t=a;for(;t<(e||[]).length-1;){let s=dt(e,n,t);if(s===t)break;t=s}return t}function le(e=[],n={}){return e.find(a=>re(a.condition,n))||null}function ce(e,n){let a={},t=e.match(/【数值更新】([\s\S]*?)(?=【|$)/);if(!t)return null;let s=t[1];for(let i of n){let l=new RegExp(`${i.name}\\s*[\uFF1A:]?\\s*(\\d+)`),c=s.match(l);c&&(a[i.id]=parseInt(c[1],10))}return Object.keys(a).length?a:null}function We(e){let n=e.match(/【关键事件】(.+)/);return n?n[1].trim():null}function de(e){return e.replace(/【选项】[\s\S]*$/,"").replace(/【数值更新】[\s\S]*$/,"").replace(/【关键事件】[\s\S]*$/,"").trim()}var U=Ie(()=>{});var ft={};Le(ft,{assertValidScript:()=>Wt,formatValidationResult:()=>K,validateScript:()=>X});function X(e){let n=[],a=[],t=Array.isArray(e?.dimensions)?e.dimensions:[],s=Array.isArray(e?.characters)?e.characters:[],i=Array.isArray(e?.events)?e.events:[],l=Array.isArray(e?.stages)?e.stages:[],c=Array.isArray(e?.endings)?e.endings:[];(!e||typeof e!="object")&&n.push("\u5267\u672C\u5FC5\u987B\u662F JSON \u5BF9\u8C61"),e?.name||a.push("\u7F3A\u5C11\u5267\u672C\u540D\u79F0"),ut(t,"\u7EF4\u5EA6",n),ut(s,"\u89D2\u8272",n),s.some(r=>r.id==="player")||n.push("\u5FC5\u987B\u5305\u542B id \u4E3A player \u7684\u73A9\u5BB6\u89D2\u8272");let o=new Set(t.map(r=>r.id).filter(Boolean));return t.forEach((r,d)=>{r.id||n.push(`\u7EF4\u5EA6 ${d+1} \u7F3A\u5C11 id`),r.name||n.push(`\u7EF4\u5EA6 ${r.id||d+1} \u7F3A\u5C11\u540D\u79F0`),pt(r.range)||n.push(`\u7EF4\u5EA6 ${r.id||d+1} \u7684 range \u5FC5\u987B\u662F\u4E24\u4E2A\u6570\u5B57`),pt(r.initial)||a.push(`\u7EF4\u5EA6 ${r.id||d+1} \u7F3A\u5C11\u5408\u6CD5 initial\uFF0C\u5C06\u4F7F\u7528\u9ED8\u8BA4\u503C`)}),i.forEach((r,d)=>{r.name||a.push(`\u4E8B\u4EF6 ${d+1} \u7F3A\u5C11\u540D\u79F0`),r.stage!==void 0&&!Gt(r.stage,l.length)&&n.push(`\u4E8B\u4EF6 ${r.name||d+1} \u7684 stage \u8D85\u51FA\u9636\u6BB5\u8303\u56F4`),["cooldown","maxTriggers"].forEach(g=>{r[g]!==void 0&&(!Number.isInteger(Number(r[g]))||Number(r[g])<0)&&n.push(`\u4E8B\u4EF6 ${r.name||d+1} \u7684 ${g} \u5FC5\u987B\u662F\u975E\u8D1F\u6574\u6570`)}),r.once!==void 0&&typeof r.once!="boolean"&&n.push(`\u4E8B\u4EF6 ${r.name||d+1} \u7684 once \u5FC5\u987B\u662F\u5E03\u5C14\u503C`),we(r.trigger,o,`\u4E8B\u4EF6 ${r.name||d+1} \u89E6\u53D1\u6761\u4EF6`,n),Zt(r.effects,o,`\u4E8B\u4EF6 ${r.name||d+1}`,n)}),l.forEach((r,d)=>{we(r.transition,o,`\u9636\u6BB5 ${r.name||d+1} \u8FC7\u6E21\u6761\u4EF6`,n)}),c.forEach((r,d)=>{we(r.condition,o,`\u7ED3\u5C40 ${r.name||d+1} \u6761\u4EF6`,n)}),{ok:n.length===0,errors:n,warnings:a}}function Wt(e){let n=X(e);if(!n.ok){let a=new Error(n.errors.join(`
+`));throw a.validation=n,a}return n}function K(e){let n=[];return e.errors?.length&&(n.push("\u9519\u8BEF:"),e.errors.forEach(a=>n.push(`- ${a}`))),e.warnings?.length&&(n.push("\u8B66\u544A:"),e.warnings.forEach(a=>n.push(`- ${a}`))),n.join(`
+`)||"\u6821\u9A8C\u901A\u8FC7"}function ut(e,n,a){let t=new Set;e.forEach((s,i)=>{s.id&&(t.has(s.id)&&a.push(`${n} id \u91CD\u590D: ${s.id}`),t.add(s.id),/^[A-Za-z_][A-Za-z0-9_-]*$/.test(s.id)||a.push(`${n} ${i+1} \u7684 id \u53EA\u80FD\u4F7F\u7528\u82F1\u6587\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u77ED\u6A2A\u7EBF\uFF0C\u5E76\u4E14\u4E0D\u80FD\u4EE5\u6570\u5B57\u5F00\u5934`))})}function pt(e){return Array.isArray(e)&&e.length===2&&e.every(n=>Number.isFinite(Number(n)))}function Gt(e,n){let a=Number(e);return Number.isInteger(a)&&a>=0&&(n===0||a<n)}function we(e,n,a,t){if(!(!e||typeof e!="object"||!Object.keys(e).length)){if(e.op){if(["and","or","not"].includes(e.op)||t.push(`${a} \u4F7F\u7528\u672A\u77E5 op: ${e.op}`),!Array.isArray(e.conditions)){t.push(`${a} \u7684 conditions \u5FC5\u987B\u662F\u6570\u7EC4`);return}e.conditions.forEach((s,i)=>we(s,n,`${a}.${i+1}`,t));return}if(e.dim){n.has(e.dim)||t.push(`${a} \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${e.dim}`),mt(e,a,t);return}for(let[s,i]of Object.entries(e))n.has(s)||t.push(`${a} \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${s}`),i&&typeof i=="object"&&mt(i,`${a}.${s}`,t)}}function mt(e,n,a){if(["min","max","probability"].forEach(t=>{e[t]!==void 0&&!Number.isFinite(Number(e[t]))&&a.push(`${n}.${t} \u5FC5\u987B\u662F\u6570\u5B57`)}),e.probability!==void 0){let t=Number(e.probability);(t<0||t>1)&&a.push(`${n}.probability \u5FC5\u987B\u5728 0 \u5230 1 \u4E4B\u95F4`)}}function Zt(e,n,a,t){let s=e?.sticky?.dims;if(!(!s||typeof s!="object"))for(let[i,l]of Object.entries(s))n.has(i)||t.push(`${a} \u7684\u6301\u7EED\u6548\u679C\u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${i}`),Number.isFinite(Number(l))||t.push(`${a} \u7684\u6301\u7EED\u6548\u679C ${i} \u5FC5\u987B\u662F\u6570\u5B57`)}var Ze=Ie(()=>{});j();var Ft=()=>document.getElementById("app"),$e=null,it={},Ut=new Set(["scriptDetail"]);function ae(e,n){it[e]=n}function w(e,n={}){$e&&$e.destroy&&$e.destroy();let a=Ft();a.setAttribute("data-page",Ut.has(e)?"editor":"phone"),a.innerHTML="",$e={destroy:it[e](a,n)?.destroy||null}}j();var Z=null;function Kt(){return Z&&Z.isConnected||(Z=document.createElement("div"),Z.className="dialog-host",document.body.appendChild(Z)),Z}function rt({title:e="\u63D0\u793A",message:n="",tone:a="default",confirmText:t="\u786E\u5B9A",cancelText:s="",dismissOnBackdrop:i=!1}){let l=Kt();return new Promise(c=>{let o=document.createElement("div");o.className="dialog-overlay",o.innerHTML=`
+      <div class="dialog-panel dialog-${a}" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+        <div class="dialog-body">
+          <h3 id="dialog-title" class="dialog-title"></h3>
+          <p class="dialog-message"></p>
+        </div>
+        <div class="dialog-actions">
+          ${s?`<button class="btn btn-secondary dialog-cancel">${s}</button>`:""}
+          <button class="btn ${a==="danger"?"btn-danger":"btn-primary"} dialog-confirm">${t}</button>
+        </div>
+      </div>
+    `;let r=o.querySelector(".dialog-title"),d=o.querySelector(".dialog-message"),g=o.querySelector(".dialog-confirm"),b=o.querySelector(".dialog-cancel");r.textContent=e,d.textContent=n;function u(h){document.removeEventListener("keydown",m),o.remove(),c(h)}function m(h){h.key==="Escape"&&u(!1),h.key==="Enter"&&u(!0)}o.addEventListener("click",h=>{i&&h.target===o&&u(!1)}),g.onclick=()=>u(!0),b&&(b.onclick=()=>u(!1)),document.addEventListener("keydown",m),l.appendChild(o),(b||g).focus()})}function J(e,n={}){return rt({title:n.title||"\u63D0\u793A",message:e,tone:n.tone||"default",confirmText:n.confirmText||"\u77E5\u9053\u4E86",dismissOnBackdrop:n.dismissOnBackdrop??!0})}function z(e,n={}){return rt({title:n.title||"\u8BF7\u786E\u8BA4",message:e,tone:n.tone||"default",confirmText:n.confirmText||"\u786E\u8BA4",cancelText:n.cancelText||"\u53D6\u6D88",dismissOnBackdrop:n.dismissOnBackdrop??!0})}async function ue(e){let n=await Ce(),a=await ze(),t=[...a].sort((o,r)=>r.updatedAt-o.updatedAt),s=t[0],i=Qt(a);e.innerHTML=`
     <div class="header home-header">
       <div>
         <h1>\u5267\u672C\u6A21\u62DF\u5668</h1>
-        <p>${a.length?"\u7BA1\u7406\u5267\u672C\uFF0C\u7EE7\u7EED\u4F60\u7684\u6A21\u62DF\u5BF9\u8BDD":"\u5BFC\u5165\u6216\u521B\u5EFA\u5267\u672C\u540E\u5F00\u59CB\u6A21\u62DF"}</p>
+        <p>${n.length?"\u7BA1\u7406\u5267\u672C\uFF0C\u7EE7\u7EED\u4F60\u7684\u6A21\u62DF\u5BF9\u8BDD":"\u5BFC\u5165\u6216\u521B\u5EFA\u5267\u672C\u540E\u5F00\u59CB\u6A21\u62DF"}</p>
       </div>
       <button class="header-btn" id="btn-settings" title="\u8BBE\u7F6E">\u2699</button>
     </div>
     <div class="page-scroll home-scroll">
       <div class="home-summary">
         <div class="summary-item">
-          <span class="summary-value">${a.length}</span>
+          <span class="summary-value">${n.length}</span>
           <span class="summary-label">\u5267\u672C</span>
         </div>
         <div class="summary-item">
-          <span class="summary-value">${n.length}</span>
+          <span class="summary-value">${a.length}</span>
           <span class="summary-label">\u4F1A\u8BDD</span>
         </div>
         <div class="summary-item summary-wide">
-          <span class="summary-value">${s?dt(s.updatedAt):"\u6682\u65E0"}</span>
+          <span class="summary-value">${s?gt(s.updatedAt):"\u6682\u65E0"}</span>
           <span class="summary-label">\u6700\u8FD1\u66F4\u65B0</span>
         </div>
       </div>
@@ -1074,13 +1374,13 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
       <section class="home-section">
         <div class="section-toolbar">
           <h2>\u6211\u7684\u4F1A\u8BDD</h2>
-          <span class="section-count">${n.length} \u4E2A</span>
+          <span class="section-count">${a.length} \u4E2A</span>
         </div>
         <div id="session-list" class="home-list"></div>
       </section>
     </div>
     <input type="file" id="file-input" accept=".json" style="display:none">
-  `;let o=e.querySelector("#script-list"),l=e.querySelector("#session-list");a.length===0?(o.innerHTML=`
+  `;let l=e.querySelector("#script-list"),c=e.querySelector("#session-list");n.length===0?(l.innerHTML=`
       <div class="empty-panel">
         <div class="empty-mark">JSON</div>
         <h3>\u8FD8\u6CA1\u6709\u5267\u672C</h3>
@@ -1089,171 +1389,171 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
           <button class="btn btn-primary" id="btn-sample">\u52A0\u8F7D\u793A\u4F8B</button>
           <button class="btn btn-secondary" id="btn-create-empty">\u65B0\u5EFA\u5267\u672C</button>
         </div>
-      </div>`,e.querySelector("#btn-create-empty").onclick=async()=>{let{parseScript:c}=await Promise.resolve().then(()=>(H(),ce)),{saveScript:r}=await Promise.resolve().then(()=>(I(),Y)),d=c({name:"\u672A\u547D\u540D\u5267\u672C",description:""});await r(d),w("scriptDetail",{scriptId:d.id})},e.querySelector("#btn-sample").onclick=async()=>{try{let c;window.__SAMPLE_SCRIPT__?c=window.__SAMPLE_SCRIPT__:c=await(await fetch("/data/scripts/dangerous-relationships.json")).json();let{parseScript:r}=await Promise.resolve().then(()=>(H(),ce)),{saveScript:d}=await Promise.resolve().then(()=>(I(),Y));await d(r(c)),de(e)}catch(c){alert("\u52A0\u8F7D\u5931\u8D25: "+c.message)}}):o.innerHTML=a.map(c=>`
-      <article class="card home-card" data-script-id="${c.id}">
-        ${(()=>{let r=i.get(c.id)||{count:0,latest:null};return`<div class="card-meta-line">${r.count} \u4E2A\u4F1A\u8BDD${r.latest?` \xB7 \u6700\u8FD1 ${dt(r.latest)}`:""}</div>`})()}
+      </div>`,e.querySelector("#btn-create-empty").onclick=async()=>{w("scriptDetail",{draft:!0})},e.querySelector("#btn-sample").onclick=async()=>{try{let o;window.__SAMPLE_SCRIPT__?o=window.__SAMPLE_SCRIPT__:o=await(await fetch("/data/scripts/dangerous-relationships.json")).json();let{parseScript:r}=await Promise.resolve().then(()=>(U(),Ge)),{saveScript:d}=await Promise.resolve().then(()=>(j(),ye));await d(r(o)),ue(e)}catch(o){await J("\u52A0\u8F7D\u5931\u8D25: "+o.message,{title:"\u52A0\u8F7D\u5931\u8D25",tone:"danger"})}}):l.innerHTML=n.map(o=>`
+      <article class="card home-card" data-script-id="${o.id}">
+        ${(()=>{let r=i.get(o.id)||{count:0,latest:null};return`<div class="card-meta-line">${r.count} \u4E2A\u4F1A\u8BDD${r.latest?` \xB7 \u6700\u8FD1 ${gt(r.latest)}`:""}</div>`})()}
         <div class="card-main">
-          <h3>${Ke(c.name)}</h3>
-          <p>${Ke(c.description||"\u6682\u65E0\u63CF\u8FF0")}</p>
+          <h3>${Qe(o.name)}</h3>
+          <p>${Qe(o.description||"\u6682\u65E0\u63CF\u8FF0")}</p>
           <div class="card-tags">
-            <span class="card-tag">${(c.dimensions||[]).length} \u7EF4\u5EA6</span>
-            <span class="card-tag">${(c.stages||[]).length} \u9636\u6BB5</span>
-            <span class="card-tag">${(c.characters||[]).length} \u89D2\u8272</span>
-            <span class="card-tag">${(c.events||[]).length} \u4E8B\u4EF6</span>
+            <span class="card-tag">${(o.dimensions||[]).length} \u7EF4\u5EA6</span>
+            <span class="card-tag">${(o.stages||[]).length} \u9636\u6BB5</span>
+            <span class="card-tag">${(o.characters||[]).length} \u89D2\u8272</span>
+            <span class="card-tag">${(o.events||[]).length} \u4E8B\u4EF6</span>
           </div>
         </div>
         <div class="card-actions">
           <button class="btn btn-sm btn-primary" data-action="play">\u5F00\u59CB</button>
           <button class="btn btn-sm btn-secondary" data-action="edit">\u7F16\u8F91</button>
-          <button class="btn btn-sm btn-ghost" data-action="delete">\u5220\u9664</button>
+          <button class="btn btn-sm btn-danger" data-action="delete">\u5220\u9664</button>
         </div>
       </article>
-    `).join(""),n.length===0?l.innerHTML='<div class="muted-row">\u6682\u65E0\u4F1A\u8BDD</div>':l.innerHTML=t.map(c=>`
-      <article class="card home-card" data-session-id="${c.id}">
+    `).join(""),a.length===0?c.innerHTML='<div class="muted-row">\u6682\u65E0\u4F1A\u8BDD</div>':c.innerHTML=t.map(o=>`
+      <article class="card home-card" data-session-id="${o.id}">
           <div class="card-main">
-            <h3>${Ke(c.scriptName||"\u672A\u77E5\u5267\u672C")}</h3>
-          <p>\u9636\u6BB5 ${(c.currentStage||0)+1} \xB7 ${(c.messages||[]).length} \u6761\u6D88\u606F${c.ended?" \xB7 \u5DF2\u7ED3\u675F":""}</p>
+            <h3>${Qe(o.scriptName||"\u672A\u77E5\u5267\u672C")}</h3>
+          <p>\u9636\u6BB5 ${(o.currentStage||0)+1} \xB7 ${(o.messages||[]).length} \u6761\u6D88\u606F${o.ended?" \xB7 \u5DF2\u7ED3\u675F":""}</p>
           <div class="card-tags">
-            ${c.seed?`<span class="card-tag">seed ${c.seed}</span>`:""}
-            ${(c.timeline||[]).length?`<span class="card-tag">${c.timeline.length} \u72B6\u6001\u53D8\u66F4</span>`:""}
+            ${o.seed?`<span class="card-tag">seed ${o.seed}</span>`:""}
+            ${(o.timeline||[]).length?`<span class="card-tag">${o.timeline.length} \u72B6\u6001\u53D8\u66F4</span>`:""}
           </div>
-          <p class="card-time">${new Date(c.updatedAt).toLocaleString()}</p>
+          <p class="card-time">${new Date(o.updatedAt).toLocaleString()}</p>
         </div>
         <div class="card-actions">
           <button class="btn btn-sm btn-primary" data-action="resume">\u7EE7\u7EED</button>
           <button class="btn btn-sm btn-secondary" data-action="branch">\u590D\u5236\u5206\u652F</button>
-          <button class="btn btn-sm btn-ghost" data-action="delete">\u5220\u9664</button>
+          <button class="btn btn-sm btn-danger" data-action="delete">\u5220\u9664</button>
         </div>
       </article>
-    `).join(""),e.querySelector("#btn-settings").onclick=()=>w("settings"),e.querySelector("#btn-create").onclick=async()=>{let{parseScript:c}=await Promise.resolve().then(()=>(H(),ce)),{saveScript:r}=await Promise.resolve().then(()=>(I(),Y)),d=c({name:"\u672A\u547D\u540D\u5267\u672C",description:""});await r(d),w("scriptDetail",{scriptId:d.id})},e.querySelector("#btn-import").onclick=()=>e.querySelector("#file-input").click(),e.querySelector("#file-input").onchange=c=>Ut(c),o.onclick=async c=>{let r=c.target.closest("[data-script-id]");if(!r)return;let d=r.dataset.scriptId,g=c.target.dataset.action;g==="play"?w("setup",{scriptId:d}):g==="edit"?w("scriptDetail",{scriptId:d}):g==="delete"&&confirm("\u786E\u5B9A\u5220\u9664\u8FD9\u4E2A\u5267\u672C\u5417\uFF1F\u76F8\u5173\u4F1A\u8BDD\u4E0D\u4F1A\u81EA\u52A8\u5220\u9664\u3002")&&(await Ae(d),de(e))},l.onclick=async c=>{let r=c.target.closest("[data-session-id]");if(!r)return;let d=r.dataset.sessionId,g=c.target.dataset.action;g==="resume"?w("chat",{sessionId:d}):g==="branch"?Gt(d):g==="delete"&&confirm("\u786E\u5B9A\u5220\u9664\u8FD9\u4E2A\u4F1A\u8BDD\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002")&&(await De(d),de(e))}}function Ft(e){let a=new Map;return e.forEach(n=>{let t=a.get(n.scriptId)||{count:0,latest:null};t.count+=1,t.latest=Math.max(t.latest||0,n.updatedAt||0),a.set(n.scriptId,t)}),a}async function Ut(e){let a=e.target.files?.[0];if(!a)return;let n="";try{n=await a.text();let t=JSON.parse(n),{parseScript:s}=await Promise.resolve().then(()=>(H(),ce)),{formatValidationResult:i,validateScript:o}=await Promise.resolve().then(()=>(Ue(),ct)),{saveScript:l}=await Promise.resolve().then(()=>(I(),Y)),c=s(t),r=o(c);if(!r.ok){let d=new Error(i(r));throw d.validation=r,d}if(r.warnings.length&&!confirm(`\u5BFC\u5165\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+    `).join(""),e.querySelector("#btn-settings").onclick=()=>w("settings"),e.querySelector("#btn-create").onclick=async()=>{w("scriptDetail",{draft:!0})},e.querySelector("#btn-import").onclick=()=>e.querySelector("#file-input").click(),e.querySelector("#file-input").onchange=o=>Xt(o),l.onclick=async o=>{let r=o.target.closest("[data-script-id]");if(!r)return;let d=r.dataset.scriptId,g=o.target.dataset.action;g==="play"?w("setup",{scriptId:d}):g==="edit"?w("scriptDetail",{scriptId:d}):g==="delete"&&await z("\u786E\u5B9A\u5220\u9664\u8FD9\u4E2A\u5267\u672C\u5417\uFF1F\u76F8\u5173\u4F1A\u8BDD\u4E0D\u4F1A\u81EA\u52A8\u5220\u9664\u3002",{title:"\u5220\u9664\u5267\u672C",tone:"danger",confirmText:"\u5220\u9664"})&&(await De(d),ue(e))},c.onclick=async o=>{let r=o.target.closest("[data-session-id]");if(!r)return;let d=r.dataset.sessionId,g=o.target.dataset.action;g==="resume"?w("chat",{sessionId:d}):g==="branch"?tn(d):g==="delete"&&await z("\u786E\u5B9A\u5220\u9664\u8FD9\u4E2A\u4F1A\u8BDD\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002",{title:"\u5220\u9664\u4F1A\u8BDD",tone:"danger",confirmText:"\u5220\u9664"})&&(await Ve(d),ue(e))}}function Qt(e){let n=new Map;return e.forEach(a=>{let t=n.get(a.scriptId)||{count:0,latest:null};t.count+=1,t.latest=Math.max(t.latest||0,a.updatedAt||0),n.set(a.scriptId,t)}),n}async function Xt(e){let n=e.target.files?.[0];if(!n)return;let a="";try{a=await n.text();let t=JSON.parse(a),{parseScript:s}=await Promise.resolve().then(()=>(U(),Ge)),{formatValidationResult:i,validateScript:l}=await Promise.resolve().then(()=>(Ze(),ft)),{saveScript:c}=await Promise.resolve().then(()=>(j(),ye)),o=s(t),r=l(o);if(!r.ok){let d=new Error(i(r));throw d.validation=r,d}if(r.warnings.length&&!await z(`\u5BFC\u5165\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
 
-${i(r)}`))return;await l(c),w("home")}catch(t){alert(Kt(t,n))}}function Kt(e,a=""){return e.validation?`\u5BFC\u5165\u5931\u8D25\uFF1Aschema \u6821\u9A8C\u672A\u901A\u8FC7
+${i(r)}`,{title:"\u5BFC\u5165\u8B66\u544A",confirmText:"\u7EE7\u7EED\u5BFC\u5165"}))return;await c(o),w("home")}catch(t){await J(Yt(t,a),{title:"\u5BFC\u5165\u5931\u8D25",tone:"danger"})}}function Yt(e,n=""){return e.validation?`\u5BFC\u5165\u5931\u8D25\uFF1Aschema \u6821\u9A8C\u672A\u901A\u8FC7
 
 ${e.message}`:e instanceof SyntaxError?`\u5BFC\u5165\u5931\u8D25\uFF1AJSON \u89E3\u6790\u9519\u8BEF
 
-${Wt(e,a)}${e.message}`:`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`}function Wt(e,a){let n=String(e.message).match(/position\s+(\d+)/i);if(!n||!a)return"";let t=Number(n[1]),s=a.slice(0,t),i=s.split(`
-`).length,o=s.length-s.lastIndexOf(`
-`);return`\u4F4D\u7F6E\uFF1A\u7B2C ${i} \u884C\uFF0C\u7B2C ${o} \u5217
-`}async function Gt(e){let{saveSession:a,getSession:n}=await Promise.resolve().then(()=>(I(),Y)),t=await n(e);if(!t)return;let s={...t,id:crypto.randomUUID(),messages:[...t.messages],updatedAt:Date.now()};await a(s),w("chat",{sessionId:s.id})}function dt(e){if(!e)return"\u6682\u65E0";let a=Date.now()-e,n=60*1e3,t=60*n,s=24*t;return a<t?`${Math.max(1,Math.floor(a/n))} \u5206\u949F\u524D`:a<s?`${Math.floor(a/t)} \u5C0F\u65F6\u524D`:new Date(e).toLocaleDateString()}function Ke(e){let a=document.createElement("div");return a.textContent=e,a.innerHTML}I();H();Ue();var u={},ue=new Set(["basic","rules","dimensions","characters","events","stages","endings","setup"]),$={},E=new Set,xe=null;async function vt(e,{scriptId:a}){if(u=await B(a),!u){w("home");return}u.rules=u.rules||{writing_style:"",forbidden:[],requirements:[]},u.dimensions=u.dimensions||[],u.characters=u.characters||[],u.events=u.events||[],u.stages=u.stages||[],u.endings=u.endings||[],u.setup=u.setup||[],ht(e)}function ht(e){e.innerHTML=`
+${en(e,n)}${e.message}`:`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`}function en(e,n){let a=String(e.message).match(/position\s+(\d+)/i);if(!a||!n)return"";let t=Number(a[1]),s=n.slice(0,t),i=s.split(`
+`).length,l=s.length-s.lastIndexOf(`
+`);return`\u4F4D\u7F6E\uFF1A\u7B2C ${i} \u884C\uFF0C\u7B2C ${l} \u5217
+`}async function tn(e){let{saveSession:n,getSession:a}=await Promise.resolve().then(()=>(j(),ye)),t=await a(e);if(!t)return;let s={...t,id:crypto.randomUUID(),messages:[...t.messages],updatedAt:Date.now()};await n(s),w("chat",{sessionId:s.id})}function gt(e){if(!e)return"\u6682\u65E0";let n=Date.now()-e,a=60*1e3,t=60*a,s=24*t;return n<t?`${Math.max(1,Math.floor(n/a))} \u5206\u949F\u524D`:n<s?`${Math.floor(n/t)} \u5C0F\u65F6\u524D`:new Date(e).toLocaleDateString()}function Qe(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}j();U();Ze();var p={},pe=new Set(["basic","rules","dimensions","characters","events","stages","endings","setup"]),$={},E=new Set,ke=null,me=!1;async function St(e,{scriptId:n}){if(p=n?await F(n):Q({name:"\u672A\u547D\u540D\u5267\u672C",description:""}),!p){w("home");return}me=!1,p.rules=p.rules||{writing_style:"",forbidden:[],requirements:[]},p.dimensions=p.dimensions||[],p.characters=p.characters||[],p.events=p.events||[],p.stages=p.stages||[],p.endings=p.endings||[],p.setup=p.setup||[],wt(e)}function wt(e){e.innerHTML=`
     <div class="header">
-      <button class="header-btn" id="btn-back">&larr;</button>
+      <button class="header-btn editor-back-btn" id="btn-back" aria-label="\u8FD4\u56DE">\u8FD4\u56DE</button>
       <h1 style="font-size:15px">\u7F16\u8F91\u5267\u672C</h1>
-      <div style="display:flex;gap:4px">
-        <button class="header-btn" id="btn-export" title="\u5BFC\u51FA JSON">&#8681;</button>
-        <button class="header-btn" id="btn-import" title="\u5BFC\u5165 JSON">&#8679;</button>
-        <button class="header-btn" id="btn-save" title="\u4FDD\u5B58" style="color:var(--accent)">&#10003;</button>
+      <div class="editor-header-actions">
+        <button class="header-btn editor-action-btn" id="btn-export" title="\u5BFC\u51FA JSON" aria-label="\u5BFC\u51FA JSON">\u5BFC\u51FA</button>
+        <button class="header-btn editor-action-btn" id="btn-import" title="\u5BFC\u5165 JSON" aria-label="\u5BFC\u5165 JSON">\u5BFC\u5165</button>
+        <button class="header-btn editor-save-btn" id="btn-save" title="\u4FDD\u5B58" aria-label="\u4FDD\u5B58\u5267\u672C">\u4FDD\u5B58</button>
       </div>
     </div>
     <div class="page-scroll" id="editor-scroll">
-      ${Qt()}
-      ${R("basic","\u57FA\u672C\u4FE1\u606F",Yt(),"editor-full")}
-      ${R("rules","\u5199\u4F5C\u89C4\u5219",en(),"editor-full")}
+      ${me?an():""}
+      ${R("basic","\u57FA\u672C\u4FE1\u606F",rn(),"editor-full")}
+      ${R("rules","\u5199\u4F5C\u89C4\u5219",on(),"editor-full")}
       <div class="editor-grid">
-        ${R("dimensions","\u6570\u503C\u7EF4\u5EA6",tn())}
-        ${R("characters","\u89D2\u8272\u8BBE\u5B9A",nn())}
-        ${R("events","\u5173\u952E\u4E8B\u4EF6",an())}
-        ${R("stages","\u5267\u60C5\u9636\u6BB5",sn())}
-        ${R("endings","\u7ED3\u5C40\u8BBE\u5B9A",rn())}
-        ${R("setup","\u5F00\u5C40\u9009\u9879",on())}
+        ${R("dimensions","\u6570\u503C\u7EF4\u5EA6",ln())}
+        ${R("characters","\u89D2\u8272\u8BBE\u5B9A",cn())}
+        ${R("events","\u5173\u952E\u4E8B\u4EF6",dn())}
+        ${R("stages","\u5267\u60C5\u9636\u6BB5",un())}
+        ${R("endings","\u7ED3\u5C40\u8BBE\u5B9A",pn())}
+        ${R("setup","\u5F00\u5C40\u9009\u9879",mn())}
       </div>
-      ${R("json","\u9AD8\u7EA7 JSON \u7F16\u8F91",ln(),"editor-full")}
+      ${R("json","\u9AD8\u7EA7 JSON \u7F16\u8F91",fn(),"editor-full")}
     </div>
     <input type="file" id="file-import" accept=".json" style="display:none">
-  `,un(e)}function Qt(){let e=W(te(u)),a=e.errors.length,n=e.warnings.length,t=a?`${a} \u4E2A\u9519\u8BEF`:n?`${n} \u4E2A\u8B66\u544A`:"\u6821\u9A8C\u901A\u8FC7";return`<div class="validation-panel ${a?"error":n?"warning":"ok"}" id="validation-panel">
+  `,vn(e)}function an(){let e=X(Q(p)),n=e.errors.length,a=e.warnings.length,t=n?`${n} \u4E2A\u9519\u8BEF`:a?`${a} \u4E2A\u8B66\u544A`:"\u6821\u9A8C\u901A\u8FC7";return`<div class="validation-panel ${n?"error":a?"warning":"ok"}" id="validation-panel">
     <div class="validation-head">
       <strong>${t}</strong>
       <button class="btn btn-sm btn-secondary" data-action="validate-now">\u91CD\u65B0\u6821\u9A8C</button>
     </div>
-    ${ut("\u9519\u8BEF",e.errors)}
-    ${ut("\u8B66\u544A",e.warnings)}
-  </div>`}function ut(e,a){return a?.length?`<div class="validation-list"><span>${e}</span>${a.map(n=>`<p>${x(n)}</p>`).join("")}</div>`:""}function R(e,a,n,t){let s=ue.has(e);return`<div class="editor-section${t?" "+t:""}" data-section="${e}">
+    ${bt("\u9519\u8BEF",e.errors)}
+    ${bt("\u8B66\u544A",e.warnings)}
+  </div>`}function bt(e,n){return n?.length?`<div class="validation-list"><span>${e}</span>${n.map(a=>`<p>${x(a)}</p>`).join("")}</div>`:""}function R(e,n,a,t){let s=pe.has(e);return`<div class="editor-section${t?" "+t:""}" data-section="${e}">
     <div class="section-header ${s?"open":""}" data-section-toggle="${e}">
       <span class="section-arrow">${s?"&#9660;":"&#9654;"}</span>
-      <span>${a}</span>
+      <span>${n}</span>
     </div>
-    <div class="section-body" style="${s?"":"display:none"}">${n}</div>
-  </div>`}function Xt(e){ue.has(e)?ue.delete(e):ue.add(e)}function Yt(){return`
+    <div class="section-body" style="${s?"":"display:none"}">${a}</div>
+  </div>`}function sn(e){pe.has(e)?pe.delete(e):pe.add(e)}function rn(){return`
     <div class="form-group">
       <label class="form-label">\u5267\u672C\u540D\u79F0</label>
-      <input class="form-input" data-field="name" value="${x(u.name||"")}">
+      <input class="form-input" data-field="name" value="${x(p.name||"")}">
     </div>
     <div class="form-group">
       <label class="form-label">\u63CF\u8FF0</label>
-      <textarea class="form-input" data-field="description" rows="3">${x(u.description||"")}</textarea>
-    </div>`}function en(){let e=u.rules;return`
+      <textarea class="form-input" data-field="description" rows="3">${x(p.description||"")}</textarea>
+    </div>`}function on(){let e=p.rules;return`
     <div class="form-group">
       <label class="form-label">\u5199\u4F5C\u98CE\u683C</label>
       <textarea class="form-input" data-field="rules.writing_style" rows="3">${x(e.writing_style||"")}</textarea>
     </div>
     <div class="form-group">
       <label class="form-label">\u7981\u6B62\u4E8B\u9879</label>
-      ${pt(e.forbidden||[],"rules.forbidden")}
+      ${vt(e.forbidden||[],"rules.forbidden")}
     </div>
     <div class="form-group">
       <label class="form-label">\u5199\u4F5C\u8981\u6C42</label>
-      ${pt(e.requirements||[],"rules.requirements")}
-    </div>`}function tn(){let e=u.dimensions||[],a="";return e.forEach((n,t)=>{$[`dim_${t}`]?a+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${x(n.id||"")}" data-dim="${t}" data-subfield="id"></div>
-        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${x(n.name||"")}" data-dim="${t}" data-subfield="name"></div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0\uFF08\u8FD9\u4E2A\u6570\u503C\u4EE3\u8868\u4EC0\u4E48\uFF09</label><input class="form-input" value="${x(n.description||"")}" data-dim="${t}" data-subfield="description" placeholder="\u5982\uFF1A\u73A9\u5BB6\u5BF9\u5371\u9669\u5BF9\u8C61\u7684\u5FC3\u52A8\u7A0B\u5EA6"></div>
-        <div class="form-group"><label class="form-label">\u4F5C\u7528\u5BF9\u8C61\uFF08\u53EF\u9009\uFF0C\u652F\u6301\u5B8F\u5982 {{target}}\uFF09</label><input class="form-input" value="${x(n.scope||"")}" data-dim="${t}" data-subfield="scope" placeholder="\u5982\uFF1A\u5BF9{{target}}"></div>
+      ${vt(e.requirements||[],"rules.requirements")}
+    </div>`}function ln(){let e=p.dimensions||[],n="";return e.forEach((a,t)=>{$[`dim_${t}`]?n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${x(a.id||"")}" data-dim="${t}" data-subfield="id"></div>
+        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${x(a.name||"")}" data-dim="${t}" data-subfield="name"></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0\uFF08\u8FD9\u4E2A\u6570\u503C\u4EE3\u8868\u4EC0\u4E48\uFF09</label><input class="form-input" value="${x(a.description||"")}" data-dim="${t}" data-subfield="description" placeholder="\u5982\uFF1A\u73A9\u5BB6\u5BF9\u5371\u9669\u5BF9\u8C61\u7684\u5FC3\u52A8\u7A0B\u5EA6"></div>
+        <div class="form-group"><label class="form-label">\u4F5C\u7528\u5BF9\u8C61\uFF08\u53EF\u9009\uFF0C\u652F\u6301\u5B8F\u5982 {{target}}\uFF09</label><input class="form-input" value="${x(a.scope||"")}" data-dim="${t}" data-subfield="scope" placeholder="\u5982\uFF1A\u5BF9{{target}}"></div>
         <div style="display:flex;gap:8px">
-          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 min</label><input class="form-input" type="number" value="${n.range?.[0]??0}" data-dim="${t}" data-subfield="range_min"></div>
-          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 max</label><input class="form-input" type="number" value="${n.range?.[1]??100}" data-dim="${t}" data-subfield="range_max"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 min</label><input class="form-input" type="number" value="${a.range?.[0]??0}" data-dim="${t}" data-subfield="range_min"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 max</label><input class="form-input" type="number" value="${a.range?.[1]??100}" data-dim="${t}" data-subfield="range_max"></div>
         </div>
         <div style="display:flex;gap:8px">
-          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB min</label><input class="form-input" type="number" value="${n.initial?.[0]??0}" data-dim="${t}" data-subfield="initial_min"></div>
-          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB max</label><input class="form-input" type="number" value="${n.initial?.[1]??0}" data-dim="${t}" data-subfield="initial_max"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB min</label><input class="form-input" type="number" value="${a.initial?.[0]??0}" data-dim="${t}" data-subfield="initial_min"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB max</label><input class="form-input" type="number" value="${a.initial?.[1]??0}" data-dim="${t}" data-subfield="initial_max"></div>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-sm btn-primary" data-action="dim-save" data-idx="${t}">\u786E\u5B9A</button>
           <button class="btn btn-sm btn-secondary" data-action="dim-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`:a+=`<div class="card">
+      </div>`:n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;min-width:0">
-            <div><strong>${x(n.name||n.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${n.range?.[0]}-${n.range?.[1]} \u521D\u59CB ${n.initial?.[0]}-${n.initial?.[1]}</span></div>
-            ${n.scope?`<div style="color:var(--accent);font-size:11px;margin-top:2px">${x(n.scope)}</div>`:""}
-            ${n.description?`<div style="color:var(--text-dim);font-size:11px;margin-top:2px">${x(n.description)}</div>`:""}
+            <div><strong>${x(a.name||a.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${a.range?.[0]}-${a.range?.[1]} \u521D\u59CB ${a.initial?.[0]}-${a.initial?.[1]}</span></div>
+            ${a.scope?`<div style="color:var(--accent);font-size:11px;margin-top:2px">${x(a.scope)}</div>`:""}
+            ${a.description?`<div style="color:var(--text-dim);font-size:11px;margin-top:2px">${x(a.description)}</div>`:""}
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
             <button class="btn btn-sm btn-secondary" data-action="dim-edit" data-idx="${t}">\u7F16\u8F91</button>
             <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="dim-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}),a+='<button class="btn btn-sm btn-secondary btn-block" data-action="dim-add" style="margin-top:8px">+ \u65B0\u589E\u7EF4\u5EA6</button>',a}function nn(){let e=u.characters||[],a="";return e.forEach((n,t)=>{$[`char_${t}`]?a+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${x(n.id||"")}" data-char="${t}" data-subfield="id"></div>
-        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${x(n.name||"")}" data-char="${t}" data-subfield="name"></div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-char="${t}" data-subfield="description">${x(n.description||"")}</textarea></div>
+      </div>`}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="dim-add" style="margin-top:8px">+ \u65B0\u589E\u7EF4\u5EA6</button>',n}function cn(){let e=p.characters||[],n="";return e.forEach((a,t)=>{$[`char_${t}`]?n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${x(a.id||"")}" data-char="${t}" data-subfield="id"></div>
+        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${x(a.name||"")}" data-char="${t}" data-subfield="name"></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-char="${t}" data-subfield="description">${x(a.description||"")}</textarea></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-sm btn-primary" data-action="char-save" data-idx="${t}">\u786E\u5B9A</button>
           <button class="btn btn-sm btn-secondary" data-action="char-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`:a+=`<div class="card">
+      </div>`:n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>${x(n.name||n.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${x(n.description||"").substring(0,30)}</span></div>
+          <div><strong>${x(a.name||a.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${x(a.description||"").substring(0,30)}</span></div>
           <div style="display:flex;gap:4px">
             <button class="btn btn-sm btn-secondary" data-action="char-edit" data-idx="${t}">\u7F16\u8F91</button>
             <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="char-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}),a+='<button class="btn btn-sm btn-secondary btn-block" data-action="char-add" style="margin-top:8px">+ \u65B0\u589E\u89D2\u8272</button>',a}function an(){let e=u.events||[],a="";return e.forEach((n,t)=>{if($[`event_${t}`])a+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u4E8B\u4EF6\u540D\u79F0</label><input class="form-input" value="${x(n.name||"")}" data-event="${t}" data-subfield="name"></div>
-        <div class="form-group"><label class="form-label">\u6240\u5C5E\u9636\u6BB5 (0-${(u.stages?.length||1)-1})</label><input class="form-input" type="number" min="0" value="${n.stage??0}" data-event="${t}" data-subfield="stage"></div>
+      </div>`}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="char-add" style="margin-top:8px">+ \u65B0\u589E\u89D2\u8272</button>',n}function dn(){let e=p.events||[],n="";return e.forEach((a,t)=>{if($[`event_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u4E8B\u4EF6\u540D\u79F0</label><input class="form-input" value="${x(a.name||"")}" data-event="${t}" data-subfield="name"></div>
+        <div class="form-group"><label class="form-label">\u6240\u5C5E\u9636\u6BB5 (0-${(p.stages?.length||1)-1})</label><input class="form-input" type="number" min="0" value="${a.stage??0}" data-event="${t}" data-subfield="stage"></div>
         <div class="form-group"><label class="form-label">\u89E6\u53D1\u6761\u4EF6</label>
-          ${We(n.trigger||{},`event_${t}_trigger`)}
+          ${Xe(a.trigger||{},`event_${t}_trigger`)}
         </div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-event="${t}" data-subfield="description">${x(n.description||"")}</textarea></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-event="${t}" data-subfield="description">${x(a.description||"")}</textarea></div>
         <div class="form-group">
           <label class="form-label">\u89E6\u53D1\u9650\u5236</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <label class="form-label" style="font-size:11px;display:flex;align-items:center;gap:6px;min-width:90px">
-              <input type="checkbox" ${n.once?"checked":""} data-event="${t}" data-subfield="once" style="width:16px;height:16px">
+              <input type="checkbox" ${a.once?"checked":""} data-event="${t}" data-subfield="once" style="width:16px;height:16px">
               \u4EC5\u89E6\u53D1\u4E00\u6B21
             </label>
             <div style="flex:1;min-width:120px">
               <label class="form-label" style="font-size:11px">\u6700\u5927\u89E6\u53D1\u6B21\u6570</label>
-              <input class="form-input" type="number" min="0" placeholder="\u7A7A=\u4E0D\u9650" value="${n.maxTriggers??""}" data-event="${t}" data-subfield="maxTriggers">
+              <input class="form-input" type="number" min="0" placeholder="\u7A7A=\u4E0D\u9650" value="${a.maxTriggers??""}" data-event="${t}" data-subfield="maxTriggers">
             </div>
           </div>
         </div>
@@ -1262,11 +1562,11 @@ ${Wt(e,a)}${e.message}`:`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`}function Wt
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <div style="flex:1;min-width:120px">
               <label class="form-label" style="font-size:11px">Sticky \u6301\u7EED\u8F6E\u6570</label>
-              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${n.effects?.sticky?.duration||""}" data-event="${t}" data-subfield="sticky_duration">
+              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${a.effects?.sticky?.duration||""}" data-event="${t}" data-subfield="sticky_duration">
             </div>
             <div style="flex:1;min-width:120px">
               <label class="form-label" style="font-size:11px">Cooldown \u51B7\u5374\u8F6E\u6570</label>
-              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${n.cooldown||n.effects?.cooldown||""}" data-event="${t}" data-subfield="cooldown">
+              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${a.cooldown||a.effects?.cooldown||""}" data-event="${t}" data-subfield="cooldown">
             </div>
           </div>
         </div>
@@ -1274,30 +1574,30 @@ ${Wt(e,a)}${e.message}`:`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`}function Wt
           <button class="btn btn-sm btn-primary" data-action="event-save" data-idx="${t}">\u786E\u5B9A</button>
           <button class="btn btn-sm btn-secondary" data-action="event-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let i=Ge(n.trigger);a+=`<div class="card">
+      </div>`;else{let i=Ye(a.trigger);n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${x(n.name||"\u672A\u547D\u540D")}</strong>
-            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">\u9636\u6BB5 ${n.stage??0} &middot; ${i}</div>
+            <strong>${x(a.name||"\u672A\u547D\u540D")}</strong>
+            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">\u9636\u6BB5 ${a.stage??0} &middot; ${i}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
             <button class="btn btn-sm btn-secondary" data-action="event-edit" data-idx="${t}">\u7F16\u8F91</button>
             <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="event-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),a+='<button class="btn btn-sm btn-secondary btn-block" data-action="event-add" style="margin-top:8px">+ \u65B0\u589E\u4E8B\u4EF6</button>',a}function sn(){let e=u.stages||[],a="";return e.forEach((n,t)=>{if($[`stage_${t}`])a+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u9636\u6BB5\u540D\u79F0</label><input class="form-input" value="${x(n.name||"")}" data-stage="${t}" data-subfield="name"></div>
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="event-add" style="margin-top:8px">+ \u65B0\u589E\u4E8B\u4EF6</button>',n}function un(){let e=p.stages||[],n="";return e.forEach((a,t)=>{if($[`stage_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u9636\u6BB5\u540D\u79F0</label><input class="form-input" value="${x(a.name||"")}" data-stage="${t}" data-subfield="name"></div>
         <div class="form-group"><label class="form-label">\u8FC7\u6E21\u6761\u4EF6</label>
-          ${We(n.transition||{},`stage_${t}_transition`)}
+          ${Xe(a.transition||{},`stage_${t}_transition`)}
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-sm btn-primary" data-action="stage-save" data-idx="${t}">\u786E\u5B9A</button>
           <button class="btn btn-sm btn-secondary" data-action="stage-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let i=Ge(n.transition);a+=`<div class="card">
+      </div>`;else{let i=Ye(a.transition);n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${t+1}. ${x(n.name||"\u672A\u547D\u540D")}</strong>
+            <strong>${t+1}. ${x(a.name||"\u672A\u547D\u540D")}</strong>
             ${i?`<div style="color:var(--text-dim);font-size:12px;margin-top:2px">${i}</div>`:""}
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
@@ -1305,20 +1605,20 @@ ${Wt(e,a)}${e.message}`:`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`}function Wt
             <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="stage-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),a+='<button class="btn btn-sm btn-secondary btn-block" data-action="stage-add" style="margin-top:8px">+ \u65B0\u589E\u9636\u6BB5</button>',a}function rn(){let e=u.endings||[],a="";return e.forEach((n,t)=>{if($[`ending_${t}`])a+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u7ED3\u5C40\u540D\u79F0</label><input class="form-input" value="${x(n.name||"")}" data-ending="${t}" data-subfield="name"></div>
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="stage-add" style="margin-top:8px">+ \u65B0\u589E\u9636\u6BB5</button>',n}function pn(){let e=p.endings||[],n="";return e.forEach((a,t)=>{if($[`ending_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u7ED3\u5C40\u540D\u79F0</label><input class="form-input" value="${x(a.name||"")}" data-ending="${t}" data-subfield="name"></div>
         <div class="form-group"><label class="form-label">\u8FBE\u6210\u6761\u4EF6</label>
-          ${We(n.condition||{},`ending_${t}_condition`)}
+          ${Xe(a.condition||{},`ending_${t}_condition`)}
         </div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-ending="${t}" data-subfield="description">${x(n.description||"")}</textarea></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-ending="${t}" data-subfield="description">${x(a.description||"")}</textarea></div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-sm btn-primary" data-action="ending-save" data-idx="${t}">\u786E\u5B9A</button>
           <button class="btn btn-sm btn-secondary" data-action="ending-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let i=Ge(n.condition);a+=`<div class="card">
+      </div>`;else{let i=Ye(a.condition);n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${x(n.name||"\u672A\u547D\u540D")}</strong>
+            <strong>${x(a.name||"\u672A\u547D\u540D")}</strong>
             <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${i||"\u65E0\u6761\u4EF6"}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
@@ -1326,14 +1626,14 @@ ${Wt(e,a)}${e.message}`:`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`}function Wt
             <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="ending-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),a+='<button class="btn btn-sm btn-secondary btn-block" data-action="ending-add" style="margin-top:8px">+ \u65B0\u589E\u7ED3\u5C40</button>',a}function on(){let e=u.setup||[],a="";return e.forEach((n,t)=>{if($[`setup_${t}`])a+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u6B65\u9AA4\u540D\u79F0</label><input class="form-input" value="${x(n.step||"")}" data-setup="${t}" data-subfield="step"></div>
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="ending-add" style="margin-top:8px">+ \u65B0\u589E\u7ED3\u5C40</button>',n}function mn(){let e=p.setup||[],n="";return e.forEach((a,t)=>{if($[`setup_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u6B65\u9AA4\u540D\u79F0</label><input class="form-input" value="${x(a.step||"")}" data-setup="${t}" data-subfield="step"></div>
         <div class="form-group"><label class="form-label">\u9009\u9879\u5217\u8868</label>
-          ${cn(n.options||[],t)}
+          ${gn(a.options||[],t)}
         </div>
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${n.allow_custom?"checked":""} data-setup="${t}" data-subfield="allow_custom" style="width:16px;height:16px">
+            <input type="checkbox" ${a.allow_custom?"checked":""} data-setup="${t}" data-subfield="allow_custom" style="width:16px;height:16px">
             \u5141\u8BB8\u81EA\u5B9A\u4E49\u8F93\u5165
           </label>
         </div>
@@ -1341,68 +1641,68 @@ ${Wt(e,a)}${e.message}`:`\u5BFC\u5165\u5931\u8D25\uFF1A${e.message}`}function Wt
           <button class="btn btn-sm btn-primary" data-action="setup-save" data-idx="${t}">\u786E\u5B9A</button>
           <button class="btn btn-sm btn-secondary" data-action="setup-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let i=(n.options||[]).length;a+=`<div class="card">
+      </div>`;else{let i=(a.options||[]).length;n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${x(n.step||"\u672A\u547D\u540D")}</strong>
-            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${i} \u4E2A\u9009\u9879${n.allow_custom?" \xB7 \u5141\u8BB8\u81EA\u5B9A\u4E49":""}</div>
+            <strong>${x(a.step||"\u672A\u547D\u540D")}</strong>
+            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${i} \u4E2A\u9009\u9879${a.allow_custom?" \xB7 \u5141\u8BB8\u81EA\u5B9A\u4E49":""}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
             <button class="btn btn-sm btn-secondary" data-action="setup-edit" data-idx="${t}">\u7F16\u8F91</button>
             <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="setup-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),a+='<button class="btn btn-sm btn-secondary btn-block" data-action="setup-add" style="margin-top:8px">+ \u65B0\u589E\u5F00\u5C40\u9009\u9879</button>',a}function ln(){return`
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="setup-add" style="margin-top:8px">+ \u65B0\u589E\u5F00\u5C40\u9009\u9879</button>',n}function fn(){return`
     <div class="form-group">
       <label class="form-label">\u539F\u59CB JSON\uFF08\u4EC5\u5728\u9700\u8981\u5FAE\u8C03\u65F6\u4F7F\u7528\uFF09</label>
-      <textarea class="form-input" id="f-json" rows="12" style="font-family:monospace;font-size:12px;resize:vertical">${x(JSON.stringify(u,null,2))}</textarea>
+      <textarea class="form-input" id="f-json" rows="12" style="font-family:monospace;font-size:12px;resize:vertical">${x(JSON.stringify(p,null,2))}</textarea>
     </div>
-    <button class="btn btn-sm btn-secondary" data-action="json-apply">\u4ECE JSON \u540C\u6B65\u5230\u8868\u5355</button>`}function x(e){let a=document.createElement("div");return a.textContent=e,a.innerHTML}function pt(e,a){let n='<div class="field-list">';return e.forEach((t,s)=>{n+=`<span class="field-tag">${x(t)}<button class="field-tag-x" data-action="tag-remove" data-field="${a}" data-idx="${s}">&times;</button></span>`}),n+=`</div>
+    <button class="btn btn-sm btn-secondary" data-action="json-apply">\u4ECE JSON \u540C\u6B65\u5230\u8868\u5355</button>`}function x(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}function vt(e,n){let a='<div class="field-list">';return e.forEach((t,s)=>{a+=`<span class="field-tag">${x(t)}<button class="field-tag-x" data-action="tag-remove" data-field="${n}" data-idx="${s}">&times;</button></span>`}),a+=`</div>
     <div style="display:flex;gap:6px;margin-top:6px">
-      <input class="form-input" style="flex:1" placeholder="\u8F93\u5165\u5185\u5BB9..." data-tag-input="${a}">
-      <button class="btn btn-sm btn-secondary" data-action="tag-add" data-field="${a}">\u6DFB\u52A0</button>
-    </div>`,n}function We(e,a){let n=u.dimensions||[],t=[],s="and";e&&e.op&&e.conditions?(s=e.op,t=e.conditions.map(l=>[l.dim||"",{min:l.min,max:l.max,probability:l.probability}])):e&&typeof e=="object"&&(t=Object.entries(e).filter(([l])=>l!=="op"&&l!=="conditions")),t.length===0&&t.push(["",{min:"",max:"",probability:""}]);let i=t.length>1,o="";return i&&(o+=`<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;font-size:12px;color:var(--text-dim)">
-      <label style="cursor:pointer"><input type="radio" name="op_${a}" value="and" ${s==="and"?"checked":""} data-cond-op="${a}"> \u5168\u90E8\u6EE1\u8DB3 (AND)</label>
-      <label style="cursor:pointer"><input type="radio" name="op_${a}" value="or" ${s==="or"?"checked":""} data-cond-op="${a}"> \u4EFB\u4E00\u6EE1\u8DB3 (OR)</label>
-    </div>`),o+='<div class="condition-list">',t.forEach(([l,c],r)=>{o+=`<div class="condition-row" data-cond-prefix="${a}" data-cond-idx="${r}">
-      <select class="form-input cond-dim" style="flex:2;font-size:12px" data-cond-prefix="${a}" data-cond-idx="${r}" data-cond-field="dimId">
+      <input class="form-input" style="flex:1" placeholder="\u8F93\u5165\u5185\u5BB9..." data-tag-input="${n}">
+      <button class="btn btn-sm btn-secondary" data-action="tag-add" data-field="${n}">\u6DFB\u52A0</button>
+    </div>`,a}function Xe(e,n){let a=p.dimensions||[],t=[],s="and";e&&e.op&&e.conditions?(s=e.op,t=e.conditions.map(c=>[c.dim||"",{min:c.min,max:c.max,probability:c.probability}])):e&&typeof e=="object"&&(t=Object.entries(e).filter(([c])=>c!=="op"&&c!=="conditions")),t.length===0&&t.push(["",{min:"",max:"",probability:""}]);let i=t.length>1,l="";return i&&(l+=`<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;font-size:12px;color:var(--text-dim)">
+      <label style="cursor:pointer"><input type="radio" name="op_${n}" value="and" ${s==="and"?"checked":""} data-cond-op="${n}"> \u5168\u90E8\u6EE1\u8DB3 (AND)</label>
+      <label style="cursor:pointer"><input type="radio" name="op_${n}" value="or" ${s==="or"?"checked":""} data-cond-op="${n}"> \u4EFB\u4E00\u6EE1\u8DB3 (OR)</label>
+    </div>`),l+='<div class="condition-list">',t.forEach(([c,o],r)=>{l+=`<div class="condition-row" data-cond-prefix="${n}" data-cond-idx="${r}">
+      <select class="form-input cond-dim" style="flex:2;font-size:12px" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="dimId">
         <option value="">\u9009\u62E9\u7EF4\u5EA6</option>
-        ${n.map(d=>`<option value="${d.id}" ${d.id===l?"selected":""}>${x(d.name||d.id)}</option>`).join("")}
+        ${a.map(d=>`<option value="${d.id}" ${d.id===c?"selected":""}>${x(d.name||d.id)}</option>`).join("")}
       </select>
-      <input class="form-input cond-min" style="flex:1;font-size:12px" type="number" placeholder="min" value="${c.min??""}" data-cond-prefix="${a}" data-cond-idx="${r}" data-cond-field="min">
-      <input class="form-input cond-max" style="flex:1;font-size:12px" type="number" placeholder="max" value="${c.max??""}" data-cond-prefix="${a}" data-cond-idx="${r}" data-cond-field="max">
-      <input class="form-input cond-prob" style="flex:1;font-size:12px" type="number" step="0.1" min="0" max="1" placeholder="\u6982\u7387" value="${c.probability??""}" data-cond-prefix="${a}" data-cond-idx="${r}" data-cond-field="probability">
-      <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="cond-remove" data-cond-prefix="${a}" data-cond-idx="${r}">&times;</button>
-    </div>`}),o+=`</div>
-    <button class="btn btn-sm btn-secondary" data-action="cond-add" data-cond-prefix="${a}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u6761\u4EF6</button>`,o}function cn(e,a){let n='<div class="option-list">';return e.forEach((t,s)=>{n+=`<div class="option-row" data-setup-idx="${a}" data-opt-idx="${s}" style="flex-direction:column;gap:4px">
+      <input class="form-input cond-min" style="flex:1;font-size:12px" type="number" placeholder="min" value="${o.min??""}" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="min">
+      <input class="form-input cond-max" style="flex:1;font-size:12px" type="number" placeholder="max" value="${o.max??""}" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="max">
+      <input class="form-input cond-prob" style="flex:1;font-size:12px" type="number" step="0.1" min="0" max="1" placeholder="\u6982\u7387" value="${o.probability??""}" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="probability">
+      <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="cond-remove" data-cond-prefix="${n}" data-cond-idx="${r}">&times;</button>
+    </div>`}),l+=`</div>
+    <button class="btn btn-sm btn-secondary" data-action="cond-add" data-cond-prefix="${n}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u6761\u4EF6</button>`,l}function gn(e,n){let a='<div class="option-list">';return e.forEach((t,s)=>{a+=`<div class="option-row" data-setup-idx="${n}" data-opt-idx="${s}" style="flex-direction:column;gap:4px">
       <div style="display:flex;gap:4px;width:100%">
-        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u663E\u793A\u6587\u672C" value="${x(t.label||"")}" data-setup="${a}" data-opt="${s}" data-opt-field="label">
-        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u5B9E\u9645\u503C" value="${x(t.value||"")}" data-setup="${a}" data-opt="${s}" data-opt-field="value">
-        <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="opt-remove" data-setup-idx="${a}" data-opt-idx="${s}">&times;</button>
+        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u663E\u793A\u6587\u672C" value="${x(t.label||"")}" data-setup="${n}" data-opt="${s}" data-opt-field="label">
+        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u5B9E\u9645\u503C" value="${x(t.value||"")}" data-setup="${n}" data-opt="${s}" data-opt-field="value">
+        <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="opt-remove" data-setup-idx="${n}" data-opt-idx="${s}">&times;</button>
       </div>
-      <input class="form-input" style="width:100%;font-size:11px" placeholder="\u63CF\u8FF0\uFF08\u53EF\u9009\uFF0C\u5E2E\u52A9LLM\u7406\u89E3\u6B64\u9009\u9879\u7684\u542B\u4E49\uFF0C\u5982\uFF1A\u4E24\u4EBA\u4E0D\u4F4F\u5728\u4E00\u8D77\uFF0C\u89C1\u9762\u9700\u8981\u7EA6\u65F6\u95F4\uFF09" value="${x(t.description||"")}" data-setup="${a}" data-opt="${s}" data-opt-field="description">
-    </div>`}),n+=`</div>
-    <button class="btn btn-sm btn-secondary" data-action="opt-add" data-setup-idx="${a}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u9009\u9879</button>`,n}function Ge(e){if(!e||typeof e!="object")return"";let a=u.dimensions||[];if(e.op&&e.conditions){let n=e.op==="or"?" \u6216 ":" \u4E14 ";return e.conditions.map(t=>{let s=a.find(l=>l.id===t.dim),i=s?s.name:t.dim,o=[];return t.min!=null&&t.min!==""&&o.push(`>=${t.min}`),t.max!=null&&t.max!==""&&o.push(`<=${t.max}`),t.probability!=null&&t.probability!==""&&o.push(`p=${t.probability}`),`${i} ${o.join(" ")}`}).filter(Boolean).join(n)}return Object.entries(e).map(([n,t])=>{if(!t||typeof t!="object")return"";let s=a.find(l=>l.id===n),i=s?s.name:n,o=[];return t.min!=null&&t.min!==""&&o.push(`>=${t.min}`),t.max!=null&&t.max!==""&&o.push(`<=${t.max}`),t.probability!=null&&t.probability!==""&&o.push(`p=${t.probability}`),`${i} ${o.join(" ")}`}).filter(Boolean).join(", ")}function pe(e){let a=document.querySelectorAll(`[data-cond-prefix="${e}"]`),n=[],t=new Set;if(a.forEach(o=>{let l=o.dataset.condIdx;if(t.has(l))return;t.add(l);let c=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${l}"][data-cond-field="dimId"]`)?.value;if(!c)return;let r=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${l}"][data-cond-field="min"]`)?.value,d=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${l}"][data-cond-field="max"]`)?.value,g=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${l}"][data-cond-field="probability"]`)?.value,v={dim:c};r!==""&&r!==void 0&&(v.min=Number(r)),d!==""&&d!==void 0&&(v.max=Number(d)),g!==""&&g!==void 0&&(v.probability=Number(g)),n.push(v)}),n.length===0)return{};if(n.length===1){let o=n[0],l={},c={};return o.min!==void 0&&(c.min=o.min),o.max!==void 0&&(c.max=o.max),o.probability!==void 0&&(c.probability=o.probability),l[o.dim]=c,l}return{op:document.querySelector(`[data-cond-op="${e}"]:checked`)?.value||"and",conditions:n}}function dn(e){let a=[];return document.querySelectorAll(`[data-setup-idx="${e}"][data-opt-idx]`).forEach(n=>{let t=n.dataset.optIdx,s=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="label"]`)?.value?.trim(),i=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="value"]`)?.value?.trim(),o=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="description"]`)?.value?.trim();if(s){let l={label:s,value:i||s};o&&(l.description=o),a.push(l)}}),a}function Se(e){let a=n=>e.querySelector(n)?.value;u.name=a('[data-field="name"]')||u.name,u.description=a('[data-field="description"]')??u.description,u.rules&&(u.rules.writing_style=a('[data-field="rules.writing_style"]')??u.rules.writing_style)}function h(e){let n=e.querySelector("#editor-scroll")?.scrollTop||0;Se(e),ht(e);let t=e.querySelector("#editor-scroll");t&&(t.scrollTop=n)}function un(e){e.querySelector("#btn-back").onclick=()=>w("home"),e.querySelector("#btn-save").onclick=async()=>{Se(e);let a=te(u),n=W(a);if(!n.ok){alert(`\u4FDD\u5B58\u5931\u8D25\uFF1A\u5267\u672C\u6821\u9A8C\u672A\u901A\u8FC7
+      <input class="form-input" style="width:100%;font-size:11px" placeholder="\u63CF\u8FF0\uFF08\u53EF\u9009\uFF0C\u5E2E\u52A9LLM\u7406\u89E3\u6B64\u9009\u9879\u7684\u542B\u4E49\uFF0C\u5982\uFF1A\u4E24\u4EBA\u4E0D\u4F4F\u5728\u4E00\u8D77\uFF0C\u89C1\u9762\u9700\u8981\u7EA6\u65F6\u95F4\uFF09" value="${x(t.description||"")}" data-setup="${n}" data-opt="${s}" data-opt-field="description">
+    </div>`}),a+=`</div>
+    <button class="btn btn-sm btn-secondary" data-action="opt-add" data-setup-idx="${n}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u9009\u9879</button>`,a}function Ye(e){if(!e||typeof e!="object")return"";let n=p.dimensions||[];if(e.op&&e.conditions){let a=e.op==="or"?" \u6216 ":" \u4E14 ";return e.conditions.map(t=>{let s=n.find(c=>c.id===t.dim),i=s?s.name:t.dim,l=[];return t.min!=null&&t.min!==""&&l.push(`>=${t.min}`),t.max!=null&&t.max!==""&&l.push(`<=${t.max}`),t.probability!=null&&t.probability!==""&&l.push(`p=${t.probability}`),`${i} ${l.join(" ")}`}).filter(Boolean).join(a)}return Object.entries(e).map(([a,t])=>{if(!t||typeof t!="object")return"";let s=n.find(c=>c.id===a),i=s?s.name:a,l=[];return t.min!=null&&t.min!==""&&l.push(`>=${t.min}`),t.max!=null&&t.max!==""&&l.push(`<=${t.max}`),t.probability!=null&&t.probability!==""&&l.push(`p=${t.probability}`),`${i} ${l.join(" ")}`}).filter(Boolean).join(", ")}function fe(e){let n=document.querySelectorAll(`[data-cond-prefix="${e}"]`),a=[],t=new Set;if(n.forEach(l=>{let c=l.dataset.condIdx;if(t.has(c))return;t.add(c);let o=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${c}"][data-cond-field="dimId"]`)?.value;if(!o)return;let r=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${c}"][data-cond-field="min"]`)?.value,d=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${c}"][data-cond-field="max"]`)?.value,g=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${c}"][data-cond-field="probability"]`)?.value,b={dim:o};r!==""&&r!==void 0&&(b.min=Number(r)),d!==""&&d!==void 0&&(b.max=Number(d)),g!==""&&g!==void 0&&(b.probability=Number(g)),a.push(b)}),a.length===0)return{};if(a.length===1){let l=a[0],c={},o={};return l.min!==void 0&&(o.min=l.min),l.max!==void 0&&(o.max=l.max),l.probability!==void 0&&(o.probability=l.probability),c[l.dim]=o,c}return{op:document.querySelector(`[data-cond-op="${e}"]:checked`)?.value||"and",conditions:a}}function bn(e){let n=[];return document.querySelectorAll(`[data-setup-idx="${e}"][data-opt-idx]`).forEach(a=>{let t=a.dataset.optIdx,s=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="label"]`)?.value?.trim(),i=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="value"]`)?.value?.trim(),l=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="description"]`)?.value?.trim();if(s){let c={label:s,value:i||s};l&&(c.description=l),n.push(c)}}),n}function Ee(e){let n=a=>e.querySelector(a)?.value;p.name=n('[data-field="name"]')||p.name,p.description=n('[data-field="description"]')??p.description,p.rules&&(p.rules.writing_style=n('[data-field="rules.writing_style"]')??p.rules.writing_style)}function y(e){let a=e.querySelector("#editor-scroll")?.scrollTop||0;Ee(e),wt(e);let t=e.querySelector("#editor-scroll");t&&(t.scrollTop=a)}function vn(e){e.querySelector("#btn-back").onclick=()=>w("home"),e.querySelector("#btn-save").onclick=async()=>{Ee(e);let n=Q(p),a=X(n);if(!a.ok){me=!0,await J(`\u4FDD\u5B58\u5931\u8D25\uFF1A\u5267\u672C\u6821\u9A8C\u672A\u901A\u8FC7
 
-${F(n)}`),h(e);return}n.warnings.length&&!confirm(`\u4FDD\u5B58\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+${K(a)}`,{title:"\u4FDD\u5B58\u5931\u8D25",tone:"danger"}),y(e);return}a.warnings.length&&!await z(`\u4FDD\u5B58\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
 
-${F(n)}`)||(await Le(a),alert("\u5DF2\u4FDD\u5B58"))},e.querySelector("#btn-export").onclick=()=>{Se(e);let a=new Blob([JSON.stringify(u,null,2)],{type:"application/json"}),n=document.createElement("a");n.href=URL.createObjectURL(a),n.download=`${u.name||"script"}.json`,n.click(),URL.revokeObjectURL(n.href)},e.querySelector("#btn-import").onclick=()=>e.querySelector("#file-import").click(),e.querySelector("#file-import").onchange=async a=>{let n=a.target.files?.[0];if(!n)return;let t="";try{t=await n.text();let s=JSON.parse(t);u=te(s);let i=W(u);if(i.ok||gt(i),i.warnings.length&&!confirm(`\u5BFC\u5165\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+${K(a)}`,{title:"\u4FDD\u5B58\u8B66\u544A",confirmText:"\u7EE7\u7EED\u4FDD\u5B58"})||(await Pe(n),me=!1,await J("\u5267\u672C\u5DF2\u4FDD\u5B58\u3002",{title:"\u4FDD\u5B58\u6210\u529F"}))},e.querySelector("#btn-export").onclick=()=>{Ee(e);let n=new Blob([JSON.stringify(p,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(n),a.download=`${p.name||"script"}.json`,a.click(),URL.revokeObjectURL(a.href)},e.querySelector("#btn-import").onclick=()=>e.querySelector("#file-import").click(),e.querySelector("#file-import").onchange=async n=>{let a=n.target.files?.[0];if(!a)return;let t="";try{t=await a.text();let s=JSON.parse(t);p=Q(s);let i=X(p);if(i.ok||$t(i),i.warnings.length&&!await z(`\u5BFC\u5165\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
 
-${F(i)}`))return;u.id=(await B(u.id))?.id||u.id,$={},h(e)}catch(s){alert(bt(s,"\u5BFC\u5165\u5931\u8D25",t))}},e.querySelectorAll("[data-section-toggle]").forEach(a=>{a.onclick=()=>{let n=a.dataset.sectionToggle;Xt(n);let t=a.nextElementSibling,s=a.querySelector(".section-arrow"),i=ue.has(n);t.style.display=i?"":"none",a.classList.toggle("open",i),s.innerHTML=i?"&#9660;":"&#9654;"}}),xe&&e.removeEventListener("click",xe),xe=a=>{let n=a.target.closest("[data-action]");if(!n)return;let t=n.dataset.action,s=parseInt(n.dataset.idx);if(!(t.endsWith("-delete")&&!confirm("\u786E\u5B9A\u5220\u9664\u8FD9\u4E00\u9879\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002")))if(t==="dim-add"){u.dimensions.push({id:"",name:"",range:[0,100],initial:[0,0]});let i=`dim_${u.dimensions.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="dim-edit")$[`dim_${s}`]=!0,h(e);else if(t==="dim-cancel"){let i=`dim_${s}`;E.has(i)&&(u.dimensions.splice(s,1),E.delete(i)),delete $[i],h(e)}else if(t==="dim-save")pn(e,s),delete $[`dim_${s}`],E.delete(`dim_${s}`),h(e);else if(t==="dim-delete")u.dimensions.splice(s,1),h(e);else if(t==="char-add"){u.characters.push({id:"",name:"",description:""});let i=`char_${u.characters.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="char-edit")$[`char_${s}`]=!0,h(e);else if(t==="char-cancel"){let i=`char_${s}`;E.has(i)&&(u.characters.splice(s,1),E.delete(i)),delete $[i],h(e)}else if(t==="char-save")mn(e,s),delete $[`char_${s}`],E.delete(`char_${s}`),h(e);else if(t==="char-delete")u.characters.splice(s,1),h(e);else if(t==="event-add"){u.events.push({name:"",stage:0,trigger:{},description:""});let i=`event_${u.events.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="event-edit")$[`event_${s}`]=!0,h(e);else if(t==="event-cancel"){let i=`event_${s}`;E.has(i)&&(u.events.splice(s,1),E.delete(i)),delete $[i],h(e)}else if(t==="event-save")fn(e,s),delete $[`event_${s}`],E.delete(`event_${s}`),h(e);else if(t==="event-delete")u.events.splice(s,1),h(e);else if(t==="stage-add"){u.stages.push({name:"",transition:{}});let i=`stage_${u.stages.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="stage-edit")$[`stage_${s}`]=!0,h(e);else if(t==="stage-cancel"){let i=`stage_${s}`;E.has(i)&&(u.stages.splice(s,1),E.delete(i)),delete $[i],h(e)}else if(t==="stage-save")gn(e,s),delete $[`stage_${s}`],E.delete(`stage_${s}`),h(e);else if(t==="stage-delete")u.stages.splice(s,1),h(e);else if(t==="ending-add"){u.endings.push({name:"",condition:{},description:""});let i=`ending_${u.endings.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="ending-edit")$[`ending_${s}`]=!0,h(e);else if(t==="ending-cancel"){let i=`ending_${s}`;E.has(i)&&(u.endings.splice(s,1),E.delete(i)),delete $[i],h(e)}else if(t==="ending-save")bn(e,s),delete $[`ending_${s}`],E.delete(`ending_${s}`),h(e);else if(t==="ending-delete")u.endings.splice(s,1),h(e);else if(t==="setup-add"){u.setup.push({step:"",options:[],allow_custom:!1});let i=`setup_${u.setup.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="setup-edit")$[`setup_${s}`]=!0,h(e);else if(t==="setup-cancel"){let i=`setup_${s}`;E.has(i)&&(u.setup.splice(s,1),E.delete(i)),delete $[i],h(e)}else if(t==="setup-save")vn(e,s),delete $[`setup_${s}`],E.delete(`setup_${s}`),h(e);else if(t==="setup-delete")u.setup.splice(s,1),h(e);else if(t==="tag-add"){let i=n.dataset.field,o=e.querySelector(`[data-tag-input="${i}"]`),l=o?.value?.trim();if(!l)return;let c=mt(u,i)||[];c.push(l),ft(u,i,c),o.value="",h(e)}else if(t==="tag-remove"){let i=n.dataset.field,o=parseInt(n.dataset.idx),l=mt(u,i)||[];l.splice(o,1),ft(u,i,l),h(e)}else if(t==="cond-add"){let i=n.dataset.condPrefix,[o,l,c]=i.split("_"),r=parseInt(l),d=pe(i);d[""]={min:"",max:"",probability:""},o==="event"?u.events[r].trigger=d:o==="stage"?u.stages[r].transition=d:o==="ending"&&(u.endings[r].condition=d),h(e),$[`${o}_${r}`]=!0,h(e)}else if(t==="cond-remove"){let i=n.dataset.condPrefix,o=n.dataset.condIdx,[l,c,r]=i.split("_"),d=parseInt(c),g=pe(i),v=Object.keys(g);v[o]&&delete g[v[o]],l==="event"?u.events[d].trigger=g:l==="stage"?u.stages[d].transition=g:l==="ending"&&(u.endings[d].condition=g),$[`${l}_${d}`]=!0,h(e)}else if(t==="opt-add"){let i=parseInt(n.dataset.setupIdx);u.setup[i].options=u.setup[i].options||[],u.setup[i].options.push({label:"",value:""}),$[`setup_${i}`]=!0,h(e)}else if(t==="opt-remove"){let i=parseInt(n.dataset.setupIdx),o=parseInt(n.dataset.optIdx);u.setup[i].options.splice(o,1),$[`setup_${i}`]=!0,h(e)}else if(t==="json-apply")try{let i=e.querySelector("#f-json").value,o=JSON.parse(i);u=te(o);let l=W(u);if(l.ok||gt(l),l.warnings.length&&!confirm(`JSON \u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+${K(i)}`,{title:"\u5BFC\u5165\u8B66\u544A",confirmText:"\u7EE7\u7EED\u5BFC\u5165"}))return;p.id=(await F(p.id))?.id||p.id,$={},y(e)}catch(s){await J(xt(s,"\u5BFC\u5165\u5931\u8D25",t),{title:"\u5BFC\u5165\u5931\u8D25",tone:"danger"})}},e.querySelectorAll("[data-section-toggle]").forEach(n=>{n.onclick=()=>{let a=n.dataset.sectionToggle;sn(a);let t=n.nextElementSibling,s=n.querySelector(".section-arrow"),i=pe.has(a);t.style.display=i?"":"none",n.classList.toggle("open",i),s.innerHTML=i?"&#9660;":"&#9654;"}}),ke&&e.removeEventListener("click",ke),ke=async n=>{let a=n.target.closest("[data-action]");if(!a)return;let t=a.dataset.action,s=parseInt(a.dataset.idx);if(!(t.endsWith("-delete")&&!await z("\u786E\u5B9A\u5220\u9664\u8FD9\u4E00\u9879\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002",{title:"\u5220\u9664\u786E\u8BA4",tone:"danger",confirmText:"\u5220\u9664"})))if(t==="dim-add"){p.dimensions.push({id:"",name:"",range:[0,100],initial:[0,0]});let i=`dim_${p.dimensions.length-1}`;$[i]=!0,E.add(i),y(e)}else if(t==="dim-edit")$[`dim_${s}`]=!0,y(e);else if(t==="dim-cancel"){let i=`dim_${s}`;E.has(i)&&(p.dimensions.splice(s,1),E.delete(i)),delete $[i],y(e)}else if(t==="dim-save")hn(e,s),delete $[`dim_${s}`],E.delete(`dim_${s}`),y(e);else if(t==="dim-delete")p.dimensions.splice(s,1),y(e);else if(t==="char-add"){p.characters.push({id:"",name:"",description:""});let i=`char_${p.characters.length-1}`;$[i]=!0,E.add(i),y(e)}else if(t==="char-edit")$[`char_${s}`]=!0,y(e);else if(t==="char-cancel"){let i=`char_${s}`;E.has(i)&&(p.characters.splice(s,1),E.delete(i)),delete $[i],y(e)}else if(t==="char-save")yn(e,s),delete $[`char_${s}`],E.delete(`char_${s}`),y(e);else if(t==="char-delete")p.characters.splice(s,1),y(e);else if(t==="event-add"){p.events.push({name:"",stage:0,trigger:{},description:""});let i=`event_${p.events.length-1}`;$[i]=!0,E.add(i),y(e)}else if(t==="event-edit")$[`event_${s}`]=!0,y(e);else if(t==="event-cancel"){let i=`event_${s}`;E.has(i)&&(p.events.splice(s,1),E.delete(i)),delete $[i],y(e)}else if(t==="event-save")$n(e,s),delete $[`event_${s}`],E.delete(`event_${s}`),y(e);else if(t==="event-delete")p.events.splice(s,1),y(e);else if(t==="stage-add"){p.stages.push({name:"",transition:{}});let i=`stage_${p.stages.length-1}`;$[i]=!0,E.add(i),y(e)}else if(t==="stage-edit")$[`stage_${s}`]=!0,y(e);else if(t==="stage-cancel"){let i=`stage_${s}`;E.has(i)&&(p.stages.splice(s,1),E.delete(i)),delete $[i],y(e)}else if(t==="stage-save")xn(e,s),delete $[`stage_${s}`],E.delete(`stage_${s}`),y(e);else if(t==="stage-delete")p.stages.splice(s,1),y(e);else if(t==="ending-add"){p.endings.push({name:"",condition:{},description:""});let i=`ending_${p.endings.length-1}`;$[i]=!0,E.add(i),y(e)}else if(t==="ending-edit")$[`ending_${s}`]=!0,y(e);else if(t==="ending-cancel"){let i=`ending_${s}`;E.has(i)&&(p.endings.splice(s,1),E.delete(i)),delete $[i],y(e)}else if(t==="ending-save")Sn(e,s),delete $[`ending_${s}`],E.delete(`ending_${s}`),y(e);else if(t==="ending-delete")p.endings.splice(s,1),y(e);else if(t==="setup-add"){p.setup.push({step:"",options:[],allow_custom:!1});let i=`setup_${p.setup.length-1}`;$[i]=!0,E.add(i),y(e)}else if(t==="setup-edit")$[`setup_${s}`]=!0,y(e);else if(t==="setup-cancel"){let i=`setup_${s}`;E.has(i)&&(p.setup.splice(s,1),E.delete(i)),delete $[i],y(e)}else if(t==="setup-save")wn(e,s),delete $[`setup_${s}`],E.delete(`setup_${s}`),y(e);else if(t==="setup-delete")p.setup.splice(s,1),y(e);else if(t==="tag-add"){let i=a.dataset.field,l=e.querySelector(`[data-tag-input="${i}"]`),c=l?.value?.trim();if(!c)return;let o=ht(p,i)||[];o.push(c),yt(p,i,o),l.value="",y(e)}else if(t==="tag-remove"){let i=a.dataset.field,l=parseInt(a.dataset.idx),c=ht(p,i)||[];c.splice(l,1),yt(p,i,c),y(e)}else if(t==="cond-add"){let i=a.dataset.condPrefix,[l,c,o]=i.split("_"),r=parseInt(c),d=fe(i);d[""]={min:"",max:"",probability:""},l==="event"?p.events[r].trigger=d:l==="stage"?p.stages[r].transition=d:l==="ending"&&(p.endings[r].condition=d),y(e),$[`${l}_${r}`]=!0,y(e)}else if(t==="cond-remove"){let i=a.dataset.condPrefix,l=a.dataset.condIdx,[c,o,r]=i.split("_"),d=parseInt(o),g=fe(i),b=Object.keys(g);b[l]&&delete g[b[l]],c==="event"?p.events[d].trigger=g:c==="stage"?p.stages[d].transition=g:c==="ending"&&(p.endings[d].condition=g),$[`${c}_${d}`]=!0,y(e)}else if(t==="opt-add"){let i=parseInt(a.dataset.setupIdx);p.setup[i].options=p.setup[i].options||[],p.setup[i].options.push({label:"",value:""}),$[`setup_${i}`]=!0,y(e)}else if(t==="opt-remove"){let i=parseInt(a.dataset.setupIdx),l=parseInt(a.dataset.optIdx);p.setup[i].options.splice(l,1),$[`setup_${i}`]=!0,y(e)}else if(t==="json-apply")try{let i=e.querySelector("#f-json").value,l=JSON.parse(i);p=Q(l);let c=X(p);if(c.ok||$t(c),c.warnings.length&&!await z(`JSON \u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
 
-${F(l)}`))return;$={},h(e)}catch(i){alert(bt(i,"JSON \u540C\u6B65\u5931\u8D25",e.querySelector("#f-json").value))}else t==="validate-now"&&(Se(e),h(e))},e.addEventListener("click",xe)}function pn(e,a){let n=i=>e.querySelector(`[data-dim="${a}"][data-subfield="${i}"]`)?.value,t=n("scope")?.trim(),s=n("description")?.trim();u.dimensions[a]={id:n("id")||`dim_${a}`,name:n("name")||"",...s?{description:s}:{},...t?{scope:t}:{},range:[Number(n("range_min")||0),Number(n("range_max")||100)],initial:[Number(n("initial_min")||0),Number(n("initial_max")||0)]}}function mn(e,a){let n=t=>e.querySelector(`[data-char="${a}"][data-subfield="${t}"]`)?.value;u.characters[a]={id:n("id")||`char_${a}`,name:n("name")||"",description:n("description")||""}}function fn(e,a){let n=r=>e.querySelector(`[data-event="${a}"][data-subfield="${r}"]`)?.value,t={},s=Number(n("sticky_duration")||0),i=Number(n("cooldown")||0);s>0&&(t.sticky={dims:{},duration:s});let o=!!e.querySelector(`[data-event="${a}"][data-subfield="once"]`)?.checked,l=n("maxTriggers"),c=l===""||l===void 0?null:Number(l);u.events[a]={name:n("name")||"",stage:Number(n("stage")||0),trigger:pe(`event_${a}_trigger`),description:n("description")||"",...o?{once:o}:{},...c!=null&&c>0?{maxTriggers:c}:{},...i>0?{cooldown:i}:{},...Object.keys(t).length>0?{effects:t}:{}}}function gn(e,a){let n=t=>e.querySelector(`[data-stage="${a}"][data-subfield="${t}"]`)?.value;u.stages[a]={name:n("name")||"",transition:pe(`stage_${a}_transition`)}}function bn(e,a){let n=t=>e.querySelector(`[data-ending="${a}"][data-subfield="${t}"]`)?.value;u.endings[a]={name:n("name")||"",condition:pe(`ending_${a}_condition`),description:n("description")||""}}function vn(e,a){let n=e.querySelector(`[data-setup="${a}"][data-subfield="step"]`)?.value||"",t=e.querySelector(`[data-setup="${a}"][data-subfield="allow_custom"]`)?.checked||!1;u.setup[a]={step:n,options:dn(a),allow_custom:t}}function mt(e,a){return a.split(".").reduce((n,t)=>n?.[t],e)}function ft(e,a,n){let t=a.split("."),s=t.pop(),i=t.reduce((o,l)=>o[l],e);i[s]=n}function gt(e){let a=new Error(F(e));throw a.validation=e,a}function bt(e,a,n=""){return e.validation?`${a}\uFF1Aschema \u6821\u9A8C\u672A\u901A\u8FC7
+${K(c)}`,{title:"JSON \u8B66\u544A",confirmText:"\u7EE7\u7EED\u540C\u6B65"}))return;$={},y(e)}catch(i){await J(xt(i,"JSON \u540C\u6B65\u5931\u8D25",e.querySelector("#f-json").value),{title:"JSON \u540C\u6B65\u5931\u8D25",tone:"danger"})}else t==="validate-now"&&(Ee(e),me=!0,y(e))},e.addEventListener("click",ke)}function hn(e,n){let a=i=>e.querySelector(`[data-dim="${n}"][data-subfield="${i}"]`)?.value,t=a("scope")?.trim(),s=a("description")?.trim();p.dimensions[n]={id:a("id")||`dim_${n}`,name:a("name")||"",...s?{description:s}:{},...t?{scope:t}:{},range:[Number(a("range_min")||0),Number(a("range_max")||100)],initial:[Number(a("initial_min")||0),Number(a("initial_max")||0)]}}function yn(e,n){let a=t=>e.querySelector(`[data-char="${n}"][data-subfield="${t}"]`)?.value;p.characters[n]={id:a("id")||`char_${n}`,name:a("name")||"",description:a("description")||""}}function $n(e,n){let a=r=>e.querySelector(`[data-event="${n}"][data-subfield="${r}"]`)?.value,t={},s=Number(a("sticky_duration")||0),i=Number(a("cooldown")||0);s>0&&(t.sticky={dims:{},duration:s});let l=!!e.querySelector(`[data-event="${n}"][data-subfield="once"]`)?.checked,c=a("maxTriggers"),o=c===""||c===void 0?null:Number(c);p.events[n]={name:a("name")||"",stage:Number(a("stage")||0),trigger:fe(`event_${n}_trigger`),description:a("description")||"",...l?{once:l}:{},...o!=null&&o>0?{maxTriggers:o}:{},...i>0?{cooldown:i}:{},...Object.keys(t).length>0?{effects:t}:{}}}function xn(e,n){let a=t=>e.querySelector(`[data-stage="${n}"][data-subfield="${t}"]`)?.value;p.stages[n]={name:a("name")||"",transition:fe(`stage_${n}_transition`)}}function Sn(e,n){let a=t=>e.querySelector(`[data-ending="${n}"][data-subfield="${t}"]`)?.value;p.endings[n]={name:a("name")||"",condition:fe(`ending_${n}_condition`),description:a("description")||""}}function wn(e,n){let a=e.querySelector(`[data-setup="${n}"][data-subfield="step"]`)?.value||"",t=e.querySelector(`[data-setup="${n}"][data-subfield="allow_custom"]`)?.checked||!1;p.setup[n]={step:a,options:bn(n),allow_custom:t}}function ht(e,n){return n.split(".").reduce((a,t)=>a?.[t],e)}function yt(e,n,a){let t=n.split("."),s=t.pop(),i=t.reduce((l,c)=>l[c],e);i[s]=a}function $t(e){let n=new Error(K(e));throw n.validation=e,n}function xt(e,n,a=""){return e.validation?`${n}\uFF1Aschema \u6821\u9A8C\u672A\u901A\u8FC7
 
-${F(e.validation)}`:e instanceof SyntaxError?`${a}\uFF1AJSON \u89E3\u6790\u9519\u8BEF
+${K(e.validation)}`:e instanceof SyntaxError?`${n}\uFF1AJSON \u89E3\u6790\u9519\u8BEF
 
-${hn(e,n)}${e.message}`:`${a}\uFF1A${e.message}`}function hn(e,a){let n=String(e.message).match(/position\s+(\d+)/i);if(!n||!a)return"";let t=Number(n[1]),s=a.slice(0,t),i=s.split(`
-`).length,o=s.length-s.lastIndexOf(`
-`);return`\u4F4D\u7F6E\uFF1A\u7B2C ${i} \u884C\uFF0C\u7B2C ${o} \u5217
-`}I();I();async function $t(){let[e,a,n,t,s,i,o]=await Promise.all([q("api_url"),q("api_key"),q("api_model"),q("thinking_enabled"),q("reasoning_effort"),q("temperature"),q("api_proxy_enabled")]);if(!e)throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E LLM API \u5730\u5740");if(!o&&!a)throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E LLM API Key\uFF0C\u6216\u542F\u7528\u540E\u7AEF\u4EE3\u7406\u6A21\u5F0F");return{url:e.endsWith("/chat/completions")?e:e.replace(/\/+$/,"")+"/chat/completions",key:a,proxyEnabled:!!o,model:n||"deepseek-v4-flash",thinking:t!==!1,effort:s||"high",temperature:i??.85}}function xt(e,a,{stream:n=!1,maxTokens:t=2048}={}){let s={model:e.model,messages:a,stream:n,max_tokens:t};return e.thinking?s.thinking={type:"enabled",reasoning_effort:e.effort}:s.temperature=e.temperature,s}async function ne(e,{onChunk:a,signal:n,timeoutMs:t=6e4,retries:s}={}){let i=await $t();return St(async l=>{let c=await fetch(i.url,{method:"POST",headers:wt(i),signal:l,body:JSON.stringify(xt(i,e,{stream:!!a}))});if(!c.ok){let g=await c.text();throw new Error(`API \u9519\u8BEF ${c.status}: ${g}`)}return a?xn(c,a):(await c.json()).choices[0].message.content||""},{retries:s??(a?0:1),signal:n,timeoutMs:t})}async function St(e,{retries:a=0,signal:n,timeoutMs:t=6e4}={}){let s=null;for(let i=0;i<=a;i++){let o=new AbortController,l=setTimeout(()=>o.abort(new Error("LLM \u8BF7\u6C42\u8D85\u65F6")),t),c=()=>o.abort(n.reason);n&&(n.aborted?o.abort(n.reason):n.addEventListener("abort",c,{once:!0}));try{return await e(o.signal)}catch(r){if(s=r,o.signal.aborted||i>=a)throw yt(r);await $n(500*(i+1))}finally{clearTimeout(l),n?.removeEventListener?.("abort",c)}}throw yt(s)}function $n(e){return new Promise(a=>setTimeout(a,e))}function yt(e){return e?.name==="AbortError"?new Error("LLM \u8BF7\u6C42\u5DF2\u53D6\u6D88\u6216\u8D85\u65F6"):e instanceof Error?e:new Error(String(e))}async function xn(e,a){let n=e.body.getReader(),t=new TextDecoder,s="",i="",o="";for(;;){let{done:l,value:c}=await n.read();if(l)break;o+=t.decode(c,{stream:!0});let r=o.split(`
-`);o=r.pop();for(let d of r){if(!d.startsWith("data: "))continue;let g=d.slice(6);if(g==="[DONE]")break;try{let p=JSON.parse(g).choices?.[0]?.delta;p?.reasoning_content&&(i+=p.reasoning_content),p?.content&&(s+=p.content,a(s,i))}catch{}}}return s}async function Ze(e,{signal:a,timeoutMs:n=3e4,retries:t=1}={}){let s=await $t();return St(async i=>{let o=await fetch(s.url,{method:"POST",headers:wt(s),signal:i,body:JSON.stringify(xt(s,[{role:"system",content:"\u4F60\u662F\u4E00\u4E2A\u5BF9\u8BDD\u6458\u8981\u52A9\u624B\u3002\u5C06\u4EE5\u4E0B\u5BF9\u8BDD\u538B\u7F29\u4E3A1-2\u53E5\u8BDD\u7684\u6458\u8981\uFF0C\u5305\u542B\u5173\u952E\u4E8B\u5B9E\u3001\u60C5\u611F\u53D8\u5316\u548C\u6570\u503C\u53D8\u5316\u8D8B\u52BF\u3002\u53EA\u8F93\u51FA\u6458\u8981\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"},...e],{maxTokens:200}))});if(!o.ok){let c=await o.text();throw new Error(`API \u9519\u8BEF ${o.status}: ${c}`)}return(await o.json()).choices[0].message.content},{retries:t,signal:a,timeoutMs:n})}function wt(e){let a={"Content-Type":"application/json"};return!e.proxyEnabled&&e.key&&(a.Authorization=`Bearer ${e.key}`),a}I();function kt({autoInterval:e=10,maxMemories:a=10}={}){let n=[],t=0,s=[],i=null;function o(m,y){return t++,s.push({role:m,content:y}),t%e===0?(i=l().finally(()=>{i=null}),i):null}async function l(){if(s.length===0)return null;let m=s.splice(0);try{let y=await Ze(m.map(M=>({role:M.role==="player"?"user":"assistant",content:M.content})));return n.push(y),r(),y}catch{return null}}async function c(m){if(!m?.length)return null;try{let y=await Ze(m.map(M=>({role:M.role==="player"?"user":"assistant",content:M.content})));return n.push(y),r(),y}catch{return null}}function r(){if(n.length<=a)return;let m=n.length-a,M=n.splice(0,Math.max(m,2)).join("\uFF1B");n.unshift(M)}function d(){return[...n]}function g(){return{memories:[...n],turnCount:t,pendingMessages:[...s]}}function v(m){n=m.memories||[],t=m.turnCount||0,s=m.pendingMessages||[]}async function p(){i&&await i}return{addTurn:o,autoSummarize:l,manualSummarize:c,flushPending:p,getMemories:d,getState:g,loadState:v}}H();function Et(e,a={},n=null){let t=He(e.dimensions||[],n||e.seed);return{id:crypto.randomUUID(),scriptId:e.id,scriptName:e.name,selections:a,values:t.values,seed:t.seed,rngState:t.seed,messages:[],currentStage:0,activeEffects:[],eventState:{},ended:!1,ending:null,snapshots:[],memoryState:null,createdAt:Date.now(),updatedAt:Date.now()}}function we(e,a){let n=kt();e.memoryState&&n.loadState(e.memoryState),e.activeEffects=e.activeEffects||[],e.eventState=e.eventState||{},e.timeline=e.timeline||[],e.snapshots=e.snapshots||[],e.rngState=e.rngState||e.seed||1,e.snapshots.length||r("initial");function t(v=3){return e.messages.slice(-v)}function s(v){e.messages.push({role:"player",content:v,timestamp:Date.now()}),n.addTurn("player",v)}function i(v,p=null,m=null){return e.messages.push({role:"ai",content:v,parsed:p,parseStatus:m,timestamp:Date.now()}),n.addTurn("ai",v)}function o(v){if(!v)return;let p=Je(v,a.dimensions||[]);p.warnings.length&&console.warn("Value clamp:",p.warnings),Object.assign(e.values,p.values)}function l(v){e.timeline=e.timeline||[],e.timeline.push({messageCount:e.messages.length,timestamp:Date.now(),...v}),e.timeline.length>120&&e.timeline.splice(0,e.timeline.length-120)}function c(){let v=he(e.rngState||e.seed||1);return e.rngState=v.seed,v.value}function r(v="manual"){e.snapshots.push({reason:v,messageCount:e.messages.length,values:{...e.values},currentStage:e.currentStage||0,activeEffects:JSON.parse(JSON.stringify(e.activeEffects||[])),eventState:JSON.parse(JSON.stringify(e.eventState||{})),timeline:JSON.parse(JSON.stringify(e.timeline||[])),rngState:e.rngState,ended:!!e.ended,ending:e.ending?JSON.parse(JSON.stringify(e.ending)):null,memoryState:n.getState(),timestamp:Date.now()}),e.snapshots.length>80&&e.snapshots.splice(0,e.snapshots.length-80)}function d(v){let p=e.snapshots||[],m=p[0];for(let y of p)if(y.messageCount<=v)m=y;else break;e.messages.splice(v),m&&(e.values={...m.values},e.currentStage=m.currentStage||0,e.activeEffects=JSON.parse(JSON.stringify(m.activeEffects||[])),e.eventState=JSON.parse(JSON.stringify(m.eventState||{})),e.timeline=JSON.parse(JSON.stringify(m.timeline||[])),e.rngState=m.rngState||e.seed||1,e.ended=!!m.ended,e.ending=m.ending?JSON.parse(JSON.stringify(m.ending)):null,m.memoryState&&n.loadState(m.memoryState),e.memoryState=n.getState(),e.snapshots=p.filter(y=>y.messageCount<=v),e.snapshots.length||r("restored-initial"))}async function g(){return await n.flushPending?.(),e.memoryState=n.getState(),e.updatedAt=Date.now(),ze({...e})}return{session:e,script:a,memoryMgr:n,getRecentMessages:t,addPlayerMessage:s,addAIMessage:i,updateValues:o,nextRandom:c,addTimelineEntry:l,createSnapshot:r,restoreToMessage:d,save:g}}function _t(e,a,n){if(!n||!Object.keys(n).length)return[];let t=[];return e.push("\u3010\u73A9\u5BB6\u521D\u59CB\u8BBE\u5B9A - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\uFF0C\u4E0D\u53EF\u5FFD\u7565\u6216\u66F4\u6539\u3011"),a.setup?.forEach((s,i)=>{let o=n[i];if(!o)return;let l=(s.options||[]).find(r=>r.value===o),c=l?.description?`\uFF08${l.description}\uFF09`:"";e.push(`- ${s.step}\uFF1A${o}${c}`),l?.constraints&&t.push(...l.constraints)}),t.length&&(e.push(""),e.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),t.forEach(s=>e.push(`- ${s}`))),e.push(""),t}function Mt(e,a){a?.length&&(e.push("\u3010\u8BB0\u5FC6\u6458\u8981\u3011"),a.forEach((n,t)=>e.push(`${t+1}. ${n}`)),e.push(""))}function Nt(e,a){a?.length&&(e.push("\u3010\u6700\u8FD1\u5BF9\u8BDD\u3011"),a.forEach(n=>{let t=n.role==="player"?"\u73A9\u5BB6":"AI";e.push(`[${t}]\uFF1A${n.content}`)}),e.push(""))}function qt(e,a){if(!e||typeof e!="string")return e;let{script:n,values:t,currentStage:s}=a,i=n.characters||[],o=n.dimensions||[],l=n.stages||[],c={};return i.forEach(r=>{c[r.id]=r.name}),e.replace(/\{\{(\w+)(?::([^}]*))?\}\}/g,(r,d,g)=>{switch(d){case"player":return c.player||"\u73A9\u5BB6";case"partner":return c.partner||"\u73B0\u4EFB";case"target":return c.target||"\u5371\u9669\u5BF9\u8C61";case"stage":return l[s]?.name||`\u9636\u6BB5${(s||0)+1}`;case"stage_num":return String((s||0)+1);case"dim":{if(!g)return"";let v=o.find(m=>m.name===g||m.id===g);if(!v)return"";let p=t?.[v.id];return p!==void 0?String(p):""}case"random":{if(!g)return"";let v=g.split(",").map(p=>p.trim()).filter(Boolean);return v.length?v[Math.floor(Math.random()*v.length)]:""}default:return`{{${d}${g?":"+g:""}}}`}})}function Qe(e,{opening:a=!1}={}){let n=[];return n.push(a?"\u8F93\u51FA\u683C\u5F0F\uFF1A":"\u3010\u8F93\u51FA\u683C\u5F0F\u8981\u6C42\u3011"),n.push("\u53EA\u8F93\u51FA\u4E00\u4E2A\u5408\u6CD5 JSON \u5BF9\u8C61\uFF0C\u4E0D\u8981 Markdown\uFF0C\u4E0D\u8981\u4EE3\u7801\u5757\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"),a||n.push("JSON schema:"),n.push("{"),n.push(a?'  "narrative": "\u5148\u5199\u72B6\u6001\u6982\u89C8\uFF0C\u518D\u5199\u5F00\u573A\u4E8B\u4EF6",':'  "narrative": "\u5267\u60C5\u5185\u5BB9\uFF0C200-400\u5B57\uFF0C\u7B80\u6D01\u6709\u529B\uFF0C\u91CD\u5BF9\u8BDD\u548C\u5173\u952E\u52A8\u4F5C\uFF0C\u4E0D\u8981\u5927\u6BB5\u73AF\u5883\u63CF\u5199",'),n.push('  "options": ['),n.push('    {"label": "A", "text": "\u9009\u9879\u5185\u5BB9", "value": "\u73A9\u5BB6\u9009\u62E9\u65F6\u53D1\u9001\u7ED9\u7CFB\u7EDF\u7684\u6587\u672C"}'),n.push("  ],"),n.push('  "values": {"\u7EF4\u5EA6ID": \u6570\u5B57},'),n.push('  "keyEvent": null,'),n.push('  "stageHint": null'),n.push("}"),a||(n.push("options \u5FC5\u987B\u6709 3-4 \u4E2A\uFF0C\u4F53\u73B0\u4E0D\u540C\u6001\u5EA6\u548C\u7B56\u7565\uFF08\u4E3B\u52A8/\u88AB\u52A8\u3001\u5766\u8BDA/\u9690\u7792\u3001\u8FDB\u653B/\u9000\u7F29\uFF09\u3002"),n.push("values \u586B\u5199\u672C\u8F6E\u540E\u7684\u7EDD\u5BF9\u503C\uFF0C\u4E0D\u8981\u586B\u5199\u589E\u91CF\uFF1B\u6570\u503C\u5FC5\u987B\u5728\u5404\u81EA range \u5185\u3002"),n.push("keyEvent \u53EA\u6709\u53D1\u751F\u91CD\u5927\u8F6C\u6298\u3001\u51B2\u7A81\u6216\u60C5\u611F\u7206\u53D1\u65F6\u624D\u586B\u5B57\u7B26\u4E32\uFF0C\u5426\u5219\u4E3A null\u3002"),n.push("stageHint \u53EA\u662F\u5267\u60C5\u9636\u6BB5\u5EFA\u8BAE\uFF1B\u4E0D\u786E\u5B9A\u65F6\u586B null\u3002")),n.push(`values \u53EA\u80FD\u4F7F\u7528\u8FD9\u4E9B\u7EF4\u5EA6 ID\uFF1A${(e.dimensions||[]).map(t=>t.id).join(", ")||"\u65E0"}`),n}function me(e,a){return qt(e,a)}function Tt({script:e,values:a,selections:n,memories:t,recentMessages:s,scenePrompt:i,playerInput:o,currentStage:l}){let c={script:e,values:a,currentStage:l},r=[];_t(r,e,n);let g=(e.characters||[]).filter(p=>p.id!=="player");return r.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),r.push("- \u4F60\u662F\u89D2\u8272\u672C\u8EAB\uFF0C\u4E0D\u8981\u8DF3\u51FA\u89D2\u8272"),r.push("- \u4E0D\u8981\u7528 AI \u7684\u53E3\u543B\u89E3\u91CA\u6216\u8BC4\u4EF7\u5267\u60C5"),r.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4F60\u53EF\u4EE5\u4E3A\u89D2\u8272\u8D77\u4EBA\u540D\uFF0C\u4F46\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),r.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"\u3002\u540E\u7EED\u53EF\u7528\u4EBA\u540D\uFF0C\u4F46\u6570\u503C\u66F4\u65B0\u548C\u5173\u952E\u4E8B\u4EF6\u4E2D\u5FC5\u987B\u540C\u65F6\u6807\u6CE8\u8EAB\u4EFD'),r.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),r.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),e.rules?.forbidden&&e.rules.forbidden.forEach(p=>r.push(`- ${me(p,c)}`)),r.push(""),e.rules?.writing_style&&(r.push("\u3010\u5199\u4F5C\u89C4\u8303\u3011"),r.push(me(e.rules.writing_style,c)),e.rules.requirements&&e.rules.requirements.forEach(p=>r.push(`- ${me(p,c)}`)),r.push("")),r.push("\u3010\u4F60\u626E\u6F14\u4EE5\u4E0B\u89D2\u8272\u3011"),(e.characters||[]).forEach(p=>{let m=a?.[p.id]?`\uFF0C\u5F53\u524D\u72B6\u6001\uFF1A${JSON.stringify(a[p.id])}`:"",y=p.id==="player",M=y?"":`\u3010\u8EAB\u4EFD\u6807\u7B7E\uFF1A${p.name}\u3011`,k=y?"":"\uFF0C\u4F60\u9700\u8981\u5728\u5F00\u573A\u65F6\u4E3A\u8BE5\u89D2\u8272\u8D77\u4E00\u4E2A\u5177\u4F53\u4EBA\u540D\uFF0C\u4F46\u8EAB\u4EFD\u6807\u7B7E\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559";r.push(`${M}${p.name}\uFF1A${me(p.description,c)}${k}${m}`)}),r.push(""),e.dimensions?.length&&a&&(r.push("\u3010\u5F53\u524D\u6570\u503C - \u7528\u7CBE\u786E\u6570\u5B57\u3011"),r.push("\uFF08\u6570\u503C\u4E2D\u7684\u8EAB\u4EFD\u6807\u7B7E\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u4E0E\u89D2\u8272\u4EBA\u540D\u5BF9\u5E94\u5173\u7CFB\u89C1\u4E0A\u65B9\u89D2\u8272\u5217\u8868\uFF09"),e.dimensions.forEach(p=>{let m=a[p.id];if(m===void 0)return;let y=p.scope?`\uFF08${me(p.scope,c)}\uFF09`:"";r.push(`${p.name}${y}\uFF1A${m}`)}),r.push("")),Mt(r,t),Nt(r,s),i&&(r.push("\u3010\u5F53\u524D\u573A\u666F\u3011"),r.push(i),r.push("")),r.push(...Qe(e)),r.push(""),r.push("\u3010\u73A9\u5BB6\u8F93\u5165\u3011"),r.push(o),r.push("\u8BF7\u57FA\u4E8E\u4EE5\u4E0A\u4FE1\u606F\u7EE7\u7EED\u5267\u60C5\u3002"),r.join(`
-`)}function It({script:e,selections:a}){let n={script:e,values:{},currentStage:0},t=[],s=(e.characters||[]).filter(l=>l.id!=="player"),i=s.map(l=>`\u300C${l.name}\u300D`).join("\u548C");t.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),t.push(`- \u4F60\u5FC5\u987B\u4E3A${i}\u5404\u8D77\u4E00\u4E2A\u5177\u4F53\u7684\u4EBA\u540D\uFF08\u4E2D\u6587\u540D\uFF09`),t.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),t.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"'),t.push('- \u6D89\u53CA\u591A\u4E2A\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u7528\u89D2\u8272\u4EBA\u540D\u800C\u975E"\u4ED6""\u5979""\u4F60"\uFF0C\u786E\u4FDD\u73A9\u5BB6\u80FD\u5206\u6E05\u6BCF\u53E5\u8BDD\u7684\u4E3B\u4F53\u548C\u5BF9\u8C61'),t.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),t.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),t.push(""),t.push("\u4EE5\u4E0B\u662F\u73A9\u5BB6\u7684\u5F00\u5C40\u9009\u62E9\uFF1A"),e.setup?.forEach((l,c)=>{let r=a[c]||"\u968F\u673A",d=(l.options||[]).find(v=>v.value===r),g=d?.description?`\uFF08${d.description}\uFF09`:"";t.push(`${l.step}\uFF1A${r}${g}`)}),t.push("");let o=[];return e.setup?.forEach((l,c)=>{let r=a[c];if(!r)return;let d=(l.options||[]).find(g=>g.value===r);d?.constraints&&o.push(...d.constraints)}),o.length&&(t.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),o.forEach(l=>t.push(`- ${l}`)),t.push("")),t.push("\u8BF7\u6839\u636E\u4EE5\u4E0A\u9009\u62E9\u751F\u6210\u5F00\u573A\u3002\u8981\u6C42\uFF1A"),t.push(""),t.push("\u7B2C\u4E00\u90E8\u5206\uFF1A\u72B6\u6001\u6982\u89C8\uFF08\u7B80\u6D01\uFF0C3-5\u53E5\uFF09"),t.push("- \u73A9\u5BB6\u662F\u8C01\uFF08\u804C\u4E1A\u3001\u6027\u683C\uFF09"),s.forEach(l=>{t.push(`- ${l.name}\u662F\u8C01\uFF08\u8D77\u4E00\u4E2A\u4EBA\u540D\uFF0C\u683C\u5F0F"\u4EBA\u540D\uFF08${l.name}\uFF09"\u3001\u8EAB\u4EFD\u3001\u6027\u683C\uFF09`)}),t.push("- \u5F53\u524D\u573A\u666F\u80CC\u666F\uFF08\u65F6\u95F4\u3001\u5730\u70B9\uFF0C\u6CE8\u610F\u5173\u7CFB\u7C7B\u578B\u5BF9\u573A\u666F\u7684\u5F71\u54CD\uFF09"),t.push(""),t.push("\u7B2C\u4E8C\u90E8\u5206\uFF1A\u5F00\u573A\u4E8B\u4EF6\uFF08\u7EA6200-300\u5B57\uFF09"),t.push("- \u4E00\u4E2A\u81EA\u7136\u7684\u573A\u666F\u5207\u5165\uFF0C\u5F15\u51FA\u73A9\u5BB6\u7684\u7B2C\u4E00\u4E2A\u9009\u62E9"),t.push("- \u573A\u666F\u548C\u89D2\u8272\u4E92\u52A8\u5FC5\u987B\u7B26\u5408\u73A9\u5BB6\u9009\u62E9\u7684\u5173\u7CFB\u72B6\u6001\u3001\u804C\u4E1A\u7B49\u8BBE\u5B9A"),t.push("- \u4E0D\u8981\u5927\u6BB5\u63CF\u5199\uFF0C\u7B80\u6D01\u6709\u529B"),t.push(""),t.push(...Qe(e,{opening:!0})),t.join(`
-`)}H();function G(e,a={}){let n=String(e||"").trim(),t=Sn(n),s=[];for(let o of t)try{let l=JSON.parse(o),c=Ot(l,a,"json");if(c.turn.narrative||c.turn.options.length)return c}catch(l){s.push(l.message)}let i=En(n,a);return{status:i.turn.narrative?"legacy":"fallback",turn:i.turn,errors:s,warnings:i.warnings}}function ke(e,a={}){return["\u4E0B\u9762\u7684\u6A21\u578B\u8F93\u51FA\u4E0D\u662F\u5408\u6CD5 JSON\uFF0C\u6216\u4E0D\u7B26\u5408\u6307\u5B9A schema\u3002","\u4E0D\u8981\u7EED\u5199\u5267\u60C5\uFF0C\u4E0D\u8981\u89E3\u91CA\u539F\u56E0\uFF0C\u53EA\u628A\u539F\u8F93\u51FA\u4FEE\u590D\u4E3A\u4E00\u4E2A JSON \u5BF9\u8C61\u3002","schema:","{",'  "narrative": "\u5267\u60C5\u6B63\u6587\u5B57\u7B26\u4E32",','  "options": [{"label":"A","text":"\u9009\u9879\u5185\u5BB9","value":"\u73A9\u5BB6\u9009\u62E9\u65F6\u53D1\u9001\u7684\u6587\u672C"}],','  "values": {"\u7EF4\u5EA6ID": 0},','  "keyEvent": null,','  "stageHint": null',"}",`\u53EF\u7528\u7EF4\u5EA6 ID: ${(a.dimensions||[]).map(t=>t.id).filter(Boolean).join(", ")||"\u65E0"}`,"\u539F\u8F93\u51FA:",e].join(`
-`)}function Xe(e,a={}){return e?.parsed?e.parsed:G(e?.content||"",a).turn}function Sn(e){let a=[];if(!e)return a;a.push(e);let n=e.match(/```(?:json)?\s*([\s\S]*?)```/i);n&&a.push(n[1].trim());let t=e.match(/(?:<json>|【JSON】)([\s\S]*?)(?:<\/json>|$)/i);t&&a.push(t[1].trim());let s=wn(e);return s&&a.push(s),[...new Set(a.map(kn))]}function wn(e){let a=e.indexOf("{");if(a<0)return null;let n=0,t=!1,s="",i=!1;for(let o=a;o<e.length;o++){let l=e[o];if(t){i?i=!1:l==="\\"?i=!0:l===s&&(t=!1);continue}if(l==='"'||l==="'"){t=!0,s=l;continue}if(l==="{"&&n++,l==="}"&&n--,n===0)return e.slice(a,o+1)}return null}function kn(e){return String(e||"").trim().replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/,\s*([}\]])/g,"$1")}function En(e,a){let n=Mn(e),t=oe(e,a.dimensions||[])||{};return Ot({narrative:le(e)||e,options:n,values:t,keyEvent:Fe(e),stageHint:null},a,"legacy")}function Ot(e,a,n){let t=[],s=a.dimensions||[],i=new Map(s.map(d=>[d.id,d])),o=new Map(s.map(d=>[d.name,d.id])),l=e?.values&&typeof e.values=="object"?e.values:{},c={};for(let[d,g]of Object.entries(l)){let v=i.has(d)?d:o.get(d);if(!v){t.push(`\u5FFD\u7565\u672A\u77E5\u7EF4\u5EA6: ${d}`);continue}let p=Number(g);if(!Number.isFinite(p)){t.push(`\u5FFD\u7565\u975E\u6570\u5B57\u7EF4\u5EA6\u503C: ${d}`);continue}let m=i.get(v),y=Number(m.range?.[0]??-1/0),M=Number(m.range?.[1]??1/0),k=Math.max(y,Math.min(M,Math.round(p)));k!==p&&t.push(`\u7EF4\u5EA6 ${v} \u5DF2\u9650\u5236\u5230\u8303\u56F4 ${y}-${M}`),c[v]=k}let r=_n(e?.options);return r.length||t.push("\u672A\u89E3\u6790\u5230\u9009\u9879"),{status:n,turn:{narrative:typeof e?.narrative=="string"?e.narrative.trim():"",options:r,values:c,keyEvent:typeof e?.keyEvent=="string"&&e.keyEvent.trim()?e.keyEvent.trim():null,stageHint:typeof e?.stageHint=="string"&&e.stageHint.trim()?e.stageHint.trim():null},errors:[],warnings:t}}function _n(e){return Array.isArray(e)?e.map((a,n)=>{if(typeof a=="string")return{label:String.fromCharCode(65+n),text:a.trim(),value:a.trim()};if(!a||typeof a!="object")return null;let t=String(a.text||a.content||a.label||a.value||"").trim();return t?{label:String(a.label||String.fromCharCode(65+n)).trim().slice(0,3),text:t,value:String(a.value||t).trim()}:null}).filter(Boolean).slice(0,4):[]}function Mn(e){let a=String(e||"").match(/【选项】([\s\S]*?)(?=【|$)/);return a?a[1].split(`
-`).map(n=>{let t=n.match(/^([A-Z])[.、)）]\s*(.+)/);return t?{label:t[1],text:t[2].trim(),value:t[2].trim()}:null}).filter(Boolean).slice(0,4):[]}H();async function jt(e,{scriptId:a}){let n=await B(a);if(!n){w("home");return}let[t,s]=await Promise.all([q("api_url"),q("api_key")]);if(!t||!s){e.innerHTML=`
+${kn(e,a)}${e.message}`:`${n}\uFF1A${e.message}`}function kn(e,n){let a=String(e.message).match(/position\s+(\d+)/i);if(!a||!n)return"";let t=Number(a[1]),s=n.slice(0,t),i=s.split(`
+`).length,l=s.length-s.lastIndexOf(`
+`);return`\u4F4D\u7F6E\uFF1A\u7B2C ${i} \u884C\uFF0C\u7B2C ${l} \u5217
+`}j();j();async function Et(){let[e,n,a,t,s,i,l]=await Promise.all([N("api_url"),N("api_key"),N("api_model"),N("thinking_enabled"),N("reasoning_effort"),N("temperature"),N("api_proxy_enabled")]);if(!e)throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E LLM API \u5730\u5740");if(!l&&!n)throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E LLM API Key\uFF0C\u6216\u542F\u7528\u540E\u7AEF\u4EE3\u7406\u6A21\u5F0F");return{url:e.endsWith("/chat/completions")?e:e.replace(/\/+$/,"")+"/chat/completions",key:n,proxyEnabled:!!l,model:a||"deepseek-v4-flash",thinking:t!==!1,effort:s||"high",temperature:i??.85}}function _t(e,n,{stream:a=!1,maxTokens:t=2048}={}){let s={model:e.model,messages:n,stream:a,max_tokens:t};return e.thinking?s.thinking={type:"enabled",reasoning_effort:e.effort}:s.temperature=e.temperature,s}async function se(e,{onChunk:n,signal:a,timeoutMs:t=6e4,retries:s}={}){let i=await Et();return Mt(async c=>{let o=await fetch(i.url,{method:"POST",headers:Tt(i),signal:c,body:JSON.stringify(_t(i,e,{stream:!!n}))});if(!o.ok){let g=await o.text();throw new Error(`API \u9519\u8BEF ${o.status}: ${g}`)}return n?Mn(o,n):(await o.json()).choices[0].message.content||""},{retries:s??(n?0:1),signal:a,timeoutMs:t})}async function Mt(e,{retries:n=0,signal:a,timeoutMs:t=6e4}={}){let s=null;for(let i=0;i<=n;i++){let l=new AbortController,c=setTimeout(()=>l.abort(new Error("LLM \u8BF7\u6C42\u8D85\u65F6")),t),o=()=>l.abort(a.reason);a&&(a.aborted?l.abort(a.reason):a.addEventListener("abort",o,{once:!0}));try{return await e(l.signal)}catch(r){if(s=r,l.signal.aborted||i>=n)throw kt(r);await _n(500*(i+1))}finally{clearTimeout(c),a?.removeEventListener?.("abort",o)}}throw kt(s)}function _n(e){return new Promise(n=>setTimeout(n,e))}function kt(e){return e?.name==="AbortError"?new Error("LLM \u8BF7\u6C42\u5DF2\u53D6\u6D88\u6216\u8D85\u65F6"):e instanceof Error?e:new Error(String(e))}async function Mn(e,n){let a=e.body.getReader(),t=new TextDecoder,s="",i="",l="";for(;;){let{done:c,value:o}=await a.read();if(c)break;l+=t.decode(o,{stream:!0});let r=l.split(`
+`);l=r.pop();for(let d of r){if(!d.startsWith("data: "))continue;let g=d.slice(6);if(g==="[DONE]")break;try{let u=JSON.parse(g).choices?.[0]?.delta;u?.reasoning_content&&(i+=u.reasoning_content),u?.content&&(s+=u.content,n(s,i))}catch{}}}return s}async function et(e,{signal:n,timeoutMs:a=3e4,retries:t=1}={}){let s=await Et();return Mt(async i=>{let l=await fetch(s.url,{method:"POST",headers:Tt(s),signal:i,body:JSON.stringify(_t(s,[{role:"system",content:"\u4F60\u662F\u4E00\u4E2A\u5BF9\u8BDD\u6458\u8981\u52A9\u624B\u3002\u5C06\u4EE5\u4E0B\u5BF9\u8BDD\u538B\u7F29\u4E3A1-2\u53E5\u8BDD\u7684\u6458\u8981\uFF0C\u5305\u542B\u5173\u952E\u4E8B\u5B9E\u3001\u60C5\u611F\u53D8\u5316\u548C\u6570\u503C\u53D8\u5316\u8D8B\u52BF\u3002\u53EA\u8F93\u51FA\u6458\u8981\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"},...e],{maxTokens:200}))});if(!l.ok){let o=await l.text();throw new Error(`API \u9519\u8BEF ${l.status}: ${o}`)}return(await l.json()).choices[0].message.content},{retries:t,signal:n,timeoutMs:a})}function Tt(e){let n={"Content-Type":"application/json"};return!e.proxyEnabled&&e.key&&(n.Authorization=`Bearer ${e.key}`),n}j();function Nt({autoInterval:e=10,maxMemories:n=10}={}){let a=[],t=0,s=[],i=null;function l(m,h){return t++,s.push({role:m,content:h}),t%e===0?(i=c().finally(()=>{i=null}),i):null}async function c(){if(s.length===0)return null;let m=s.splice(0);try{let h=await et(m.map(M=>({role:M.role==="player"?"user":"assistant",content:M.content})));return a.push(h),r(),h}catch{return null}}async function o(m){if(!m?.length)return null;try{let h=await et(m.map(M=>({role:M.role==="player"?"user":"assistant",content:M.content})));return a.push(h),r(),h}catch{return null}}function r(){if(a.length<=n)return;let m=a.length-n,M=a.splice(0,Math.max(m,2)).join("\uFF1B");a.unshift(M)}function d(){return[...a]}function g(){return{memories:[...a],turnCount:t,pendingMessages:[...s]}}function b(m){a=m.memories||[],t=m.turnCount||0,s=m.pendingMessages||[]}async function u(){i&&await i}return{addTurn:l,autoSummarize:c,manualSummarize:o,flushPending:u,getMemories:d,getState:g,loadState:b}}U();function qt(e,n={},a=null){let t=Re(e.dimensions||[],a||e.seed);return{id:crypto.randomUUID(),scriptId:e.id,scriptName:e.name,selections:n,values:t.values,seed:t.seed,rngState:t.seed,messages:[],currentStage:0,activeEffects:[],eventState:{},ended:!1,ending:null,snapshots:[],memoryState:null,createdAt:Date.now(),updatedAt:Date.now()}}function _e(e,n){let a=Nt();e.memoryState&&a.loadState(e.memoryState),e.activeEffects=e.activeEffects||[],e.eventState=e.eventState||{},e.timeline=e.timeline||[],e.snapshots=e.snapshots||[],e.rngState=e.rngState||e.seed||1,e.snapshots.length||r("initial");function t(b=3){return e.messages.slice(-b)}function s(b){e.messages.push({role:"player",content:b,timestamp:Date.now()}),a.addTurn("player",b)}function i(b,u=null,m=null){return e.messages.push({role:"ai",content:b,parsed:u,parseStatus:m,timestamp:Date.now()}),a.addTurn("ai",b)}function l(b){if(!b)return;let u=Be(b,n.dimensions||[]);u.warnings.length&&console.warn("Value clamp:",u.warnings),Object.assign(e.values,u.values)}function c(b){e.timeline=e.timeline||[],e.timeline.push({messageCount:e.messages.length,timestamp:Date.now(),...b}),e.timeline.length>120&&e.timeline.splice(0,e.timeline.length-120)}function o(){let b=xe(e.rngState||e.seed||1);return e.rngState=b.seed,b.value}function r(b="manual"){e.snapshots.push({reason:b,messageCount:e.messages.length,values:{...e.values},currentStage:e.currentStage||0,activeEffects:JSON.parse(JSON.stringify(e.activeEffects||[])),eventState:JSON.parse(JSON.stringify(e.eventState||{})),timeline:JSON.parse(JSON.stringify(e.timeline||[])),rngState:e.rngState,ended:!!e.ended,ending:e.ending?JSON.parse(JSON.stringify(e.ending)):null,memoryState:a.getState(),timestamp:Date.now()}),e.snapshots.length>80&&e.snapshots.splice(0,e.snapshots.length-80)}function d(b){let u=e.snapshots||[],m=u[0];for(let h of u)if(h.messageCount<=b)m=h;else break;e.messages.splice(b),m&&(e.values={...m.values},e.currentStage=m.currentStage||0,e.activeEffects=JSON.parse(JSON.stringify(m.activeEffects||[])),e.eventState=JSON.parse(JSON.stringify(m.eventState||{})),e.timeline=JSON.parse(JSON.stringify(m.timeline||[])),e.rngState=m.rngState||e.seed||1,e.ended=!!m.ended,e.ending=m.ending?JSON.parse(JSON.stringify(m.ending)):null,m.memoryState&&a.loadState(m.memoryState),e.memoryState=a.getState(),e.snapshots=u.filter(h=>h.messageCount<=b),e.snapshots.length||r("restored-initial"))}async function g(){return await a.flushPending?.(),e.memoryState=a.getState(),e.updatedAt=Date.now(),Je({...e})}return{session:e,script:n,memoryMgr:a,getRecentMessages:t,addPlayerMessage:s,addAIMessage:i,updateValues:l,nextRandom:o,addTimelineEntry:c,createSnapshot:r,restoreToMessage:d,save:g}}function Ot(e,n,a){if(!a||!Object.keys(a).length)return[];let t=[];return e.push("\u3010\u73A9\u5BB6\u521D\u59CB\u8BBE\u5B9A - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\uFF0C\u4E0D\u53EF\u5FFD\u7565\u6216\u66F4\u6539\u3011"),n.setup?.forEach((s,i)=>{let l=a[i];if(!l)return;let c=(s.options||[]).find(r=>r.value===l),o=c?.description?`\uFF08${c.description}\uFF09`:"";e.push(`- ${s.step}\uFF1A${l}${o}`),c?.constraints&&t.push(...c.constraints)}),t.length&&(e.push(""),e.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),t.forEach(s=>e.push(`- ${s}`))),e.push(""),t}function It(e,n){n?.length&&(e.push("\u3010\u8BB0\u5FC6\u6458\u8981\u3011"),n.forEach((a,t)=>e.push(`${t+1}. ${a}`)),e.push(""))}function Lt(e,n){n?.length&&(e.push("\u3010\u6700\u8FD1\u5BF9\u8BDD\u3011"),n.forEach(a=>{let t=a.role==="player"?"\u73A9\u5BB6":"AI";e.push(`[${t}]\uFF1A${a.content}`)}),e.push(""))}function jt(e,n){if(!e||typeof e!="string")return e;let{script:a,values:t,currentStage:s}=n,i=a.characters||[],l=a.dimensions||[],c=a.stages||[],o={};return i.forEach(r=>{o[r.id]=r.name}),e.replace(/\{\{(\w+)(?::([^}]*))?\}\}/g,(r,d,g)=>{switch(d){case"player":return o.player||"\u73A9\u5BB6";case"partner":return o.partner||"\u73B0\u4EFB";case"target":return o.target||"\u5371\u9669\u5BF9\u8C61";case"stage":return c[s]?.name||`\u9636\u6BB5${(s||0)+1}`;case"stage_num":return String((s||0)+1);case"dim":{if(!g)return"";let b=l.find(m=>m.name===g||m.id===g);if(!b)return"";let u=t?.[b.id];return u!==void 0?String(u):""}case"random":{if(!g)return"";let b=g.split(",").map(u=>u.trim()).filter(Boolean);return b.length?b[Math.floor(Math.random()*b.length)]:""}default:return`{{${d}${g?":"+g:""}}}`}})}function tt(e,{opening:n=!1}={}){let a=[];return a.push(n?"\u8F93\u51FA\u683C\u5F0F\uFF1A":"\u3010\u8F93\u51FA\u683C\u5F0F\u8981\u6C42\u3011"),a.push("\u53EA\u8F93\u51FA\u4E00\u4E2A\u5408\u6CD5 JSON \u5BF9\u8C61\uFF0C\u4E0D\u8981 Markdown\uFF0C\u4E0D\u8981\u4EE3\u7801\u5757\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"),n||a.push("JSON schema:"),a.push("{"),a.push(n?'  "narrative": "\u5148\u5199\u72B6\u6001\u6982\u89C8\uFF0C\u518D\u5199\u5F00\u573A\u4E8B\u4EF6",':'  "narrative": "\u5267\u60C5\u5185\u5BB9\uFF0C200-400\u5B57\uFF0C\u7B80\u6D01\u6709\u529B\uFF0C\u91CD\u5BF9\u8BDD\u548C\u5173\u952E\u52A8\u4F5C\uFF0C\u4E0D\u8981\u5927\u6BB5\u73AF\u5883\u63CF\u5199",'),a.push('  "options": ['),a.push('    {"label": "A", "text": "\u9009\u9879\u5185\u5BB9", "value": "\u73A9\u5BB6\u9009\u62E9\u65F6\u53D1\u9001\u7ED9\u7CFB\u7EDF\u7684\u6587\u672C"}'),a.push("  ],"),a.push('  "values": {"\u7EF4\u5EA6ID": \u6570\u5B57},'),a.push('  "keyEvent": null,'),a.push('  "stageHint": null'),a.push("}"),n||(a.push("options \u5FC5\u987B\u6709 3-4 \u4E2A\uFF0C\u4F53\u73B0\u4E0D\u540C\u6001\u5EA6\u548C\u7B56\u7565\uFF08\u4E3B\u52A8/\u88AB\u52A8\u3001\u5766\u8BDA/\u9690\u7792\u3001\u8FDB\u653B/\u9000\u7F29\uFF09\u3002"),a.push("values \u586B\u5199\u672C\u8F6E\u540E\u7684\u7EDD\u5BF9\u503C\uFF0C\u4E0D\u8981\u586B\u5199\u589E\u91CF\uFF1B\u6570\u503C\u5FC5\u987B\u5728\u5404\u81EA range \u5185\u3002"),a.push("keyEvent \u53EA\u6709\u53D1\u751F\u91CD\u5927\u8F6C\u6298\u3001\u51B2\u7A81\u6216\u60C5\u611F\u7206\u53D1\u65F6\u624D\u586B\u5B57\u7B26\u4E32\uFF0C\u5426\u5219\u4E3A null\u3002"),a.push("stageHint \u53EA\u662F\u5267\u60C5\u9636\u6BB5\u5EFA\u8BAE\uFF1B\u4E0D\u786E\u5B9A\u65F6\u586B null\u3002")),a.push(`values \u53EA\u80FD\u4F7F\u7528\u8FD9\u4E9B\u7EF4\u5EA6 ID\uFF1A${(e.dimensions||[]).map(t=>t.id).join(", ")||"\u65E0"}`),a}function ge(e,n){return jt(e,n)}function At({script:e,values:n,selections:a,memories:t,recentMessages:s,scenePrompt:i,playerInput:l,currentStage:c}){let o={script:e,values:n,currentStage:c},r=[];Ot(r,e,a);let g=(e.characters||[]).filter(u=>u.id!=="player");return r.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),r.push("- \u4F60\u662F\u89D2\u8272\u672C\u8EAB\uFF0C\u4E0D\u8981\u8DF3\u51FA\u89D2\u8272"),r.push("- \u4E0D\u8981\u7528 AI \u7684\u53E3\u543B\u89E3\u91CA\u6216\u8BC4\u4EF7\u5267\u60C5"),r.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4F60\u53EF\u4EE5\u4E3A\u89D2\u8272\u8D77\u4EBA\u540D\uFF0C\u4F46\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),r.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"\u3002\u540E\u7EED\u53EF\u7528\u4EBA\u540D\uFF0C\u4F46\u6570\u503C\u66F4\u65B0\u548C\u5173\u952E\u4E8B\u4EF6\u4E2D\u5FC5\u987B\u540C\u65F6\u6807\u6CE8\u8EAB\u4EFD'),r.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),r.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),e.rules?.forbidden&&e.rules.forbidden.forEach(u=>r.push(`- ${ge(u,o)}`)),r.push(""),e.rules?.writing_style&&(r.push("\u3010\u5199\u4F5C\u89C4\u8303\u3011"),r.push(ge(e.rules.writing_style,o)),e.rules.requirements&&e.rules.requirements.forEach(u=>r.push(`- ${ge(u,o)}`)),r.push("")),r.push("\u3010\u4F60\u626E\u6F14\u4EE5\u4E0B\u89D2\u8272\u3011"),(e.characters||[]).forEach(u=>{let m=n?.[u.id]?`\uFF0C\u5F53\u524D\u72B6\u6001\uFF1A${JSON.stringify(n[u.id])}`:"",h=u.id==="player",M=h?"":`\u3010\u8EAB\u4EFD\u6807\u7B7E\uFF1A${u.name}\u3011`,k=h?"":"\uFF0C\u4F60\u9700\u8981\u5728\u5F00\u573A\u65F6\u4E3A\u8BE5\u89D2\u8272\u8D77\u4E00\u4E2A\u5177\u4F53\u4EBA\u540D\uFF0C\u4F46\u8EAB\u4EFD\u6807\u7B7E\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559";r.push(`${M}${u.name}\uFF1A${ge(u.description,o)}${k}${m}`)}),r.push(""),e.dimensions?.length&&n&&(r.push("\u3010\u5F53\u524D\u6570\u503C - \u7528\u7CBE\u786E\u6570\u5B57\u3011"),r.push("\uFF08\u6570\u503C\u4E2D\u7684\u8EAB\u4EFD\u6807\u7B7E\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u4E0E\u89D2\u8272\u4EBA\u540D\u5BF9\u5E94\u5173\u7CFB\u89C1\u4E0A\u65B9\u89D2\u8272\u5217\u8868\uFF09"),e.dimensions.forEach(u=>{let m=n[u.id];if(m===void 0)return;let h=u.scope?`\uFF08${ge(u.scope,o)}\uFF09`:"";r.push(`${u.name}${h}\uFF1A${m}`)}),r.push("")),It(r,t),Lt(r,s),i&&(r.push("\u3010\u5F53\u524D\u573A\u666F\u3011"),r.push(i),r.push("")),r.push(...tt(e)),r.push(""),r.push("\u3010\u73A9\u5BB6\u8F93\u5165\u3011"),r.push(l),r.push("\u8BF7\u57FA\u4E8E\u4EE5\u4E0A\u4FE1\u606F\u7EE7\u7EED\u5267\u60C5\u3002"),r.join(`
+`)}function Ct({script:e,selections:n}){let a={script:e,values:{},currentStage:0},t=[],s=(e.characters||[]).filter(c=>c.id!=="player"),i=s.map(c=>`\u300C${c.name}\u300D`).join("\u548C");t.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),t.push(`- \u4F60\u5FC5\u987B\u4E3A${i}\u5404\u8D77\u4E00\u4E2A\u5177\u4F53\u7684\u4EBA\u540D\uFF08\u4E2D\u6587\u540D\uFF09`),t.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),t.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"'),t.push('- \u6D89\u53CA\u591A\u4E2A\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u7528\u89D2\u8272\u4EBA\u540D\u800C\u975E"\u4ED6""\u5979""\u4F60"\uFF0C\u786E\u4FDD\u73A9\u5BB6\u80FD\u5206\u6E05\u6BCF\u53E5\u8BDD\u7684\u4E3B\u4F53\u548C\u5BF9\u8C61'),t.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),t.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),t.push(""),t.push("\u4EE5\u4E0B\u662F\u73A9\u5BB6\u7684\u5F00\u5C40\u9009\u62E9\uFF1A"),e.setup?.forEach((c,o)=>{let r=n[o]||"\u968F\u673A",d=(c.options||[]).find(b=>b.value===r),g=d?.description?`\uFF08${d.description}\uFF09`:"";t.push(`${c.step}\uFF1A${r}${g}`)}),t.push("");let l=[];return e.setup?.forEach((c,o)=>{let r=n[o];if(!r)return;let d=(c.options||[]).find(g=>g.value===r);d?.constraints&&l.push(...d.constraints)}),l.length&&(t.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),l.forEach(c=>t.push(`- ${c}`)),t.push("")),t.push("\u8BF7\u6839\u636E\u4EE5\u4E0A\u9009\u62E9\u751F\u6210\u5F00\u573A\u3002\u8981\u6C42\uFF1A"),t.push(""),t.push("\u7B2C\u4E00\u90E8\u5206\uFF1A\u72B6\u6001\u6982\u89C8\uFF08\u7B80\u6D01\uFF0C3-5\u53E5\uFF09"),t.push("- \u73A9\u5BB6\u662F\u8C01\uFF08\u804C\u4E1A\u3001\u6027\u683C\uFF09"),s.forEach(c=>{t.push(`- ${c.name}\u662F\u8C01\uFF08\u8D77\u4E00\u4E2A\u4EBA\u540D\uFF0C\u683C\u5F0F"\u4EBA\u540D\uFF08${c.name}\uFF09"\u3001\u8EAB\u4EFD\u3001\u6027\u683C\uFF09`)}),t.push("- \u5F53\u524D\u573A\u666F\u80CC\u666F\uFF08\u65F6\u95F4\u3001\u5730\u70B9\uFF0C\u6CE8\u610F\u5173\u7CFB\u7C7B\u578B\u5BF9\u573A\u666F\u7684\u5F71\u54CD\uFF09"),t.push(""),t.push("\u7B2C\u4E8C\u90E8\u5206\uFF1A\u5F00\u573A\u4E8B\u4EF6\uFF08\u7EA6200-300\u5B57\uFF09"),t.push("- \u4E00\u4E2A\u81EA\u7136\u7684\u573A\u666F\u5207\u5165\uFF0C\u5F15\u51FA\u73A9\u5BB6\u7684\u7B2C\u4E00\u4E2A\u9009\u62E9"),t.push("- \u573A\u666F\u548C\u89D2\u8272\u4E92\u52A8\u5FC5\u987B\u7B26\u5408\u73A9\u5BB6\u9009\u62E9\u7684\u5173\u7CFB\u72B6\u6001\u3001\u804C\u4E1A\u7B49\u8BBE\u5B9A"),t.push("- \u4E0D\u8981\u5927\u6BB5\u63CF\u5199\uFF0C\u7B80\u6D01\u6709\u529B"),t.push(""),t.push(...tt(e,{opening:!0})),t.join(`
+`)}U();function Y(e,n={}){let a=String(e||"").trim(),t=Tn(a),s=[];for(let l of t)try{let c=JSON.parse(l),o=Pt(c,n,"json");if(o.turn.narrative||o.turn.options.length)return o}catch(c){s.push(c.message)}let i=On(a,n);return{status:i.turn.narrative?"legacy":"fallback",turn:i.turn,errors:s,warnings:i.warnings}}function Me(e,n={}){return["\u4E0B\u9762\u7684\u6A21\u578B\u8F93\u51FA\u4E0D\u662F\u5408\u6CD5 JSON\uFF0C\u6216\u4E0D\u7B26\u5408\u6307\u5B9A schema\u3002","\u4E0D\u8981\u7EED\u5199\u5267\u60C5\uFF0C\u4E0D\u8981\u89E3\u91CA\u539F\u56E0\uFF0C\u53EA\u628A\u539F\u8F93\u51FA\u4FEE\u590D\u4E3A\u4E00\u4E2A JSON \u5BF9\u8C61\u3002","schema:","{",'  "narrative": "\u5267\u60C5\u6B63\u6587\u5B57\u7B26\u4E32",','  "options": [{"label":"A","text":"\u9009\u9879\u5185\u5BB9","value":"\u73A9\u5BB6\u9009\u62E9\u65F6\u53D1\u9001\u7684\u6587\u672C"}],','  "values": {"\u7EF4\u5EA6ID": 0},','  "keyEvent": null,','  "stageHint": null',"}",`\u53EF\u7528\u7EF4\u5EA6 ID: ${(n.dimensions||[]).map(t=>t.id).filter(Boolean).join(", ")||"\u65E0"}`,"\u539F\u8F93\u51FA:",e].join(`
+`)}function nt(e,n={}){return e?.parsed?e.parsed:Y(e?.content||"",n).turn}function Tn(e){let n=[];if(!e)return n;n.push(e);let a=e.match(/```(?:json)?\s*([\s\S]*?)```/i);a&&n.push(a[1].trim());let t=e.match(/(?:<json>|【JSON】)([\s\S]*?)(?:<\/json>|$)/i);t&&n.push(t[1].trim());let s=Nn(e);return s&&n.push(s),[...new Set(n.map(qn))]}function Nn(e){let n=e.indexOf("{");if(n<0)return null;let a=0,t=!1,s="",i=!1;for(let l=n;l<e.length;l++){let c=e[l];if(t){i?i=!1:c==="\\"?i=!0:c===s&&(t=!1);continue}if(c==='"'||c==="'"){t=!0,s=c;continue}if(c==="{"&&a++,c==="}"&&a--,a===0)return e.slice(n,l+1)}return null}function qn(e){return String(e||"").trim().replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/,\s*([}\]])/g,"$1")}function On(e,n){let a=Ln(e),t=ce(e,n.dimensions||[])||{};return Pt({narrative:de(e)||e,options:a,values:t,keyEvent:We(e),stageHint:null},n,"legacy")}function Pt(e,n,a){let t=[],s=n.dimensions||[],i=new Map(s.map(d=>[d.id,d])),l=new Map(s.map(d=>[d.name,d.id])),c=e?.values&&typeof e.values=="object"?e.values:{},o={};for(let[d,g]of Object.entries(c)){let b=i.has(d)?d:l.get(d);if(!b){t.push(`\u5FFD\u7565\u672A\u77E5\u7EF4\u5EA6: ${d}`);continue}let u=Number(g);if(!Number.isFinite(u)){t.push(`\u5FFD\u7565\u975E\u6570\u5B57\u7EF4\u5EA6\u503C: ${d}`);continue}let m=i.get(b),h=Number(m.range?.[0]??-1/0),M=Number(m.range?.[1]??1/0),k=Math.max(h,Math.min(M,Math.round(u)));k!==u&&t.push(`\u7EF4\u5EA6 ${b} \u5DF2\u9650\u5236\u5230\u8303\u56F4 ${h}-${M}`),o[b]=k}let r=In(e?.options);return r.length||t.push("\u672A\u89E3\u6790\u5230\u9009\u9879"),{status:a,turn:{narrative:typeof e?.narrative=="string"?e.narrative.trim():"",options:r,values:o,keyEvent:typeof e?.keyEvent=="string"&&e.keyEvent.trim()?e.keyEvent.trim():null,stageHint:typeof e?.stageHint=="string"&&e.stageHint.trim()?e.stageHint.trim():null},errors:[],warnings:t}}function In(e){return Array.isArray(e)?e.map((n,a)=>{if(typeof n=="string")return{label:String.fromCharCode(65+a),text:n.trim(),value:n.trim()};if(!n||typeof n!="object")return null;let t=String(n.text||n.content||n.label||n.value||"").trim();return t?{label:String(n.label||String.fromCharCode(65+a)).trim().slice(0,3),text:t,value:String(n.value||t).trim()}:null}).filter(Boolean).slice(0,4):[]}function Ln(e){let n=String(e||"").match(/【选项】([\s\S]*?)(?=【|$)/);return n?n[1].split(`
+`).map(a=>{let t=a.match(/^([A-Z])[.、)）]\s*(.+)/);return t?{label:t[1],text:t[2].trim(),value:t[2].trim()}:null}).filter(Boolean).slice(0,4):[]}U();async function Dt(e,{scriptId:n}){let a=await F(n);if(!a){w("home");return}let[t,s]=await Promise.all([N("api_url"),N("api_key")]);if(!t||!s){e.innerHTML=`
       <div class="wizard-step">
         <div class="icon" style="font-size:48px;margin-bottom:16px">\u2699</div>
         <h2>\u672A\u914D\u7F6E LLM</h2>
@@ -1410,42 +1710,42 @@ ${hn(e,n)}${e.message}`:`${a}\uFF1A${e.message}`}function hn(e,a){let n=String(e
         <button class="btn btn-primary" id="btn-go-settings">\u524D\u5F80\u8BBE\u7F6E</button>
         <button class="btn btn-secondary" style="margin-top:10px" id="btn-go-back">\u8FD4\u56DE</button>
       </div>
-    `,e.querySelector("#btn-go-settings").onclick=()=>w("settings"),e.querySelector("#btn-go-back").onclick=()=>w("home");return}let i=n.setup||[],o=0,l=[];function c(){if(o>=i.length){r();return}let d=i[o],g=l[o]||"";e.innerHTML=`
+    `,e.querySelector("#btn-go-settings").onclick=()=>w("settings"),e.querySelector("#btn-go-back").onclick=()=>w("home");return}let i=a.setup||[],l=0,c=[];function o(){if(l>=i.length){r();return}let d=i[l],g=c[l]||"";e.innerHTML=`
       <div class="wizard-step">
         <div class="wizard-progress">
-          ${i.map((k,O)=>`<div class="wizard-dot ${O<o?"done":O===o?"active":""}"></div>`).join("")}
+          ${i.map((k,O)=>`<div class="wizard-dot ${O<l?"done":O===l?"active":""}"></div>`).join("")}
         </div>
-        <h2>${Ee(d.step)}</h2>
-        <p>${Ee(d.description||"")}</p>
+        <h2>${Te(d.step)}</h2>
+        <p>${Te(d.description||"")}</p>
         <div class="wizard-options">
           ${(d.options||[]).map((k,O)=>`
-            <button class="wizard-option ${g===k.value?"selected":""}" data-idx="${O}">${Ee(k.label)}</button>
+            <button class="wizard-option ${g===k.value?"selected":""}" data-idx="${O}">${Te(k.label)}</button>
           `).join("")}
           ${d.allow_custom?`
             <input class="form-input" id="custom-input" placeholder="\u81EA\u5B9A\u4E49\u8F93\u5165..." style="margin-top:8px">
           `:""}
         </div>
         <div class="wizard-nav">
-          ${o>0?'<button class="btn btn-secondary" id="btn-prev" style="min-width:90px">\u4E0A\u4E00\u6B65</button>':""}
+          ${l>0?'<button class="btn btn-secondary" id="btn-prev" style="min-width:90px">\u4E0A\u4E00\u6B65</button>':""}
           <button class="btn btn-primary" id="btn-next" disabled style="flex:1">\u4E0B\u4E00\u6B65</button>
         </div>
       </div>
-    `;let v=null,p=e.querySelectorAll(".wizard-option"),m=e.querySelector("#btn-next");m.disabled=!l[o],p.forEach(k=>{k.onclick=()=>{p.forEach(O=>O.classList.remove("selected")),k.classList.add("selected"),v=parseInt(k.dataset.idx),l[o]=d.options[v].value,m.disabled=!1}});let y=e.querySelector("#custom-input");y&&(y.oninput=()=>{y.value.trim()?(l[o]=y.value.trim(),m.disabled=!1,p.forEach(k=>k.classList.remove("selected"))):m.disabled=!0}),m.onclick=()=>{o++,c()};let M=e.querySelector("#btn-prev");M&&(M.onclick=()=>{o--,c()})}async function r(){e.innerHTML=`
+    `;let b=null,u=e.querySelectorAll(".wizard-option"),m=e.querySelector("#btn-next");m.disabled=!c[l],u.forEach(k=>{k.onclick=()=>{u.forEach(O=>O.classList.remove("selected")),k.classList.add("selected"),b=parseInt(k.dataset.idx),c[l]=d.options[b].value,m.disabled=!1}});let h=e.querySelector("#custom-input");h&&(h.oninput=()=>{h.value.trim()?(c[l]=h.value.trim(),m.disabled=!1,u.forEach(k=>k.classList.remove("selected"))):m.disabled=!0}),m.onclick=()=>{l++,o()};let M=e.querySelector("#btn-prev");M&&(M.onclick=()=>{l--,o()})}async function r(){e.innerHTML=`
       <div class="wizard-step">
         <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
         <p style="margin-top:16px;color:var(--text-dim)">\u6B63\u5728\u751F\u6210\u5F00\u573A\u573A\u666F...</p>
       </div>
-    `;try{let d=Et(n,l),g=we(d,n),v=It({script:n,selections:l}),p=await ne([{role:"user",content:v}]),m=G(p,n);if(Nn(m))try{let k=await ne([{role:"user",content:ke(p,n)}]),O=G(k,n);O.status==="json"&&(p=k,m={...O,status:"repaired"})}catch(k){console.warn("Opening JSON repair failed:",k)}g.addAIMessage(p,m.turn,m.status);let y=m.turn.values&&Object.keys(m.turn.values).length?m.turn.values:null;y&&g.updateValues(y),d.currentStage=ie(n.stages,d.values,d.currentStage);let M=re(n.endings,d.values);M&&(d.ended=!0,d.ending=M,n.stages?.length&&(d.currentStage=n.stages.length-1)),g.createSnapshot("after-opening"),await g.save(),w("chat",{sessionId:d.id})}catch(d){e.innerHTML=`
+    `;try{let d=qt(a,c),g=_e(d,a),b=Ct({script:a,selections:c}),u=await se([{role:"user",content:b}]),m=Y(u,a);if(jn(m))try{let k=await se([{role:"user",content:Me(u,a)}]),O=Y(k,a);O.status==="json"&&(u=k,m={...O,status:"repaired"})}catch(k){console.warn("Opening JSON repair failed:",k)}g.addAIMessage(u,m.turn,m.status);let h=m.turn.values&&Object.keys(m.turn.values).length?m.turn.values:null;h&&g.updateValues(h),d.currentStage=oe(a.stages,d.values,d.currentStage);let M=le(a.endings,d.values);M&&(d.ended=!0,d.ending=M,a.stages?.length&&(d.currentStage=a.stages.length-1)),g.createSnapshot("after-opening"),await g.save(),w("chat",{sessionId:d.id})}catch(d){e.innerHTML=`
         <div class="empty-state">
           <div class="icon">\u26A0\uFE0F</div>
-          <p>${Ee(d.message)}</p>
+          <p>${Te(d.message)}</p>
           <button class="btn btn-primary" onclick="location.reload()">\u91CD\u8BD5</button>
         </div>
-      `}}c()}function Nn(e){return e.status!=="json"||!e.turn.narrative||!(e.turn.options||[]).length}function Ee(e){let a=document.createElement("div");return a.textContent=e,a.innerHTML}I();H();var _=null,_e=!1,Me={};async function Lt(e,{sessionId:a}){let n=await Pe(a);if(!n){w("home");return}let t=await B(n.scriptId);if(!t){w("home");return}_=we(n,t);let s=_.session;Me={...s.values},e.innerHTML=`
+      `}}o()}function jn(e){return e.status!=="json"||!e.turn.narrative||!(e.turn.options||[]).length}function Te(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}j();U();var _=null,Ne=!1,qe={};async function zt(e,{sessionId:n}){let a=await He(n);if(!a){w("home");return}let t=await F(a.scriptId);if(!t){w("home");return}_=_e(a,t);let s=_.session;qe={...s.values},e.innerHTML=`
     <div class="chat-page">
       <div class="header">
         <button class="header-btn" id="btn-back-chat">\u2190</button>
-        <h1 style="font-size:15px">${Z(t.name)}</h1>
+        <h1 style="font-size:15px">${ee(t.name)}</h1>
         <button class="header-btn" id="btn-menu">\u22EF</button>
       </div>
       <div class="numerical-toggle" id="num-toggle">\u25B2 \u6570\u503C\u9762\u677F</div>
@@ -1468,18 +1768,18 @@ ${hn(e,n)}${e.message}`:`${a}\uFF1A${e.message}`}function hn(e,a){let n=String(e
         </div>
       </div>
     </div>
-  `;let i=e.querySelector("#messages"),o=-1;y(),p(),U(),i.scrollTop=i.scrollHeight,e.querySelector("#num-toggle").onclick=()=>{_e=!_e;let f=e.querySelector("#num-panel"),b=e.querySelector("#num-toggle");f.classList.toggle("open",_e),b.textContent=_e?"\u25BC \u6570\u503C\u9762\u677F":"\u25B2 \u6570\u503C\u9762\u677F"};let l=e.querySelector("#chat-input");l.onkeydown=f=>{f.key==="Enter"&&!f.shiftKey&&(f.preventDefault(),r())},l.oninput=()=>{l.style.height="auto",l.style.height=Math.min(l.scrollHeight,120)+"px"},e.querySelector("#nav-top").onclick=()=>{i.scrollTo({top:0,behavior:"smooth"})},e.querySelector("#nav-bottom").onclick=()=>{i.scrollTo({top:i.scrollHeight,behavior:"smooth"})},e.querySelector("#nav-prev").onclick=()=>{c(-1)},e.querySelector("#nav-next").onclick=()=>{c(1)};function c(f){let b=i.querySelectorAll(".msg");b.length!==0&&(o=Math.max(0,Math.min(b.length-1,o+f)),b[o].scrollIntoView({behavior:"smooth",block:"center"}))}e.querySelector("#btn-send").onclick=()=>r(),k();async function r(f){let b=f||l.value.trim();!b||_._sending||s.ended||(l.value="",l.style.height="auto",e.querySelector("#chat-options").innerHTML="",_.addPlayerMessage(b),_.createSnapshot("before-ai-response"),p(),await d(b))}async function d(f){_._sending=!0,g(!0);let b=document.createElement("div");b.className="msg msg-ai",b.textContent="",i.appendChild(b),i.scrollTop=i.scrollHeight;try{let S=Tt({script:t,values:s.values,selections:s.selections,memories:_.memoryMgr.getMemories(),recentMessages:_.getRecentMessages(3),scenePrompt:et(t,s),playerInput:f,currentStage:s.currentStage}),T=await ne([{role:"user",content:S}],{onChunk:(L,X)=>{L?b.textContent=L:X&&(b.innerHTML='<span style="color:var(--text-dim);font-size:12px">\u601D\u8003\u4E2D...</span>'),i.scrollTop=i.scrollHeight}}),N=G(T,t);if(v(N))try{b.textContent="\u6B63\u5728\u4FEE\u6B63\u8F93\u51FA\u683C\u5F0F...";let L=await ne([{role:"user",content:ke(T,t)}]),X=G(L,t);X.status==="json"&&(T=L,N={...X,status:"repaired"})}catch(L){console.warn("LLM JSON repair failed:",L)}N.warnings?.length&&console.warn("LLM output warnings:",N.warnings);let j=N.turn;_.addAIMessage(T,j,N.status);let V={...s.values},A=s.currentStage,ae=j.values&&Object.keys(j.values).length?j.values:null;ae&&_.updateValues(ae),Ve(s,t.dimensions||[]);let C=Re(t.events,s.values,s.currentStage,s.activeEffects,s.eventState,()=>_.nextRandom());if(C.length>0){C.forEach(X=>Be(s,X));let L=ie(t.stages,s.values,s.currentStage);L!==s.currentStage&&(s.currentStage=L)}let J=re(t.endings,s.values);J&&(s.ended=!0,s.ending=J,t.stages?.length&&(s.currentStage=t.stages.length-1)),_.addTimelineEntry({values:be(V,s.values),events:C.map(L=>L.name),stageFrom:A,stageTo:s.currentStage,ending:J?J.name:null});let Q=j.keyEvent;Q&&K(),_.createSnapshot("after-ai-response"),await _.save(),p(),y(),U(),k(),requestAnimationFrame(()=>{i.scrollTop=i.scrollHeight});let Ne=e.querySelector("#memory-prompt-area");Q||(Ne.innerHTML="")}catch(S){b.remove(),ge("\u53D1\u9001\u5931\u8D25: "+S.message)}_._sending=!1,g(!1)}function g(f){l.disabled=f||s.ended,e.querySelector("#btn-send").disabled=f||s.ended,e.querySelectorAll(".chat-option-btn").forEach(b=>{b.disabled=f})}function v(f){return f.status!=="json"||!f.turn.narrative||!(f.turn.options||[]).length}function p(){i.innerHTML=s.messages.map((f,b)=>{let S=f.role==="player"?"msg-player":"msg-ai",T=f.content,N="";if(f.role==="ai"){let V=Xe(f,t);T=V.narrative||le(f.content);let A=V.values&&Object.keys(V.values).length?V.values:oe(f.content,t.dimensions);if(A&&t.dimensions?.length){let ae=t.dimensions.filter(C=>A[C.id]!==void 0&&A[C.id]!==Me[C.id]).map(C=>{let J=Me[C.id],Q=A[C.id],Ne=J!==void 0&&Q>J?"\u2191":J!==void 0&&Q<J?"\u2193":"";return`${C.name} ${Q}${Ne}`}).slice(0,5);ae.length&&(N=`<div class="msg-values">${ae.join(" \xB7 ")}</div>`),Object.assign(Me,A)}}let j=f.role==="ai"?`<div class="msg-regen" data-idx="${b}">\u21BB \u91CD\u65B0\u751F\u6210</div>`:"";return`<div class="msg ${S}">${Z(T)}${N}${j}</div>`}).join(""),o=i.querySelectorAll(".msg").length-1,i.scrollTop=i.scrollHeight}i.addEventListener("click",f=>{let b=f.target.closest(".msg-regen");b&&m(parseInt(b.dataset.idx))});async function m(f){if(_._sending)return;let b=f-1;if(f===0||b<0||s.messages[b]?.role!=="player"){_.restoreToMessage(0),p(),await d("\u8BF7\u91CD\u65B0\u751F\u6210\u5F00\u573A\u573A\u666F");return}let S=s.messages[b].content;_.restoreToMessage(b),_.addPlayerMessage(S),_.createSnapshot("before-ai-regenerate"),p(),await d(S)}function y(){let f=e.querySelector("#num-panel");if(!t.dimensions?.length){f.innerHTML='<p style="color:var(--text-dim);font-size:13px">\u6B64\u5267\u672C\u65E0\u6570\u503C\u7CFB\u7EDF</p>';return}f.innerHTML=t.dimensions.map(b=>{let S=s.values[b.id];return`<div class="num-row"><span class="num-label">${Z(b.name)}</span><span class="num-value">${S??"-"}</span></div>`}).join("")+M()}function M(){let f=(s.timeline||[]).slice(-12).reverse();return f.length?`<div class="state-timeline">
+  `;let i=e.querySelector("#messages"),l=-1;h(),u(),W(),i.scrollTop=i.scrollHeight,e.querySelector("#num-toggle").onclick=()=>{Ne=!Ne;let f=e.querySelector("#num-panel"),v=e.querySelector("#num-toggle");f.classList.toggle("open",Ne),v.textContent=Ne?"\u25BC \u6570\u503C\u9762\u677F":"\u25B2 \u6570\u503C\u9762\u677F"};let c=e.querySelector("#chat-input");c.onkeydown=f=>{f.key==="Enter"&&!f.shiftKey&&(f.preventDefault(),r())},c.oninput=()=>{c.style.height="auto",c.style.height=Math.min(c.scrollHeight,120)+"px"},e.querySelector("#nav-top").onclick=()=>{i.scrollTo({top:0,behavior:"smooth"})},e.querySelector("#nav-bottom").onclick=()=>{i.scrollTo({top:i.scrollHeight,behavior:"smooth"})},e.querySelector("#nav-prev").onclick=()=>{o(-1)},e.querySelector("#nav-next").onclick=()=>{o(1)};function o(f){let v=i.querySelectorAll(".msg");v.length!==0&&(l=Math.max(0,Math.min(v.length-1,l+f)),v[l].scrollIntoView({behavior:"smooth",block:"center"}))}e.querySelector("#btn-send").onclick=()=>r(),k();async function r(f){let v=f||c.value.trim();!v||_._sending||s.ended||(c.value="",c.style.height="auto",e.querySelector("#chat-options").innerHTML="",_.addPlayerMessage(v),_.createSnapshot("before-ai-response"),u(),await d(v))}async function d(f){_._sending=!0,g(!0);let v=document.createElement("div");v.className="msg msg-ai",v.textContent="",i.appendChild(v),i.scrollTop=i.scrollHeight;try{let S=At({script:t,values:s.values,selections:s.selections,memories:_.memoryMgr.getMemories(),recentMessages:_.getRecentMessages(3),scenePrompt:st(t,s),playerInput:f,currentStage:s.currentStage}),q=await se([{role:"user",content:S}],{onChunk:(L,ne)=>{L?v.textContent=L:ne&&(v.innerHTML='<span style="color:var(--text-dim);font-size:12px">\u601D\u8003\u4E2D...</span>'),i.scrollTop=i.scrollHeight}}),T=Y(q,t);if(b(T))try{v.textContent="\u6B63\u5728\u4FEE\u6B63\u8F93\u51FA\u683C\u5F0F...";let L=await se([{role:"user",content:Me(q,t)}]),ne=Y(L,t);ne.status==="json"&&(q=L,T={...ne,status:"repaired"})}catch(L){console.warn("LLM JSON repair failed:",L)}T.warnings?.length&&console.warn("LLM output warnings:",T.warnings);let I=T.turn;_.addAIMessage(q,I,T.status);let B={...s.values},A=s.currentStage,ie=I.values&&Object.keys(I.values).length?I.values:null;ie&&_.updateValues(ie),Ue(s,t.dimensions||[]);let C=Fe(t.events,s.values,s.currentStage,s.activeEffects,s.eventState,()=>_.nextRandom());if(C.length>0){C.forEach(ne=>Ke(s,ne));let L=oe(t.stages,s.values,s.currentStage);L!==s.currentStage&&(s.currentStage=L)}let V=le(t.endings,s.values);V&&(s.ended=!0,s.ending=V,t.stages?.length&&(s.currentStage=t.stages.length-1)),_.addTimelineEntry({values:he(B,s.values),events:C.map(L=>L.name),stageFrom:A,stageTo:s.currentStage,ending:V?V.name:null});let te=I.keyEvent;te&&G(),_.createSnapshot("after-ai-response"),await _.save(),u(),h(),W(),k(),requestAnimationFrame(()=>{i.scrollTop=i.scrollHeight});let Oe=e.querySelector("#memory-prompt-area");te||(Oe.innerHTML="")}catch(S){v.remove(),ve("\u53D1\u9001\u5931\u8D25: "+S.message)}_._sending=!1,g(!1)}function g(f){c.disabled=f||s.ended,e.querySelector("#btn-send").disabled=f||s.ended,e.querySelectorAll(".chat-option-btn").forEach(v=>{v.disabled=f})}function b(f){return f.status!=="json"||!f.turn.narrative||!(f.turn.options||[]).length}function u(){i.innerHTML=s.messages.map((f,v)=>{let S=f.role==="player"?"msg-player":"msg-ai",q=f.content,T="";if(f.role==="ai"){let B=nt(f,t);q=B.narrative||de(f.content);let A=B.values&&Object.keys(B.values).length?B.values:ce(f.content,t.dimensions);if(A&&t.dimensions?.length){let ie=t.dimensions.filter(C=>A[C.id]!==void 0&&A[C.id]!==qe[C.id]).map(C=>{let V=qe[C.id],te=A[C.id],Oe=V!==void 0&&te>V?"\u2191":V!==void 0&&te<V?"\u2193":"";return`${C.name} ${te}${Oe}`}).slice(0,5);ie.length&&(T=`<div class="msg-values">${ie.join(" \xB7 ")}</div>`),Object.assign(qe,A)}}let I=f.role==="ai"?`<div class="msg-regen" data-idx="${v}">\u21BB \u91CD\u65B0\u751F\u6210</div>`:"";return`<div class="msg ${S}">${ee(q)}${T}${I}</div>`}).join(""),l=i.querySelectorAll(".msg").length-1,i.scrollTop=i.scrollHeight}i.addEventListener("click",f=>{let v=f.target.closest(".msg-regen");v&&m(parseInt(v.dataset.idx))});async function m(f){if(_._sending)return;let v=f-1;if(f===0||v<0||s.messages[v]?.role!=="player"){_.restoreToMessage(0),u(),await d("\u8BF7\u91CD\u65B0\u751F\u6210\u5F00\u573A\u573A\u666F");return}let S=s.messages[v].content;_.restoreToMessage(v),_.addPlayerMessage(S),_.createSnapshot("before-ai-regenerate"),u(),await d(S)}function h(){let f=e.querySelector("#num-panel");if(!t.dimensions?.length){f.innerHTML='<p style="color:var(--text-dim);font-size:13px">\u6B64\u5267\u672C\u65E0\u6570\u503C\u7CFB\u7EDF</p>';return}f.innerHTML=t.dimensions.map(v=>{let S=s.values[v.id];return`<div class="num-row"><span class="num-label">${ee(v.name)}</span><span class="num-value">${S??"-"}</span></div>`}).join("")+M()}function M(){let f=(s.timeline||[]).slice(-12).reverse();return f.length?`<div class="state-timeline">
       <div class="timeline-title">\u72B6\u6001\u65F6\u95F4\u7EBF</div>
-      ${f.map(b=>{let S=(b.values||[]).map(A=>`${A.name} ${A.from}\u2192${A.to}`).join(" \xB7 "),T=b.stageTo!==b.stageFrom?`\u9636\u6BB5 ${Number(b.stageFrom)+1}\u2192${Number(b.stageTo)+1}`:"",N=b.events?.length?`\u4E8B\u4EF6\uFF1A${b.events.join("\u3001")}`:"",j=b.ending?`\u7ED3\u5C40\uFF1A${b.ending}`:"",V=[S,T,N,j].filter(Boolean).join("<br>");return`<div class="timeline-item">
+      ${f.map(v=>{let S=(v.values||[]).map(A=>`${A.name} ${A.from}\u2192${A.to}`).join(" \xB7 "),q=v.stageTo!==v.stageFrom?`\u9636\u6BB5 ${Number(v.stageFrom)+1}\u2192${Number(v.stageTo)+1}`:"",T=v.events?.length?`\u4E8B\u4EF6\uFF1A${v.events.join("\u3001")}`:"",I=v.ending?`\u7ED3\u5C40\uFF1A${v.ending}`:"",B=[S,q,T,I].filter(Boolean).join("<br>");return`<div class="timeline-item">
           <span class="timeline-dot"></span>
-          <div><div class="timeline-time">${new Date(b.timestamp).toLocaleTimeString()}</div><div class="timeline-detail">${V||"\u65E0\u663E\u8457\u53D8\u5316"}</div></div>
+          <div><div class="timeline-time">${new Date(v.timestamp).toLocaleTimeString()}</div><div class="timeline-detail">${B||"\u65E0\u663E\u8457\u53D8\u5316"}</div></div>
         </div>`}).join("")}
-    </div>`:'<div class="state-timeline"><div class="timeline-title">\u72B6\u6001\u65F6\u95F4\u7EBF</div><p class="timeline-empty">\u6682\u65E0\u72B6\u6001\u53D8\u5316</p></div>'}function k(){let f=e.querySelector("#chat-options");if(s.ended){f.innerHTML="";return}let b=[...s.messages].reverse().find(N=>N.role==="ai");if(!b){f.innerHTML="";return}let T=(Xe(b,t).options||[]).map(N=>({label:`${N.label}. ${N.text}`,value:N.value||N.text}));if(T.length===0){f.innerHTML="";return}T.splice(4),f.innerHTML=T.map(N=>`<button class="chat-option-btn" data-value="${Z(N.value)}">${Z(N.label)}</button>`).join(""),f.onclick=N=>{let j=N.target.closest(".chat-option-btn");j&&r(j.dataset.value)}}function O(){let f=document.createElement("div");f.className="typing-indicator",f.id="typing",f.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>',i.appendChild(f),i.scrollTop=i.scrollHeight}function Ye(){let f=e.querySelector("#typing");f&&f.remove()}function ge(f){let b=document.createElement("div");b.className="msg msg-system",b.textContent=f,i.appendChild(b),i.scrollTop=i.scrollHeight}function U(){let f=e.querySelector("#memory-prompt-area");if(!s.ended||!s.ending){f.dataset.mode==="ending"&&(f.innerHTML=""),f.dataset.mode="",g(!1);return}f.dataset.mode="ending",f.innerHTML=`
+    </div>`:'<div class="state-timeline"><div class="timeline-title">\u72B6\u6001\u65F6\u95F4\u7EBF</div><p class="timeline-empty">\u6682\u65E0\u72B6\u6001\u53D8\u5316</p></div>'}function k(){let f=e.querySelector("#chat-options");if(s.ended){f.innerHTML="";return}let v=[...s.messages].reverse().find(T=>T.role==="ai");if(!v){f.innerHTML="";return}let q=(nt(v,t).options||[]).map(T=>({label:`${T.label}. ${T.text}`,value:T.value||T.text}));if(q.length===0){f.innerHTML="";return}q.splice(4),f.innerHTML=q.map(T=>`<button class="chat-option-btn" data-value="${ee(T.value)}">${ee(T.label)}</button>`).join(""),f.onclick=T=>{let I=T.target.closest(".chat-option-btn");I&&r(I.dataset.value)}}function O(){let f=document.createElement("div");f.className="typing-indicator",f.id="typing",f.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>',i.appendChild(f),i.scrollTop=i.scrollHeight}function at(){let f=e.querySelector("#typing");f&&f.remove()}function ve(f){let v=document.createElement("div");v.className="msg msg-system",v.textContent=f,i.appendChild(v),i.scrollTop=i.scrollHeight}function W(){let f=e.querySelector("#memory-prompt-area");if(!s.ended||!s.ending){f.dataset.mode==="ending"&&(f.innerHTML=""),f.dataset.mode="",g(!1);return}f.dataset.mode="ending",f.innerHTML=`
       <div class="msg msg-system">
-        <strong>${Z(s.ending.name||"\u7ED3\u5C40")}</strong><br>
-        ${Z(s.ending.description||"\u672C\u6B21\u6A21\u62DF\u5DF2\u7ED3\u675F\u3002")}
+        <strong>${ee(s.ending.name||"\u7ED3\u5C40")}</strong><br>
+        ${ee(s.ending.description||"\u672C\u6B21\u6A21\u62DF\u5DF2\u7ED3\u675F\u3002")}
       </div>
-    `,g(!1)}function K(){let f=e.querySelector("#memory-prompt-area");f.innerHTML='<div class="memory-prompt" id="btn-memory">\u{1F4CC} \u53D1\u751F\u4E86\u5173\u952E\u4E8B\u4EF6\uFF0C\u70B9\u51FB\u4FDD\u5B58\u8BB0\u5FC6</div>',f.querySelector("#btn-memory").onclick=async()=>{let b=s.messages.slice(-6);await _.memoryMgr.manualSummarize(b.map(S=>({role:S.role==="player"?"user":"assistant",content:S.content}))),await _.save(),f.innerHTML='<div class="msg msg-system">\u8BB0\u5FC6\u5DF2\u4FDD\u5B58</div>'}}function et(f,b){let T=f.stages?.[b.currentStage]?.name||`\u9636\u6BB5 ${b.currentStage+1}`;return`\u9636\u6BB5\uFF1A${b.currentStage+1}/${f.stages?.length||"?"} - ${T}`}function be(f,b){return(t.dimensions||[]).filter(S=>f[S.id]!==b[S.id]).map(S=>({id:S.id,name:S.name||S.id,from:f[S.id]??"-",to:b[S.id]??"-"}))}e.querySelector("#btn-back-chat").onclick=()=>{_.save(),w("home")},e.querySelector("#btn-menu").onclick=()=>{confirm("\u8FD4\u56DE\u9996\u9875\uFF1F\u5F53\u524D\u8FDB\u5EA6\u4F1A\u81EA\u52A8\u4FDD\u5B58\u3002")&&(_.save(),w("home"))}}function Z(e){let a=document.createElement("div");return a.textContent=e,a.innerHTML}I();var At=[{id:"",label:"\u81EA\u5B9A\u4E49\u914D\u7F6E",url:"",model:"",thinking:null,effort:"high",temperature:.85,proxy:!1},{id:"deepseek-v4-flash",label:"DeepSeek V4 Flash",url:"https://api.deepseek.com/chat/completions",model:"deepseek-v4-flash",thinking:!1,effort:"high",temperature:.85,proxy:!1},{id:"deepseek-v4-pro",label:"DeepSeek V4 Pro",url:"https://api.deepseek.com/chat/completions",model:"deepseek-v4-pro",thinking:!0,effort:"high",temperature:.85,proxy:!1},{id:"deepseek-v4-pro-max",label:"DeepSeek V4 Pro \u6DF1\u5EA6\u601D\u8003",url:"https://api.deepseek.com/chat/completions",model:"deepseek-v4-pro",thinking:!0,effort:"max",temperature:.85,proxy:!1},{id:"openai-gpt-4o-mini",label:"OpenAI GPT-4o mini",url:"https://api.openai.com/v1/chat/completions",model:"gpt-4o-mini",thinking:!1,effort:"high",temperature:.7,proxy:!1},{id:"proxy",label:"\u540E\u7AEF\u4EE3\u7406",url:"/api/chat/completions",model:"deepseek-v4-flash",thinking:!1,effort:"high",temperature:.85,proxy:!0}];async function Ct(e){let[a,n,t,s,i,o,l,c]=await Promise.all([q("api_url"),q("api_key"),q("api_model"),q("memory_interval"),q("thinking_enabled"),q("reasoning_effort"),q("temperature"),q("api_proxy_enabled")]),r=i!==!1,d=!!c;e.innerHTML=`
+    `,g(!1)}function G(){let f=e.querySelector("#memory-prompt-area");f.innerHTML='<div class="memory-prompt" id="btn-memory">\u{1F4CC} \u53D1\u751F\u4E86\u5173\u952E\u4E8B\u4EF6\uFF0C\u70B9\u51FB\u4FDD\u5B58\u8BB0\u5FC6</div>',f.querySelector("#btn-memory").onclick=async()=>{let v=s.messages.slice(-6);await _.memoryMgr.manualSummarize(v.map(S=>({role:S.role==="player"?"user":"assistant",content:S.content}))),await _.save(),f.innerHTML='<div class="msg msg-system">\u8BB0\u5FC6\u5DF2\u4FDD\u5B58</div>'}}function st(f,v){let q=f.stages?.[v.currentStage]?.name||`\u9636\u6BB5 ${v.currentStage+1}`;return`\u9636\u6BB5\uFF1A${v.currentStage+1}/${f.stages?.length||"?"} - ${q}`}function he(f,v){return(t.dimensions||[]).filter(S=>f[S.id]!==v[S.id]).map(S=>({id:S.id,name:S.name||S.id,from:f[S.id]??"-",to:v[S.id]??"-"}))}e.querySelector("#btn-back-chat").onclick=()=>{_.save(),w("home")},e.querySelector("#btn-menu").onclick=async()=>{await z("\u8FD4\u56DE\u9996\u9875\uFF1F\u5F53\u524D\u8FDB\u5EA6\u4F1A\u81EA\u52A8\u4FDD\u5B58\u3002",{title:"\u8FD4\u56DE\u9996\u9875",confirmText:"\u8FD4\u56DE"})&&(_.save(),w("home"))}}function ee(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}j();var Ht=[{id:"",label:"\u81EA\u5B9A\u4E49\u914D\u7F6E",url:"",model:"",thinking:null,effort:"high",temperature:.85,proxy:!1},{id:"deepseek-v4-flash",label:"DeepSeek V4 Flash",url:"https://api.deepseek.com/chat/completions",model:"deepseek-v4-flash",thinking:!1,effort:"high",temperature:.85,proxy:!1},{id:"deepseek-v4-pro",label:"DeepSeek V4 Pro",url:"https://api.deepseek.com/chat/completions",model:"deepseek-v4-pro",thinking:!0,effort:"high",temperature:.85,proxy:!1},{id:"deepseek-v4-pro-max",label:"DeepSeek V4 Pro \u6DF1\u5EA6\u601D\u8003",url:"https://api.deepseek.com/chat/completions",model:"deepseek-v4-pro",thinking:!0,effort:"max",temperature:.85,proxy:!1},{id:"openai-gpt-4o-mini",label:"OpenAI GPT-4o mini",url:"https://api.openai.com/v1/chat/completions",model:"gpt-4o-mini",thinking:!1,effort:"high",temperature:.7,proxy:!1},{id:"proxy",label:"\u540E\u7AEF\u4EE3\u7406",url:"/api/chat/completions",model:"deepseek-v4-flash",thinking:!1,effort:"high",temperature:.85,proxy:!0}];async function Jt(e){let[n,a,t,s,i,l,c,o]=await Promise.all([N("api_url"),N("api_key"),N("api_model"),N("memory_interval"),N("thinking_enabled"),N("reasoning_effort"),N("temperature"),N("api_proxy_enabled")]),r=i!==!1,d=!!o;e.innerHTML=`
     <div class="header">
       <button class="header-btn" id="btn-back">\u2190</button>
       <h1>\u8BBE\u7F6E</h1>
@@ -1490,12 +1790,12 @@ ${hn(e,n)}${e.message}`:`${a}\uFF1A${e.message}`}function hn(e,a){let n=String(e
         <div class="form-group">
           <label class="form-label">\u6A21\u578B\u9884\u8BBE</label>
           <select class="form-input" id="f-preset">
-            ${At.map(p=>`<option value="${fe(p.id)}">${fe(p.label)}</option>`).join("")}
+            ${Ht.map(u=>`<option value="${be(u.id)}">${be(u.label)}</option>`).join("")}
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">API \u5730\u5740</label>
-          <input class="form-input" id="f-url" value="${fe(a||"https://api.deepseek.com/chat/completions")}" placeholder="https://api.deepseek.com/chat/completions">
+          <input class="form-input" id="f-url" value="${be(n||"https://api.deepseek.com/chat/completions")}" placeholder="https://api.deepseek.com/chat/completions">
         </div>
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
@@ -1506,11 +1806,11 @@ ${hn(e,n)}${e.message}`:`${a}\uFF1A${e.message}`}function hn(e,a){let n=String(e
         </div>
         <div class="form-group">
           <label class="form-label">API Key</label>
-          <input class="form-input" id="f-key" type="password" value="${fe(d?"":n||"")}" placeholder="sk-..." ${d?"disabled":""}>
+          <input class="form-input" id="f-key" type="password" value="${be(d?"":a||"")}" placeholder="sk-..." ${d?"disabled":""}>
         </div>
         <div class="form-group">
           <label class="form-label">\u6A21\u578B\u540D\u79F0</label>
-          <input class="form-input" id="f-model" value="${fe(t||"deepseek-v4-flash")}" placeholder="deepseek-v4-flash">
+          <input class="form-input" id="f-model" value="${be(t||"deepseek-v4-flash")}" placeholder="deepseek-v4-flash">
         </div>
       </div>
 
@@ -1526,13 +1826,13 @@ ${hn(e,n)}${e.message}`:`${a}\uFF1A${e.message}`}function hn(e,a){let n=String(e
         <div class="form-group" id="effort-group" style="${r?"":"display:none"}">
           <label class="form-label">\u601D\u8003\u5F3A\u5EA6</label>
           <select class="form-input" id="f-effort">
-            <option value="high" ${o!=="max"?"selected":""}>high - \u666E\u901A\uFF08\u63A8\u8350\uFF09</option>
-            <option value="max" ${o==="max"?"selected":""}>max - \u6DF1\u5EA6\u601D\u8003</option>
+            <option value="high" ${l!=="max"?"selected":""}>high - \u666E\u901A\uFF08\u63A8\u8350\uFF09</option>
+            <option value="max" ${l==="max"?"selected":""}>max - \u6DF1\u5EA6\u601D\u8003</option>
           </select>
         </div>
         <div class="form-group" id="temp-group" style="${r?"display:none":""}">
-          <label class="form-label">Temperature: <span id="temp-val">${l??.85}</span></label>
-          <input type="range" id="f-temp" min="0" max="2" step="0.05" value="${l??.85}" style="width:100%">
+          <label class="form-label">Temperature: <span id="temp-val">${c??.85}</span></label>
+          <input type="range" id="f-temp" min="0" max="2" step="0.05" value="${c??.85}" style="width:100%">
           <p style="font-size:12px;color:var(--text-dim);margin-top:4px">\u8D8A\u9AD8\u8D8A\u968F\u673A\u6709\u521B\u610F\uFF0C\u8D8A\u4F4E\u8D8A\u7A33\u5B9A\u4FDD\u5B88\u3002\u601D\u8003\u6A21\u5F0F\u4E0B\u6B64\u53C2\u6570\u65E0\u6548</p>
         </div>
       </div>
@@ -1553,7 +1853,7 @@ ${hn(e,n)}${e.message}`:`${a}\uFF1A${e.message}`}function hn(e,a){let n=String(e
 
       <button class="btn btn-primary btn-block" id="btn-save">\u4FDD\u5B58\u8BBE\u7F6E</button>
     </div>
-  `,e.querySelector("#f-thinking").onchange=p=>{let m=p.target.checked;e.querySelector("#effort-group").style.display=m?"":"none",e.querySelector("#temp-group").style.display=m?"none":""},e.querySelector("#f-proxy").onchange=p=>{let m=e.querySelector("#f-key");m.disabled=p.target.checked,p.target.checked&&(m.value="")},e.querySelector("#f-preset").onchange=p=>{let m=At.find(y=>y.id===p.target.value);!m||!m.id||(e.querySelector("#f-url").value=m.url,e.querySelector("#f-model").value=m.model,e.querySelector("#f-proxy").checked=m.proxy,e.querySelector("#f-proxy").dispatchEvent(new Event("change")),m.thinking!==null&&(e.querySelector("#f-thinking").checked=m.thinking,e.querySelector("#f-thinking").dispatchEvent(new Event("change"))),e.querySelector("#f-effort").value=m.effort,g.value=m.temperature,v.textContent=String(m.temperature))};let g=e.querySelector("#f-temp"),v=e.querySelector("#temp-val");g.oninput=()=>{v.textContent=g.value},e.querySelector("#btn-back").onclick=()=>w("home"),e.querySelector("#btn-save").onclick=async()=>{let p=e.querySelector("#btn-save");p.disabled=!0;let m=p.textContent;try{await Promise.all([D("api_url",e.querySelector("#f-url").value.trim()),D("api_key",e.querySelector("#f-proxy").checked?"":e.querySelector("#f-key").value.trim()),D("api_proxy_enabled",e.querySelector("#f-proxy").checked),D("api_model",e.querySelector("#f-model").value.trim()),D("memory_interval",parseInt(e.querySelector("#f-memory").value)||10),D("thinking_enabled",e.querySelector("#f-thinking").checked),D("reasoning_effort",e.querySelector("#f-effort").value),D("temperature",parseFloat(g.value))]),p.textContent="\u5DF2\u4FDD\u5B58",setTimeout(()=>{p.textContent=m,p.disabled=!1},1200)}catch(y){p.textContent=m,p.disabled=!1,alert("\u4FDD\u5B58\u5931\u8D25: "+y.message)}},e.querySelector("#btn-test").onclick=async()=>{let p=e.querySelector("#test-result");p.textContent="\u6D4B\u8BD5\u4E2D...",p.style.color="var(--text-dim)";let m=e.querySelector("#f-url").value.trim(),y=e.querySelector("#f-key").value.trim(),M=e.querySelector("#f-proxy").checked,k=e.querySelector("#f-model").value.trim(),O=e.querySelector("#f-thinking").checked,Ye=e.querySelector("#f-effort").value;if(!m||!M&&!y){p.textContent="\u2717 \u8BF7\u5148\u586B\u5199 API \u5730\u5740\u548C Key\uFF0C\u6216\u542F\u7528\u540E\u7AEF\u4EE3\u7406\u6A21\u5F0F",p.style.color="var(--accent)";return}let ge={model:k||"deepseek-v4-flash",messages:[{role:"user",content:'\u56DE\u590D"\u8FDE\u63A5\u6210\u529F"'}],max_tokens:20};O&&(ge.thinking={type:"enabled",reasoning_effort:Ye});try{let U=m.endsWith("/chat/completions")?m:m.replace(/\/+$/,"")+"/chat/completions";p.textContent=`\u6D4B\u8BD5\u4E2D... (${U})`;let K=await fetch(U,{method:"POST",headers:M?{"Content-Type":"application/json"}:{"Content-Type":"application/json",Authorization:`Bearer ${y}`},body:JSON.stringify(ge)});if(!K.ok){let f=await K.text();throw new Error(`${K.status} ${K.statusText}: ${f.slice(0,200)}`)}let be=(await K.json()).choices?.[0]?.message?.content||"";p.textContent="\u2713 \u8FDE\u63A5\u6210\u529F"+(be?` - "${be.slice(0,50)}"`:""),p.style.color="#4caf50"}catch(U){p.textContent="\u2717 "+U.message,p.style.color="var(--accent)"}}}function fe(e){let a=document.createElement("div");return a.textContent=e,a.innerHTML}(async()=>{ee("home",de),ee("scriptDetail",vt),ee("setup",jt),ee("chat",Lt),ee("settings",Ct);try{await Oe()}catch(e){console.error("DB init failed:",e)}"serviceWorker"in navigator&&navigator.serviceWorker.register("/sw.js").catch(()=>{}),w("home"),window.onerror=(e,a,n)=>{console.error("Error:",e,"at",a,"line",n)}})();})();
+  `,e.querySelector("#f-thinking").onchange=u=>{let m=u.target.checked;e.querySelector("#effort-group").style.display=m?"":"none",e.querySelector("#temp-group").style.display=m?"none":""},e.querySelector("#f-proxy").onchange=u=>{let m=e.querySelector("#f-key");m.disabled=u.target.checked,u.target.checked&&(m.value="")},e.querySelector("#f-preset").onchange=u=>{let m=Ht.find(h=>h.id===u.target.value);!m||!m.id||(e.querySelector("#f-url").value=m.url,e.querySelector("#f-model").value=m.model,e.querySelector("#f-proxy").checked=m.proxy,e.querySelector("#f-proxy").dispatchEvent(new Event("change")),m.thinking!==null&&(e.querySelector("#f-thinking").checked=m.thinking,e.querySelector("#f-thinking").dispatchEvent(new Event("change"))),e.querySelector("#f-effort").value=m.effort,g.value=m.temperature,b.textContent=String(m.temperature))};let g=e.querySelector("#f-temp"),b=e.querySelector("#temp-val");g.oninput=()=>{b.textContent=g.value},e.querySelector("#btn-back").onclick=()=>w("home"),e.querySelector("#btn-save").onclick=async()=>{let u=e.querySelector("#btn-save");u.disabled=!0;let m=u.textContent;try{await Promise.all([H("api_url",e.querySelector("#f-url").value.trim()),H("api_key",e.querySelector("#f-proxy").checked?"":e.querySelector("#f-key").value.trim()),H("api_proxy_enabled",e.querySelector("#f-proxy").checked),H("api_model",e.querySelector("#f-model").value.trim()),H("memory_interval",parseInt(e.querySelector("#f-memory").value)||10),H("thinking_enabled",e.querySelector("#f-thinking").checked),H("reasoning_effort",e.querySelector("#f-effort").value),H("temperature",parseFloat(g.value))]),u.textContent="\u5DF2\u4FDD\u5B58",setTimeout(()=>{u.textContent=m,u.disabled=!1},1200)}catch(h){u.textContent=m,u.disabled=!1,await J("\u4FDD\u5B58\u5931\u8D25: "+h.message,{title:"\u4FDD\u5B58\u5931\u8D25",tone:"danger"})}},e.querySelector("#btn-test").onclick=async()=>{let u=e.querySelector("#test-result");u.textContent="\u6D4B\u8BD5\u4E2D...",u.style.color="var(--text-dim)";let m=e.querySelector("#f-url").value.trim(),h=e.querySelector("#f-key").value.trim(),M=e.querySelector("#f-proxy").checked,k=e.querySelector("#f-model").value.trim(),O=e.querySelector("#f-thinking").checked,at=e.querySelector("#f-effort").value;if(!m||!M&&!h){u.textContent="\u2717 \u8BF7\u5148\u586B\u5199 API \u5730\u5740\u548C Key\uFF0C\u6216\u542F\u7528\u540E\u7AEF\u4EE3\u7406\u6A21\u5F0F",u.style.color="var(--accent)";return}let ve={model:k||"deepseek-v4-flash",messages:[{role:"user",content:'\u56DE\u590D"\u8FDE\u63A5\u6210\u529F"'}],max_tokens:20};O&&(ve.thinking={type:"enabled",reasoning_effort:at});try{let W=m.endsWith("/chat/completions")?m:m.replace(/\/+$/,"")+"/chat/completions";u.textContent=`\u6D4B\u8BD5\u4E2D... (${W})`;let G=await fetch(W,{method:"POST",headers:M?{"Content-Type":"application/json"}:{"Content-Type":"application/json",Authorization:`Bearer ${h}`},body:JSON.stringify(ve)});if(!G.ok){let f=await G.text();throw new Error(`${G.status} ${G.statusText}: ${f.slice(0,200)}`)}let he=(await G.json()).choices?.[0]?.message?.content||"";u.textContent="\u2713 \u8FDE\u63A5\u6210\u529F"+(he?` - "${he.slice(0,50)}"`:""),u.style.color="#4caf50"}catch(W){u.textContent="\u2717 "+W.message,u.style.color="var(--accent)"}}}function be(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}(async()=>{ae("home",ue),ae("scriptDetail",St),ae("setup",Dt),ae("chat",zt),ae("settings",Jt);try{await Ae()}catch(e){console.error("DB init failed:",e)}"serviceWorker"in navigator&&navigator.serviceWorker.register("/sw.js").catch(()=>{}),w("home"),window.onerror=(e,n,a)=>{console.error("Error:",e,"at",n,"line",a)}})();})();
 </script>
 </body>
 </html>

@@ -45,11 +45,14 @@ const html = `<!DOCTYPE html>
 const docsDir = path.join(base, 'docs');
 if (!fs.existsSync(docsDir)) fs.mkdirSync(docsDir, { recursive: true });
 const outPath = path.join(docsDir, 'index.html');
+const rootOutPath = path.join(base, 'index.html');
 fs.writeFileSync(outPath, html, 'utf8');
+fs.writeFileSync(rootOutPath, html, 'utf8');
 writeServiceWorker();
 
 const size = (fs.statSync(outPath).size / 1024).toFixed(1);
 console.log(`Built: docs/index.html (${size}KB)`);
+console.log(`Built: index.html (${size}KB)`);
 
 function writeServiceWorker() {
   const assets = [

@@ -1,5 +1,6 @@
 import { getSetting, setSetting } from '../db.js';
 import { navigate } from '../router.js';
+import { showAlert } from '../modules/dialog.js';
 
 const MODEL_PRESETS = [
   { id: '', label: '自定义配置', url: '', model: '', thinking: null, effort: 'high', temperature: 0.85, proxy: false },
@@ -154,7 +155,7 @@ export async function render(container) {
     } catch (err) {
       saveBtn.textContent = originalText;
       saveBtn.disabled = false;
-      alert('保存失败: ' + err.message);
+      await showAlert('保存失败: ' + err.message, { title: '保存失败', tone: 'danger' });
     }
   };
 

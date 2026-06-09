@@ -2,16 +2,19 @@ import { getScript, saveScript } from '../db.js';
 import { navigate } from '../router.js';
 import { parseScript } from '../modules/script-engine.js';
 import { formatValidationResult, validateScript } from '../modules/script-validator.js';
+import { showAlert, showConfirm } from '../modules/dialog.js';
 
 let script = {};
 let openSections = new Set(['basic','rules','dimensions','characters','events','stages','endings','setup']);
 let editingItems = {};
 let newItems = new Set();
 let clickHandler = null;
+let validationVisible = false;
 
 export async function render(container, { scriptId }) {
-  script = await getScript(scriptId);
+  script = scriptId ? await getScript(scriptId) : parseScript({ name: '未命名剧本', description: '' });
   if (!script) { navigate('home'); return; }
+  validationVisible = false;
   script.rules = script.rules || { writing_style: '', forbidden: [], requirements: [] };
   script.dimensions = script.dimensions || [];
   script.characters = script.characters || [];
@@ -25,16 +28,16 @@ export async function render(container, { scriptId }) {
 function renderPage(container) {
   container.innerHTML = `
     <div class="header">
-      <button class="header-btn" id="btn-back">&larr;</button>
+      <button class="header-btn editor-back-btn" id="btn-back" aria-label="返回">返回</button>
       <h1 style="font-size:15px">编辑剧本</h1>
-      <div style="display:flex;gap:4px">
-        <button class="header-btn" id="btn-export" title="导出 JSON">&#8681;</button>
-        <button class="header-btn" id="btn-import" title="导入 JSON">&#8679;</button>
-        <button class="header-btn" id="btn-save" title="保存" style="color:var(--accent)">&#10003;</button>
+      <div class="editor-header-actions">
+        <button class="header-btn editor-action-btn" id="btn-export" title="导出 JSON" aria-label="导出 JSON">导出</button>
+        <button class="header-btn editor-action-btn" id="btn-import" title="导入 JSON" aria-label="导入 JSON">导入</button>
+        <button class="header-btn editor-save-btn" id="btn-save" title="保存" aria-label="保存剧本">保存</button>
       </div>
     </div>
     <div class="page-scroll" id="editor-scroll">
-      ${renderValidationPanel()}
+      ${validationVisible ? renderValidationPanel() : ''}
       ${renderSection('basic', '基本信息', renderBasicInfo(), 'editor-full')}
       ${renderSection('rules', '写作规则', renderRules(), 'editor-full')}
       <div class="editor-grid">
@@ -587,13 +590,15 @@ function attachEvents(container) {
     const parsed = parseScript(script);
     const validation = validateScript(parsed);
     if (!validation.ok) {
-      alert(`保存失败：剧本校验未通过\n\n${formatValidationResult(validation)}`);
+      validationVisible = true;
+      await showAlert(`保存失败：剧本校验未通过\n\n${formatValidationResult(validation)}`, { title: '保存失败', tone: 'danger' });
       rerender(container);
       return;
     }
-    if (validation.warnings.length && !confirm(`保存校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
+    if (validation.warnings.length && !await showConfirm(`保存校验有警告，是否继续？\n\n${formatValidationResult(validation)}`, { title: '保存警告', confirmText: '继续保存' })) return;
     await saveScript(parsed);
-    alert('已保存');
+    validationVisible = false;
+    await showAlert('剧本已保存。', { title: '保存成功' });
   };
 
   container.querySelector('#btn-export').onclick = () => {
@@ -617,11 +622,11 @@ function attachEvents(container) {
       script = parseScript(json);
       const validation = validateScript(script);
       if (!validation.ok) throwValidationError(validation);
-      if (validation.warnings.length && !confirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
+      if (validation.warnings.length && !await showConfirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`, { title: '导入警告', confirmText: '继续导入' })) return;
       script.id = (await getScript(script.id))?.id || script.id;
       editingItems = {};
       rerender(container);
-    } catch (err) { alert(formatImportError(err, '导入失败', text)); }
+    } catch (err) { await showAlert(formatImportError(err, '导入失败', text), { title: '导入失败', tone: 'danger' }); }
   };
 
   // 折叠面板
@@ -640,12 +645,12 @@ function attachEvents(container) {
 
   // 委托所有 data-action 点击（先移除旧监听器防止叠加）
   if (clickHandler) container.removeEventListener('click', clickHandler);
-  clickHandler = (e) => {
+  clickHandler = async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
     const action = btn.dataset.action;
     const idx = parseInt(btn.dataset.idx);
-    if (action.endsWith('-delete') && !confirm('确定删除这一项吗？此操作无法撤销。')) return;
+    if (action.endsWith('-delete') && !await showConfirm('确定删除这一项吗？此操作无法撤销。', { title: '删除确认', tone: 'danger', confirmText: '删除' })) return;
 
     // ── 数值维度 ──
     if (action === 'dim-add') {
@@ -871,12 +876,13 @@ function attachEvents(container) {
         script = parseScript(json);
         const validation = validateScript(script);
         if (!validation.ok) throwValidationError(validation);
-        if (validation.warnings.length && !confirm(`JSON 校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
+        if (validation.warnings.length && !await showConfirm(`JSON 校验有警告，是否继续？\n\n${formatValidationResult(validation)}`, { title: 'JSON 警告', confirmText: '继续同步' })) return;
         editingItems = {};
         rerender(container);
-      } catch (err) { alert(formatImportError(err, 'JSON 同步失败', container.querySelector('#f-json').value)); }
+      } catch (err) { await showAlert(formatImportError(err, 'JSON 同步失败', container.querySelector('#f-json').value), { title: 'JSON 同步失败', tone: 'danger' }); }
     } else if (action === 'validate-now') {
       syncFieldsToScript(container);
+      validationVisible = true;
       rerender(container);
     }
   };
