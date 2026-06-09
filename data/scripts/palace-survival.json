@@ -92,7 +92,7 @@
   "events": [
     {
       "name": "贵妃刁难",
-      "stages": [0, 1],
+      "stages": [1, 2],
       "trigger": { "threat": { "min": 30, "probability": 0.4 } },
       "description": "贵妃在请安时当众刁难{{player}}，或在用膳时安排座位羞辱",
       "effects": {
@@ -102,7 +102,7 @@
     },
     {
       "name": "皇帝召见",
-      "stages": [0, 1, 2],
+      "stages": [1, 2, 3],
       "trigger": { "favor": { "min": 25, "probability": 0.3 } },
       "description": "皇帝单独召见{{player}}，或在御花园偶遇并交谈",
       "effects": {
@@ -112,7 +112,7 @@
     },
     {
       "name": "宫女告密",
-      "stages": [1, 2],
+      "stages": [2, 3],
       "trigger": {
         "op": "and",
         "conditions": [
@@ -134,7 +134,7 @@
     },
     {
       "name": "下毒未遂",
-      "stages": [2, 3],
+      "stages": [3, 4],
       "trigger": {
         "op": "and",
         "conditions": [
@@ -150,14 +150,14 @@
     },
     {
       "name": "派系拉拢",
-      "stages": [1, 2],
+      "stages": [2, 3],
       "trigger": { "favor": { "min": 35, "probability": 0.3 } },
       "description": "某方势力主动向{{player}}示好，希望拉拢入伙",
       "once": true
     },
     {
       "name": "深夜召见",
-      "stages": [2, 3],
+      "stages": [3, 4],
       "trigger": {
         "op": "and",
         "conditions": [
@@ -173,7 +173,7 @@
     },
     {
       "name": "冷宫边缘",
-      "stages": [2, 3],
+      "stages": [3, 4],
       "trigger": {
         "op": "and",
         "conditions": [

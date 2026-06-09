@@ -65,10 +65,13 @@ export function validateScript(script) {
 
 function getEventStages(event) {
   if (Array.isArray(event?.stages)) {
-    return [...new Set(event.stages.map(v => Number(v)).filter(Number.isInteger))];
+    // 剧本中阶段从1开始，转换为0-based索引
+    return [...new Set(event.stages.map(v => Number(v) - 1).filter(v => Number.isInteger(v) && v >= 0))];
   }
   if (event?.stage === undefined || event.stage === null || event.stage === '') return [];
-  return Number.isInteger(Number(event.stage)) ? [Number(event.stage)] : [];
+  // 剧本中阶段从1开始，转换为0-based索引
+  const stage = Number(event.stage) - 1;
+  return Number.isInteger(stage) && stage >= 0 ? [stage] : [];
 }
 
 export function assertValidScript(script) {

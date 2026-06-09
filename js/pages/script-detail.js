@@ -1,8 +1,18 @@
 import { getScript, saveScript } from '../db.js';
 import { navigate } from '../router.js';
-import { getEventStages, parseScript } from '../modules/script-engine.js';
+import { parseScript } from '../modules/script-engine.js';
 import { formatValidationResult, validateScript } from '../modules/script-validator.js';
 import { showAlert, showConfirm } from '../modules/dialog.js';
+
+// 本地版本：用于显示，不进行1-based到0-based的转换
+function getEventStages(event) {
+  if (!event || typeof event !== 'object') return [];
+  if (Array.isArray(event.stages)) {
+    return [...new Set(event.stages.map(v => Number(v)).filter(Number.isInteger))];
+  }
+  if (event.stage === undefined || event.stage === null || event.stage === '') return [];
+  return Number.isInteger(Number(event.stage)) ? [Number(event.stage)] : [];
+}
 
 let script = {};
 let openSections = new Set(['basic','rules','dimensions','characters','events','stages','endings','setup']);
@@ -212,8 +222,8 @@ function renderEvents() {
         <div class="form-group"><label class="form-label">事件名称</label><input class="form-input" value="${esc(e.name || '')}" data-event="${i}" data-subfield="name"></div>
         <div class="form-group">
           <label class="form-label">所属阶段</label>
-          <input class="form-input" value="${esc(stageText)}" data-event="${i}" data-subfield="stage_targets" placeholder="留空=全阶段；单个如 0；多个如 0,2,3">
-          <div style="color:var(--text-dim);font-size:11px;margin-top:6px">支持单个阶段、多个阶段，留空表示全阶段。当前阶段范围：0-${(script.stages?.length || 1) - 1}</div>
+          <input class="form-input" value="${esc(stageText)}" data-event="${i}" data-subfield="stage_targets" placeholder="留空=全阶段；单个如 1；多个如 1,3,4">
+          <div style="color:var(--text-dim);font-size:11px;margin-top:6px">支持单个阶段、多个阶段，留空表示全阶段。当前阶段范围：1-${script.stages?.length || 1}</div>
         </div>
         <div class="form-group"><label class="form-label">触发条件</label>
           ${renderConditionEditor(e.trigger || {}, `event_${i}_trigger`)}
