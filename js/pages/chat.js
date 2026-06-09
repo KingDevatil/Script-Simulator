@@ -1,9 +1,10 @@
-import { getSession, getScript, saveSession } from '../db.js';
+import { getSession, getScript } from '../db.js';
 import { navigate } from '../router.js';
 import { chat } from '../modules/llm-client.js';
 import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
-import { extractValues, extractKeyEvents, extractNarrative, checkEventTriggers, checkStageTransition, processEffects, addEventEffects } from '../modules/script-engine.js';
+import { extractValues, extractNarrative, checkEventTriggers, checkStageTransition, processEffects, addEventEffects } from '../modules/script-engine.js';
+import { buildRepairPrompt, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
 
 let engine = null;
 let panelOpen = false;
@@ -109,12 +110,14 @@ export async function render(container, { sessionId }) {
     container.querySelector('#chat-options').innerHTML = '';
 
     engine.addPlayerMessage(msg);
+    engine.createSnapshot('before-ai-response');
     renderMessages();
     await callAI(msg);
   }
 
   async function callAI(playerMsg) {
     engine._sending = true;
+    setSendingState(true);
 
     const streamEl = document.createElement('div');
     streamEl.className = 'msg msg-ai';
@@ -134,7 +137,7 @@ export async function render(container, { sessionId }) {
         currentStage: s.currentStage
       });
 
-      const aiResponse = await chat(
+      let aiResponse = await chat(
         [{ role: 'user', content: systemPrompt }],
         {
           onChunk: (partial, reasoning) => {
@@ -148,9 +151,26 @@ export async function render(container, { sessionId }) {
         }
       );
 
-      engine.addAIMessage(aiResponse);
+      let parsedResult = parseLLMTurn(aiResponse, script);
+      if (needsOutputRepair(parsedResult)) {
+        try {
+          streamEl.textContent = '正在修正输出格式...';
+          const repaired = await chat([{ role: 'user', content: buildRepairPrompt(aiResponse, script) }]);
+          const repairedResult = parseLLMTurn(repaired, script);
+          if (repairedResult.status === 'json') {
+            aiResponse = repaired;
+            parsedResult = { ...repairedResult, status: 'repaired' };
+          }
+        } catch (repairErr) {
+          console.warn('LLM JSON repair failed:', repairErr);
+        }
+      }
+      if (parsedResult.warnings?.length) console.warn('LLM output warnings:', parsedResult.warnings);
 
-      const newVals = extractValues(aiResponse, script.dimensions);
+      const turn = parsedResult.turn;
+      engine.addAIMessage(aiResponse, turn, parsedResult.status);
+
+      const newVals = turn.values && Object.keys(turn.values).length ? turn.values : null;
       if (newVals) engine.updateValues(newVals);
 
       // 处理持续效果（sticky 数值变化 + 过期清理）
@@ -163,9 +183,10 @@ export async function render(container, { sessionId }) {
         if (nextStage !== s.currentStage) s.currentStage = nextStage;
       }
 
-      const keyEvent = extractKeyEvents(aiResponse);
+      const keyEvent = turn.keyEvent;
       if (keyEvent) showMemoryPrompt();
 
+      engine.createSnapshot('after-ai-response');
       await engine.save();
       renderMessages();
       renderNumericalPanel();
@@ -182,6 +203,17 @@ export async function render(container, { sessionId }) {
       showSystemMessage('发送失败: ' + err.message);
     }
     engine._sending = false;
+    setSendingState(false);
+  }
+
+  function setSendingState(isSending) {
+    input.disabled = isSending;
+    container.querySelector('#btn-send').disabled = isSending;
+    container.querySelectorAll('.chat-option-btn').forEach(btn => { btn.disabled = isSending; });
+  }
+
+  function needsOutputRepair(result) {
+    return result.status !== 'json' || !result.turn.narrative || !(result.turn.options || []).length;
   }
 
   function renderMessages() {
@@ -190,9 +222,10 @@ export async function render(container, { sessionId }) {
       let display = m.content;
       let valChanges = '';
       if (m.role === 'ai') {
-        display = extractNarrative(m.content);
+        const turn = getMessageTurn(m, script);
+        display = turn.narrative || extractNarrative(m.content);
         // 只在数值有变化时显示
-        const vals = extractValues(m.content, script.dimensions);
+        const vals = turn.values && Object.keys(turn.values).length ? turn.values : extractValues(m.content, script.dimensions);
         if (vals && script.dimensions?.length) {
           const changes = script.dimensions
             .filter(d => vals[d.id] !== undefined && vals[d.id] !== prevValues[d.id])
@@ -229,14 +262,16 @@ export async function render(container, { sessionId }) {
 
     // 开场白（第一条消息，无前置玩家消息）
     if (aiIdx === 0 || playerIdx < 0 || s.messages[playerIdx]?.role !== 'player') {
-      s.messages.splice(aiIdx, 1);
+      engine.restoreToMessage(0);
       renderMessages();
       await callAI('请重新生成开场场景');
       return;
     }
 
     const playerContent = s.messages[playerIdx].content;
-    s.messages.splice(playerIdx, 2);
+    engine.restoreToMessage(playerIdx);
+    engine.addPlayerMessage(playerContent);
+    engine.createSnapshot('before-ai-regenerate');
     renderMessages();
     await callAI(playerContent);
   }
@@ -258,16 +293,8 @@ export async function render(container, { sessionId }) {
     const lastAI = [...s.messages].reverse().find(m => m.role === 'ai');
     if (!lastAI) { optContainer.innerHTML = ''; return; }
 
-    // Extract 【选项】 block
-    const optBlock = lastAI.content.match(/【选项】([\s\S]*?)(?=【|$)/);
-    if (!optBlock) { optContainer.innerHTML = ''; return; }
-
-    const opts = [];
-    const optLines = optBlock[1].split('\n');
-    for (const line of optLines) {
-      const m = line.match(/^([A-Z])[.、)）]\s*(.+)/);
-      if (m) opts.push({ label: `${m[1]}. ${m[2]}`, value: m[2] });
-    }
+    const turn = getMessageTurn(lastAI, script);
+    const opts = (turn.options || []).map(o => ({ label: `${o.label}. ${o.text}`, value: o.value || o.text }));
     if (opts.length === 0) { optContainer.innerHTML = ''; return; }
     // 最多显示4个选项
     opts.splice(4);

@@ -4,27 +4,51 @@ import { navigate } from '../router.js';
 export async function render(container) {
   const scripts = await getAllScripts();
   const sessions = await getAllSessions();
+  const sortedSessions = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt);
+  const lastSession = sortedSessions[0];
 
   container.innerHTML = `
-    <div class="header">
-      <h1>剧本模拟器</h1>
+    <div class="header home-header">
+      <div>
+        <h1>剧本模拟器</h1>
+        <p>${scripts.length ? '管理剧本，继续你的模拟对话' : '导入或创建剧本后开始模拟'}</p>
+      </div>
       <button class="header-btn" id="btn-settings" title="设置">⚙</button>
     </div>
-    <div class="page-scroll">
-      <div class="section">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <h2 style="font-size:15px;color:var(--text-dim)">剧本库</h2>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-secondary" id="btn-create">+ 新建剧本</button>
-            <button class="btn btn-sm btn-secondary" id="btn-import">导入剧本</button>
+    <div class="page-scroll home-scroll">
+      <div class="home-summary">
+        <div class="summary-item">
+          <span class="summary-value">${scripts.length}</span>
+          <span class="summary-label">剧本</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-value">${sessions.length}</span>
+          <span class="summary-label">会话</span>
+        </div>
+        <div class="summary-item summary-wide">
+          <span class="summary-value">${lastSession ? formatTime(lastSession.updatedAt) : '暂无'}</span>
+          <span class="summary-label">最近更新</span>
+        </div>
+      </div>
+
+      <section class="home-section">
+        <div class="section-toolbar">
+          <h2>剧本库</h2>
+          <div class="toolbar-actions">
+            <button class="btn btn-sm btn-secondary" id="btn-create">新建</button>
+            <button class="btn btn-sm btn-primary" id="btn-import">导入 JSON</button>
           </div>
         </div>
-        <div id="script-list"></div>
-      </div>
-      <div class="section" style="margin-top:24px">
-        <h2 style="font-size:15px;color:var(--text-dim);margin-bottom:12px">我的会话</h2>
-        <div id="session-list"></div>
-      </div>
+        <div id="script-list" class="home-list"></div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-toolbar">
+          <h2>我的会话</h2>
+          <span class="section-count">${sessions.length} 个</span>
+        </div>
+        <div id="session-list" class="home-list"></div>
+      </section>
     </div>
     <input type="file" id="file-input" accept=".json" style="display:none">
   `;
@@ -34,11 +58,12 @@ export async function render(container) {
 
   if (scripts.length === 0) {
     scriptList.innerHTML = `
-      <div class="empty-state" style="padding:30px">
-        <div class="icon">📖</div>
-        <p>还没有剧本，新建一个或加载示例开始吧</p>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-primary" id="btn-sample">加载示例剧本</button>
+      <div class="empty-panel">
+        <div class="empty-mark">JSON</div>
+        <h3>还没有剧本</h3>
+        <p>新建一个空剧本，或加载示例剧本快速体验完整流程。</p>
+        <div class="empty-actions">
+          <button class="btn btn-primary" id="btn-sample">加载示例</button>
           <button class="btn btn-secondary" id="btn-create-empty">新建剧本</button>
         </div>
       </div>`;
@@ -68,34 +93,44 @@ export async function render(container) {
     };
   } else {
     scriptList.innerHTML = scripts.map(s => `
-      <div class="card" data-script-id="${s.id}">
-        <h3>${esc(s.name)}</h3>
-        <p>${esc(s.description)}</p>
-        <span class="card-tag">${(s.dimensions||[]).length} 个维度</span>
-        <span class="card-tag">${(s.stages||[]).length} 个阶段</span>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;margin-right:6px" data-action="play">开始</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;margin-right:6px" data-action="edit">编辑</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;color:var(--accent)" data-action="delete">删除</button>
-      </div>
+      <article class="card home-card" data-script-id="${s.id}">
+        <div class="card-main">
+          <h3>${esc(s.name)}</h3>
+          <p>${esc(s.description || '暂无描述')}</p>
+          <div class="card-tags">
+            <span class="card-tag">${(s.dimensions || []).length} 维度</span>
+            <span class="card-tag">${(s.stages || []).length} 阶段</span>
+            <span class="card-tag">${(s.characters || []).length} 角色</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-sm btn-primary" data-action="play">开始</button>
+          <button class="btn btn-sm btn-secondary" data-action="edit">编辑</button>
+          <button class="btn btn-sm btn-ghost" data-action="delete">删除</button>
+        </div>
+      </article>
     `).join('');
   }
 
   if (sessions.length === 0) {
-    sessionList.innerHTML = `<p style="color:var(--text-dim);font-size:13px">暂无会话</p>`;
+    sessionList.innerHTML = `<div class="muted-row">暂无会话</div>`;
   } else {
-    sessionList.innerHTML = sessions.sort((a, b) => b.updatedAt - a.updatedAt).map(s => `
-      <div class="card" data-session-id="${s.id}">
-        <h3>${esc(s.scriptName || '未知剧本')}</h3>
-        <p>阶段 ${(s.currentStage || 0) + 1} · ${(s.messages||[]).length} 条消息</p>
-        <p style="font-size:11px;color:var(--text-dim)">${new Date(s.updatedAt).toLocaleString()}</p>
-        <button class="btn btn-sm btn-primary" style="margin-top:8px;margin-right:6px" data-action="resume">继续</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;margin-right:6px" data-action="branch">复制分支</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;color:var(--accent)" data-action="delete">删除</button>
-      </div>
+    sessionList.innerHTML = sortedSessions.map(s => `
+      <article class="card home-card" data-session-id="${s.id}">
+        <div class="card-main">
+          <h3>${esc(s.scriptName || '未知剧本')}</h3>
+          <p>阶段 ${(s.currentStage || 0) + 1} · ${(s.messages || []).length} 条消息</p>
+          <p class="card-time">${new Date(s.updatedAt).toLocaleString()}</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-sm btn-primary" data-action="resume">继续</button>
+          <button class="btn btn-sm btn-secondary" data-action="branch">复制分支</button>
+          <button class="btn btn-sm btn-ghost" data-action="delete">删除</button>
+        </div>
+      </article>
     `).join('');
   }
 
-  // Events
   container.querySelector('#btn-settings').onclick = () => navigate('settings');
   container.querySelector('#btn-create').onclick = async () => {
     const { parseScript } = await import('../modules/script-engine.js');
@@ -105,38 +140,48 @@ export async function render(container) {
     navigate('scriptDetail', { scriptId: newScript.id });
   };
   container.querySelector('#btn-import').onclick = () => container.querySelector('#file-input').click();
-  container.querySelector('#file-input').onchange = e => handleImport(e, scripts);
+  container.querySelector('#file-input').onchange = e => handleImport(e);
 
-  scriptList.onclick = e => {
+  scriptList.onclick = async e => {
     const card = e.target.closest('[data-script-id]');
     if (!card) return;
     const id = card.dataset.scriptId;
     const action = e.target.dataset.action;
     if (action === 'play') navigate('setup', { scriptId: id });
     else if (action === 'edit') navigate('scriptDetail', { scriptId: id });
-    else if (action === 'delete') { deleteScript(id); render(container); }
+    else if (action === 'delete' && confirm('确定删除这个剧本吗？相关会话不会自动删除。')) {
+      await deleteScript(id);
+      render(container);
+    }
   };
 
-  sessionList.onclick = e => {
+  sessionList.onclick = async e => {
     const card = e.target.closest('[data-session-id]');
     if (!card) return;
     const id = card.dataset.sessionId;
     const action = e.target.dataset.action;
     if (action === 'resume') navigate('chat', { sessionId: id });
-    else if (action === 'branch') handleBranch(id, sessions);
-    else if (action === 'delete') { deleteSession(id); render(container); }
+    else if (action === 'branch') handleBranch(id);
+    else if (action === 'delete' && confirm('确定删除这个会话吗？此操作无法撤销。')) {
+      await deleteSession(id);
+      render(container);
+    }
   };
 }
 
-async function handleImport(e, existingScripts) {
+async function handleImport(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   try {
     const text = await file.text();
     const json = JSON.parse(text);
     const { parseScript } = await import('../modules/script-engine.js');
+    const { assertValidScript, formatValidationResult, validateScript } = await import('../modules/script-validator.js');
     const { saveScript } = await import('../db.js');
     const script = parseScript(json);
+    const validation = validateScript(script);
+    assertValidScript(script);
+    if (validation.warnings.length && !confirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
     await saveScript(script);
     navigate('home');
   } catch (err) {
@@ -144,13 +189,24 @@ async function handleImport(e, existingScripts) {
   }
 }
 
-async function handleBranch(sessionId, sessions) {
+async function handleBranch(sessionId) {
   const { saveSession, getSession } = await import('../db.js');
   const original = await getSession(sessionId);
   if (!original) return;
   const branch = { ...original, id: crypto.randomUUID(), messages: [...original.messages], updatedAt: Date.now() };
   await saveSession(branch);
   navigate('chat', { sessionId: branch.id });
+}
+
+function formatTime(ts) {
+  if (!ts) return '暂无';
+  const diff = Date.now() - ts;
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+  if (diff < hour) return `${Math.max(1, Math.floor(diff / minute))} 分钟前`;
+  if (diff < day) return `${Math.floor(diff / hour)} 小时前`;
+  return new Date(ts).toLocaleDateString();
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }

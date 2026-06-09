@@ -4,12 +4,14 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
   let memories = [];
   let turnCount = 0;
   let pendingMessages = [];
+  let pendingSummary = null;
 
   function addTurn(role, content) {
     turnCount++;
     pendingMessages.push({ role, content });
     if (turnCount % autoInterval === 0) {
-      return autoSummarize();
+      pendingSummary = autoSummarize().finally(() => { pendingSummary = null; });
+      return pendingSummary;
     }
     return null;
   }
@@ -65,5 +67,9 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
     pendingMessages = state.pendingMessages || [];
   }
 
-  return { addTurn, autoSummarize, manualSummarize, getMemories, getState, loadState };
+  async function flushPending() {
+    if (pendingSummary) await pendingSummary;
+  }
+
+  return { addTurn, autoSummarize, manualSummarize, flushPending, getMemories, getState, loadState };
 }

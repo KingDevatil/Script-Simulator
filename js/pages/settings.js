@@ -2,14 +2,15 @@ import { getSetting, setSetting } from '../db.js';
 import { navigate } from '../router.js';
 
 export async function render(container) {
-  const [apiUrl, apiKey, apiModel, memoryInterval, thinkingEnabled, reasoningEffort, temperature] = await Promise.all([
+  const [apiUrl, apiKey, apiModel, memoryInterval, thinkingEnabled, reasoningEffort, temperature, apiProxyEnabled] = await Promise.all([
     getSetting('api_url'), getSetting('api_key'),
     getSetting('api_model'), getSetting('memory_interval'),
     getSetting('thinking_enabled'), getSetting('reasoning_effort'),
-    getSetting('temperature')
+    getSetting('temperature'), getSetting('api_proxy_enabled')
   ]);
 
   const isThinking = thinkingEnabled !== false; // 默认开启
+  const isProxy = !!apiProxyEnabled;
 
   container.innerHTML = `
     <div class="header">
@@ -24,8 +25,15 @@ export async function render(container) {
           <input class="form-input" id="f-url" value="${esc(apiUrl || 'https://api.deepseek.com/chat/completions')}" placeholder="https://api.deepseek.com/chat/completions">
         </div>
         <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="f-proxy" ${isProxy ? 'checked' : ''} style="width:16px;height:16px">
+            使用后端代理模式（前端不保存 API Key）
+          </label>
+          <p style="font-size:12px;color:var(--text-dim);margin-top:4px">生产环境建议使用代理或 token broker，由后端保存长期密钥。</p>
+        </div>
+        <div class="form-group">
           <label class="form-label">API Key</label>
-          <input class="form-input" id="f-key" type="password" value="${esc(apiKey || '')}" placeholder="sk-...">
+          <input class="form-input" id="f-key" type="password" value="${esc(isProxy ? '' : (apiKey || ''))}" placeholder="sk-..." ${isProxy ? 'disabled' : ''}>
         </div>
         <div class="form-group">
           <label class="form-label">模型名称</label>
@@ -80,6 +88,11 @@ export async function render(container) {
     container.querySelector('#effort-group').style.display = on ? '' : 'none';
     container.querySelector('#temp-group').style.display = on ? 'none' : '';
   };
+  container.querySelector('#f-proxy').onchange = e => {
+    const keyInput = container.querySelector('#f-key');
+    keyInput.disabled = e.target.checked;
+    if (e.target.checked) keyInput.value = '';
+  };
 
   // Temperature slider
   const tempSlider = container.querySelector('#f-temp');
@@ -89,16 +102,30 @@ export async function render(container) {
   container.querySelector('#btn-back').onclick = () => navigate('home');
 
   container.querySelector('#btn-save').onclick = async () => {
-    await Promise.all([
-      setSetting('api_url', container.querySelector('#f-url').value.trim()),
-      setSetting('api_key', container.querySelector('#f-key').value.trim()),
-      setSetting('api_model', container.querySelector('#f-model').value.trim()),
-      setSetting('memory_interval', parseInt(container.querySelector('#f-memory').value) || 10),
-      setSetting('thinking_enabled', container.querySelector('#f-thinking').checked),
-      setSetting('reasoning_effort', container.querySelector('#f-effort').value),
-      setSetting('temperature', parseFloat(tempSlider.value))
-    ]);
-    alert('设置已保存');
+    const saveBtn = container.querySelector('#btn-save');
+    saveBtn.disabled = true;
+    const originalText = saveBtn.textContent;
+    try {
+      await Promise.all([
+        setSetting('api_url', container.querySelector('#f-url').value.trim()),
+        setSetting('api_key', container.querySelector('#f-proxy').checked ? '' : container.querySelector('#f-key').value.trim()),
+        setSetting('api_proxy_enabled', container.querySelector('#f-proxy').checked),
+        setSetting('api_model', container.querySelector('#f-model').value.trim()),
+        setSetting('memory_interval', parseInt(container.querySelector('#f-memory').value) || 10),
+        setSetting('thinking_enabled', container.querySelector('#f-thinking').checked),
+        setSetting('reasoning_effort', container.querySelector('#f-effort').value),
+        setSetting('temperature', parseFloat(tempSlider.value))
+      ]);
+      saveBtn.textContent = '已保存';
+      setTimeout(() => {
+        saveBtn.textContent = originalText;
+        saveBtn.disabled = false;
+      }, 1200);
+    } catch (err) {
+      saveBtn.textContent = originalText;
+      saveBtn.disabled = false;
+      alert('保存失败: ' + err.message);
+    }
   };
 
   container.querySelector('#btn-test').onclick = async () => {
@@ -108,12 +135,13 @@ export async function render(container) {
 
     const url = container.querySelector('#f-url').value.trim();
     const key = container.querySelector('#f-key').value.trim();
+    const proxy = container.querySelector('#f-proxy').checked;
     const model = container.querySelector('#f-model').value.trim();
     const thinking = container.querySelector('#f-thinking').checked;
     const effort = container.querySelector('#f-effort').value;
 
-    if (!url || !key) {
-      result.textContent = '✗ 请先填写 API 地址和 Key';
+    if (!url || (!proxy && !key)) {
+      result.textContent = '✗ 请先填写 API 地址和 Key，或启用后端代理模式';
       result.style.color = 'var(--accent)';
       return;
     }
@@ -132,7 +160,7 @@ export async function render(container) {
       result.textContent = `测试中... (${fullUrl})`;
       const res = await fetch(fullUrl, {
         method: 'POST',
-        headers: {
+        headers: proxy ? { 'Content-Type': 'application/json' } : {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${key}`
         },

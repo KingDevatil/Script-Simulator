@@ -1,4 +1,4 @@
-import { saveSession, getSession as dbGet } from '../db.js';
+import { saveSession } from '../db.js';
 import { createMemoryManager } from './memory.js';
 
 export function createSession(script, selections = {}) {
@@ -15,6 +15,8 @@ export function createSession(script, selections = {}) {
     values,
     messages: [],
     currentStage: 0,
+    activeEffects: [],
+    snapshots: [],
     memoryState: null,
     createdAt: Date.now(),
     updatedAt: Date.now()
@@ -24,6 +26,9 @@ export function createSession(script, selections = {}) {
 export function createGameEngine(session, script) {
   const memoryMgr = createMemoryManager();
   if (session.memoryState) memoryMgr.loadState(session.memoryState);
+  session.activeEffects = session.activeEffects || [];
+  session.snapshots = session.snapshots || [];
+  if (!session.snapshots.length) createSnapshot('initial');
 
   function getRecentMessages(count = 3) {
     return session.messages.slice(-count);
@@ -34,8 +39,8 @@ export function createGameEngine(session, script) {
     memoryMgr.addTurn('player', content);
   }
 
-  function addAIMessage(content) {
-    session.messages.push({ role: 'ai', content, timestamp: Date.now() });
+  function addAIMessage(content, parsed = null, parseStatus = null) {
+    session.messages.push({ role: 'ai', content, parsed, parseStatus, timestamp: Date.now() });
     return memoryMgr.addTurn('ai', content);
   }
 
@@ -44,7 +49,39 @@ export function createGameEngine(session, script) {
     Object.assign(session.values, newVals);
   }
 
-  function save() {
+  function createSnapshot(reason = 'manual') {
+    session.snapshots.push({
+      reason,
+      messageCount: session.messages.length,
+      values: { ...session.values },
+      currentStage: session.currentStage || 0,
+      activeEffects: JSON.parse(JSON.stringify(session.activeEffects || [])),
+      memoryState: memoryMgr.getState(),
+      timestamp: Date.now()
+    });
+    if (session.snapshots.length > 80) session.snapshots.splice(0, session.snapshots.length - 80);
+  }
+
+  function restoreToMessage(messageCount) {
+    const snapshots = session.snapshots || [];
+    let snapshot = snapshots[0];
+    for (const item of snapshots) {
+      if (item.messageCount <= messageCount) snapshot = item;
+      else break;
+    }
+    session.messages.splice(messageCount);
+    if (!snapshot) return;
+    session.values = { ...snapshot.values };
+    session.currentStage = snapshot.currentStage || 0;
+    session.activeEffects = JSON.parse(JSON.stringify(snapshot.activeEffects || []));
+    if (snapshot.memoryState) memoryMgr.loadState(snapshot.memoryState);
+    session.memoryState = memoryMgr.getState();
+    session.snapshots = snapshots.filter(item => item.messageCount <= messageCount);
+    if (!session.snapshots.length) createSnapshot('restored-initial');
+  }
+
+  async function save() {
+    await memoryMgr.flushPending?.();
     session.memoryState = memoryMgr.getState();
     session.updatedAt = Date.now();
     return saveSession({ ...session });
@@ -58,6 +95,8 @@ export function createGameEngine(session, script) {
     addPlayerMessage,
     addAIMessage,
     updateValues,
+    createSnapshot,
+    restoreToMessage,
     save
   };
 }

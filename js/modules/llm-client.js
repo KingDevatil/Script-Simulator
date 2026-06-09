@@ -1,15 +1,17 @@
 import { getSetting } from '../db.js';
 
 async function getApiConfig() {
-  const [url, key, model, thinkingEnabled, reasoningEffort, temperature] = await Promise.all([
+  const [url, key, model, thinkingEnabled, reasoningEffort, temperature, proxyEnabled] = await Promise.all([
     getSetting('api_url'), getSetting('api_key'), getSetting('api_model'),
-    getSetting('thinking_enabled'), getSetting('reasoning_effort'), getSetting('temperature')
+    getSetting('thinking_enabled'), getSetting('reasoning_effort'), getSetting('temperature'),
+    getSetting('api_proxy_enabled')
   ]);
-  if (!url || !key) throw new Error('请先在设置中配置 LLM API');
+  if (!url) throw new Error('请先在设置中配置 LLM API 地址');
+  if (!proxyEnabled && !key) throw new Error('请先在设置中配置 LLM API Key，或启用后端代理模式');
   // 自动补全 URL
   const fullUrl = url.endsWith('/chat/completions') ? url : url.replace(/\/+$/, '') + '/chat/completions';
   return {
-    url: fullUrl, key,
+    url: fullUrl, key, proxyEnabled: !!proxyEnabled,
     model: model || 'deepseek-v4-flash',
     thinking: thinkingEnabled !== false,
     effort: reasoningEffort || 'high',
@@ -36,10 +38,7 @@ export async function chat(messages, { onChunk } = {}) {
   const config = await getApiConfig();
   const res = await fetch(config.url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.key}`
-    },
+    headers: authHeaders(config),
     body: JSON.stringify(buildBody(config, messages, { stream: !!onChunk }))
   });
 
@@ -94,16 +93,24 @@ export async function summarize(messages) {
   const config = await getApiConfig();
   const res = await fetch(config.url, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${config.key}`
-    },
+    headers: authHeaders(config),
     body: JSON.stringify(buildBody(config, [
       { role: 'system', content: '你是一个对话摘要助手。将以下对话压缩为1-2句话的摘要，包含关键事实、情感变化和数值变化趋势。只输出摘要，不要解释。' },
       ...messages
     ], { maxTokens: 200 }))
   });
 
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`API 错误 ${res.status}: ${err}`);
+  }
+
   const data = await res.json();
   return data.choices[0].message.content;
+}
+
+function authHeaders(config) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (!config.proxyEnabled && config.key) headers.Authorization = `Bearer ${config.key}`;
+  return headers;
 }

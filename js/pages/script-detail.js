@@ -1,6 +1,7 @@
 import { getScript, saveScript } from '../db.js';
 import { navigate } from '../router.js';
 import { parseScript } from '../modules/script-engine.js';
+import { assertValidScript, formatValidationResult, validateScript } from '../modules/script-validator.js';
 
 let script = {};
 let openSections = new Set(['basic','rules','dimensions','characters','events','stages','endings','setup']);
@@ -549,6 +550,9 @@ function attachEvents(container) {
   container.querySelector('#btn-save').onclick = async () => {
     syncFieldsToScript(container);
     const parsed = parseScript(script);
+    const validation = validateScript(parsed);
+    assertValidScript(parsed);
+    if (validation.warnings.length && !confirm(`保存校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
     await saveScript(parsed);
     alert('已保存');
   };
@@ -571,6 +575,9 @@ function attachEvents(container) {
       const text = await file.text();
       const json = JSON.parse(text);
       script = parseScript(json);
+      const validation = validateScript(script);
+      assertValidScript(script);
+      if (validation.warnings.length && !confirm(`导入校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
       script.id = (await getScript(script.id))?.id || script.id;
       editingItems = {};
       rerender(container);
@@ -598,6 +605,7 @@ function attachEvents(container) {
     if (!btn) return;
     const action = btn.dataset.action;
     const idx = parseInt(btn.dataset.idx);
+    if (action.endsWith('-delete') && !confirm('确定删除这一项吗？此操作无法撤销。')) return;
 
     // ── 数值维度 ──
     if (action === 'dim-add') {
@@ -820,6 +828,9 @@ function attachEvents(container) {
       try {
         const json = JSON.parse(container.querySelector('#f-json').value);
         script = parseScript(json);
+        const validation = validateScript(script);
+        assertValidScript(script);
+        if (validation.warnings.length && !confirm(`JSON 校验有警告，是否继续？\n\n${formatValidationResult(validation)}`)) return;
         editingItems = {};
         rerender(container);
       } catch (err) { alert('JSON 解析失败: ' + err.message); }

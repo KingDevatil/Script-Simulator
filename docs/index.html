@@ -19,6 +19,9 @@
   --border: #2a2a4a;
   --radius: 12px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --content-max: 960px;
+  --reader-max: 760px;
+  --tap-size: 44px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -30,6 +33,7 @@ body {
   min-height: 100vh;
   min-height: 100dvh;
   overflow: hidden;
+  -webkit-text-size-adjust: 100%;
 }
 
 #app {
@@ -55,7 +59,7 @@ body {
     margin-top: 0;
   }
   .page-scroll {
-    max-width: 800px;
+    max-width: var(--reader-max);
     margin: 0 auto;
     padding: 24px 32px;
   }
@@ -63,7 +67,7 @@ body {
     max-width: 100%;
   }
   .chat-messages {
-    max-width: 800px;
+    max-width: var(--reader-max);
     margin: 0 auto;
   }
 }
@@ -71,12 +75,15 @@ body {
 /* ===== Wide Desktop ===== */
 @media (min-width: 900px) {
   #app[data-page="editor"] {
-    max-width: 960px;
+    max-width: 100%;
+  }
+  #app[data-page="editor"] .page-scroll {
+    max-width: var(--content-max);
   }
   #app[data-page="editor"] .editor-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 8px;
+    gap: 12px;
   }
   #app[data-page="editor"] .editor-grid > .editor-section {
     margin-bottom: 0;
@@ -104,6 +111,9 @@ body {
   overflow-y: auto;
   padding: 16px;
   padding-bottom: calc(16px + var(--safe-bottom));
+  width: 100%;
+  min-height: 0;
+  scrollbar-gutter: stable both-edges;
 }
 
 /* ===== Header ===== */
@@ -114,13 +124,25 @@ body {
   gap: 12px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  min-height: 57px;
 }
-.header h1 { font-size: 18px; font-weight: 600; flex: 1; }
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .header-btn {
   background: none; border: none; color: var(--text-dim);
   font-size: 20px; cursor: pointer; padding: 4px 8px;
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  border-radius: 10px;
 }
-.header-btn:hover { color: var(--text); }
+.header-btn:hover { color: var(--text); background: rgba(255,255,255,0.04); }
 
 /* ===== Cards ===== */
 .card {
@@ -158,13 +180,188 @@ body {
   cursor: pointer;
   transition: all 0.2s;
   gap: 8px;
+  min-height: var(--tap-size);
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
 }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-primary:hover { filter: brightness(1.1); }
 .btn-secondary { background: var(--bg-input); color: var(--text); border: 1px solid var(--border); }
 .btn-secondary:hover { border-color: var(--accent); }
+.btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid transparent; }
+.btn-ghost:hover { color: var(--accent); background: var(--accent-soft); }
+.btn:disabled,
+.chat-send:disabled,
+.chat-option-btn:disabled,
+.form-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+  filter: grayscale(0.15);
+}
 .btn-block { width: 100%; }
-.btn-sm { padding: 8px 16px; font-size: 13px; }
+.btn-sm { padding: 8px 14px; font-size: 13px; min-height: 38px; }
+
+/* ===== Home ===== */
+.home-header {
+  align-items: flex-start;
+  padding: 16px;
+}
+.home-header h1 { line-height: 1.2; }
+.home-header p {
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.home-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.home-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.summary-item {
+  min-width: 0;
+  padding: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.summary-wide { grid-column: 1 / -1; }
+.summary-value {
+  display: block;
+  color: var(--text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.summary-label {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.home-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.section-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.section-toolbar h2 {
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 600;
+}
+.toolbar-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.section-count {
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.home-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.home-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 0;
+  cursor: default;
+}
+.card-main {
+  min-width: 0;
+}
+.card-main h3 {
+  overflow-wrap: anywhere;
+}
+.card-main p {
+  margin-top: 4px;
+}
+.card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 2px;
+}
+.card-time {
+  font-size: 11px;
+}
+.muted-row {
+  padding: 12px 0;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+.empty-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 20px;
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+}
+.empty-mark {
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.empty-panel h3 {
+  font-size: 17px;
+}
+.empty-panel p {
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.empty-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+@media (min-width: 768px) {
+  .home-summary {
+    grid-template-columns: 1fr 1fr 2fr;
+  }
+  .summary-wide { grid-column: auto; }
+  .home-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .card-actions {
+    flex-shrink: 0;
+    justify-content: flex-end;
+  }
+}
 
 /* ===== Form ===== */
 .form-group { margin-bottom: 20px; }
@@ -179,10 +376,12 @@ body {
   font-size: 15px;
   outline: none;
   transition: border-color 0.2s;
+  min-height: var(--tap-size);
 }
 .form-input:focus { border-color: var(--accent); }
 .form-input::placeholder { color: var(--text-dim); }
 select.form-input { appearance: none; }
+textarea.form-input { line-height: 1.55; resize: vertical; }
 
 /* ===== Setup Wizard ===== */
 .wizard-step {
@@ -193,6 +392,7 @@ select.form-input { appearance: none; }
   padding: 24px 20px;
   flex: 1;
   overflow-y: auto;
+  width: 100%;
 }
 .wizard-step h2 { font-size: 22px; margin-bottom: 8px; }
 .wizard-step p { color: var(--text-dim); margin-bottom: 24px; font-size: 14px; }
@@ -252,6 +452,7 @@ select.form-input { appearance: none; }
   min-height: 0;
   scrollbar-width: none;
   -ms-overflow-style: none;
+  width: 100%;
 }
 .chat-messages::-webkit-scrollbar { display: none; }
 .chat-nav {
@@ -261,10 +462,11 @@ select.form-input { appearance: none; }
   padding: 8px 2px;
   justify-content: center;
   flex-shrink: 0;
+  padding-right: 8px;
 }
 .chat-nav-btn {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -286,6 +488,7 @@ select.form-input { appearance: none; }
   line-height: 1.7;
   white-space: pre-wrap;
   word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .msg-ai {
   align-self: flex-start;
@@ -339,10 +542,18 @@ select.form-input { appearance: none; }
   background: var(--bg);
   z-index: 5;
 }
+.chat-input-bar > * {
+  width: 100%;
+  max-width: var(--reader-max);
+  margin-left: auto;
+  margin-right: auto;
+}
 .chat-options {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  max-height: 112px;
+  overflow-y: auto;
 }
 .chat-option-btn {
   padding: 8px 16px;
@@ -353,6 +564,9 @@ select.form-input { appearance: none; }
   font-size: 13px;
   cursor: pointer;
   transition: all 0.2s;
+  min-height: 38px;
+  text-align: left;
+  white-space: normal;
 }
 .chat-option-btn:hover { border-color: var(--accent); background: var(--accent-soft); }
 .chat-row { display: flex; gap: 10px; }
@@ -369,10 +583,11 @@ select.form-input { appearance: none; }
   min-height: 42px;
   max-height: 120px;
   font-family: inherit;
+  line-height: 1.45;
 }
 .chat-textarea:focus { border-color: var(--accent); }
 .chat-send {
-  width: 42px; height: 42px;
+  width: var(--tap-size); height: var(--tap-size);
   background: var(--accent);
   border: none;
   border-radius: var(--radius);
@@ -396,7 +611,7 @@ select.form-input { appearance: none; }
   flex-shrink: 0;
 }
 .numerical-panel.open {
-  max-height: 200px;
+  max-height: min(240px, 38dvh);
   overflow-y: auto;
   padding: 12px 16px;
 }
@@ -418,10 +633,11 @@ select.form-input { appearance: none; }
 .num-row {
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   font-size: 13px;
   padding: 3px 0;
 }
-.num-label { color: var(--text-dim); }
+.num-label { color: var(--text-dim); overflow-wrap: anywhere; }
 .num-value { font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ===== Settings ===== */
@@ -518,6 +734,8 @@ select.form-input { appearance: none; }
   border-radius: 16px;
   font-size: 12px;
   line-height: 1.4;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .field-tag-x {
   background: none;
@@ -541,6 +759,7 @@ select.form-input { appearance: none; }
   display: flex;
   gap: 4px;
   align-items: center;
+  min-width: 0;
 }
 
 /* ===== Option Rows ===== */
@@ -553,62 +772,279 @@ select.form-input { appearance: none; }
   display: flex;
   gap: 4px;
   align-items: center;
+  min-width: 0;
+}
+
+/* ===== Responsive Polish ===== */
+@media (max-width: 767px) {
+  :root {
+    --radius: 10px;
+  }
+
+  .page-scroll {
+    padding: 14px;
+    padding-bottom: calc(18px + var(--safe-bottom));
+  }
+
+  .header {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .home-header {
+    align-items: center;
+  }
+
+  .home-header > div {
+    min-width: 0;
+  }
+
+  .section-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .toolbar-actions,
+  .card-actions,
+  .empty-actions {
+    width: 100%;
+  }
+
+  .toolbar-actions .btn,
+  .card-actions .btn,
+  .empty-actions .btn {
+    flex: 1 1 92px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .wizard-step {
+    align-items: stretch;
+    text-align: left;
+    padding: 18px 14px calc(18px + var(--safe-bottom));
+  }
+
+  .wizard-step h2 {
+    font-size: 20px;
+  }
+
+  .wizard-options,
+  .wizard-nav {
+    max-width: none;
+  }
+
+  .wizard-progress {
+    align-self: center;
+    max-width: 100%;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+
+  .wizard-nav {
+    position: sticky;
+    bottom: 0;
+    padding-top: 10px;
+    background: linear-gradient(180deg, rgba(26,26,46,0), var(--bg) 35%);
+  }
+
+  .chat-messages {
+    padding: 12px;
+  }
+
+  .chat-nav {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px;
+    background: rgba(22, 33, 62, 0.72);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    backdrop-filter: blur(8px);
+  }
+
+  .chat-nav-btn {
+    width: 30px;
+    height: 30px;
+  }
+
+  .msg {
+    max-width: calc(100% - 34px);
+    padding: 11px 13px;
+  }
+
+  .chat-input-bar {
+    padding: 10px 12px;
+    padding-bottom: calc(10px + var(--safe-bottom));
+  }
+
+  .chat-row {
+    gap: 8px;
+  }
+
+  .chat-option-btn {
+    flex: 1 1 100%;
+  }
+
+  .section-body {
+    padding: 12px;
+  }
+
+  .condition-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 38px;
+    gap: 6px;
+  }
+
+  .condition-row .cond-dim {
+    grid-column: 1 / -1;
+  }
+
+  .condition-row .btn {
+    min-width: 38px;
+    min-height: 38px;
+  }
+
+  .option-row > div {
+    flex-wrap: wrap;
+  }
+
+  .option-row > div .form-input {
+    flex: 1 1 140px !important;
+  }
+
+  .field-list + div {
+    flex-wrap: wrap;
+  }
+
+  .field-list + div .btn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .settings-section {
+    padding: 18px;
+    background: rgba(22, 33, 62, 0.5);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .chat-input-bar {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .msg {
+    max-width: min(78%, 680px);
+  }
+}
+
+@media (min-width: 1180px) {
+  :root {
+    --content-max: 1120px;
+    --reader-max: 840px;
+  }
+
+  .home-scroll {
+    max-width: var(--content-max);
+  }
 }
 </style>
 </head>
 <body>
   <div id="app"></div>
   <script>window.__SAMPLE_SCRIPT__ = {};</script>
-  <script>(()=>{var Wt=Object.defineProperty;var Lt=(t,n)=>()=>(t&&(n=t(t=0)),n);var jt=(t,n)=>{for(var s in n)Wt(t,s,{get:n[s],enumerable:!0})};var U={};jt(U,{deleteScript:()=>ft,deleteSession:()=>yt,getAllScripts:()=>ut,getAllSessions:()=>bt,getScript:()=>J,getSession:()=>gt,getSessionsByScript:()=>Qt,getSetting:()=>_,init:()=>pt,saveScript:()=>mt,saveSession:()=>vt,setSetting:()=>H});function pt(){return new Promise((t,n)=>{let s=indexedDB.open(Zt,1);s.onupgradeneeded=e=>{let i=e.target.result;i.objectStoreNames.contains("scripts")||i.createObjectStore("scripts",{keyPath:"id"}),i.objectStoreNames.contains("sessions")||i.createObjectStore("sessions",{keyPath:"id"}).createIndex("scriptId","scriptId",{unique:!1}),i.objectStoreNames.contains("settings")||i.createObjectStore("settings",{keyPath:"key"})},s.onsuccess=e=>{dt=e.target.result,t(dt)},s.onerror=e=>n(e.target.error)})}function z(t,n="readonly"){return dt.transaction(t,n).objectStore(t)}function A(t){return new Promise((n,s)=>{t.onsuccess=()=>n(t.result),t.onerror=()=>s(t.error)})}async function ut(){return A(z("scripts").getAll())}async function J(t){return A(z("scripts").get(t))}async function mt(t){return A(z("scripts","readwrite").put(t))}async function ft(t){return A(z("scripts","readwrite").delete(t))}async function bt(){return A(z("sessions").getAll())}async function gt(t){return A(z("sessions").get(t))}async function vt(t){return A(z("sessions","readwrite").put(t))}async function yt(t){return A(z("sessions","readwrite").delete(t))}async function Qt(t){let s=z("sessions").index("scriptId");return A(s.getAll(t))}async function _(t){let n=await A(z("settings").get(t));return n?n.value:null}async function H(t,n){return A(z("settings","readwrite").put({key:t,value:n}))}var Zt,dt,I=Lt(()=>{Zt="ScriptSimulator",dt=null});var F={};jt(F,{addEventEffects:()=>$t,checkEventTriggers:()=>ht,checkStageTransition:()=>St,evaluateCondition:()=>et,extractKeyEvents:()=>wt,extractNarrative:()=>kt,extractValues:()=>st,parseScript:()=>K,processEffects:()=>xt});function K(t){return{id:t.id||crypto.randomUUID(),name:t.name||"\u672A\u547D\u540D\u5267\u672C",description:t.description||"",cover:t.cover||"",rules:t.rules||{writing_style:"",forbidden:[],requirements:[]},dimensions:t.dimensions||[],characters:t.characters||[],events:t.events||[],stages:t.stages||[],endings:t.endings||[],setup:t.setup||[],createdAt:Date.now()}}function et(t,n){if(!t)return!1;if(t.op){let s=(t.conditions||[]).map(e=>et(e,n));switch(t.op){case"and":return s.every(Boolean);case"or":return s.some(Boolean);case"not":return s.length?!s[0]:!1;default:return!1}}if(t.dim){let s=n[t.dim];return!(s===void 0||t.min!==void 0&&s<t.min||t.max!==void 0&&s>t.max||t.probability!==void 0&&Math.random()>t.probability)}for(let[s,e]of Object.entries(t)){let i=n[s];if(i===void 0||e.min!==void 0&&i<e.min||e.max!==void 0&&i>e.max||e.probability!==void 0&&Math.random()>e.probability)return!1}return!0}function ht(t,n,s,e){let i=new Set;e&&e.forEach(o=>{o.type==="cooldown"&&i.add(o.eventName)});let a=[];for(let o of t)o.stage!==void 0&&o.stage!==s||o.trigger&&(i.has(o.name)||et(o.trigger,n)&&a.push(o));return a}function xt(t){if(!t.activeEffects||t.activeEffects.length===0)return;let n=[];t.activeEffects.forEach((s,e)=>{if(s.type==="sticky"&&s.dims)for(let[i,a]of Object.entries(s.dims))t.values[i]=(t.values[i]||0)+a;s.remaining--,s.remaining<=0&&n.push(e)});for(let s=n.length-1;s>=0;s--)t.activeEffects.splice(n[s],1)}function $t(t,n){n.effects&&(t.activeEffects||(t.activeEffects=[]),n.effects.sticky&&t.activeEffects.push({eventName:n.name,type:"sticky",dims:n.effects.sticky.dims||{},remaining:n.effects.sticky.duration||3}),n.effects.cooldown&&t.activeEffects.push({eventName:n.name,type:"cooldown",remaining:n.effects.cooldown}))}function St(t,n,s){if(s>=t.length-1)return s;let e=t[s+1];return e?.transition&&et(e.transition,n)?s+1:s}function st(t,n){let s={},e=t.match(/【数值更新】([\s\S]*?)(?=【|$)/);if(!e)return null;let i=e[1];for(let a of n){let o=new RegExp(`${a.name}\\s*[\uFF1A:]?\\s*(\\d+)`),r=i.match(o);r&&(s[a.id]=parseInt(r[1],10))}return Object.keys(s).length?s:null}function wt(t){let n=t.match(/【关键事件】(.+)/);return n?n[1].trim():null}function kt(t){return t.replace(/【选项】[\s\S]*$/,"").replace(/【数值更新】[\s\S]*$/,"").replace(/【关键事件】[\s\S]*$/,"").trim()}var P=Lt(()=>{});I();var Xt=()=>document.getElementById("app"),tt=null,Nt={},Yt=new Set(["scriptDetail"]);function V(t,n){Nt[t]=n}function $(t,n={}){tt&&tt.destroy&&tt.destroy();let s=Xt();s.setAttribute("data-page",Yt.has(t)?"editor":"phone"),s.innerHTML="",tt={destroy:Nt[t](s,n)?.destroy||null}}I();async function G(t){let n=await ut(),s=await bt();t.innerHTML=`
-    <div class="header">
-      <h1>\u5267\u672C\u6A21\u62DF\u5668</h1>
+  <script>(()=>{var pt=Object.defineProperty;var $e=(e,n)=>()=>(e&&(n=e(e=0)),n);var xe=(e,n)=>{for(var s in n)pt(e,s,{get:n[s],enumerable:!0})};var K={};xe(K,{deleteScript:()=>_e,deleteSession:()=>Te,getAllScripts:()=>ke,getAllSessions:()=>Me,getScript:()=>R,getSession:()=>qe,getSessionsByScript:()=>ft,getSetting:()=>q,init:()=>we,saveScript:()=>Ee,saveSession:()=>Ne,setSetting:()=>z});function we(){return new Promise((e,n)=>{let s=indexedDB.open(mt,1);s.onupgradeneeded=t=>{let a=t.target.result;a.objectStoreNames.contains("scripts")||a.createObjectStore("scripts",{keyPath:"id"}),a.objectStoreNames.contains("sessions")||a.createObjectStore("sessions",{keyPath:"id"}).createIndex("scriptId","scriptId",{unique:!1}),a.objectStoreNames.contains("settings")||a.createObjectStore("settings",{keyPath:"key"})},s.onsuccess=t=>{Se=t.target.result,e(Se)},s.onerror=t=>n(t.target.error)})}function A(e,n="readonly"){return Se.transaction(e,n).objectStore(e)}function L(e){return new Promise((n,s)=>{e.onsuccess=()=>n(e.result),e.onerror=()=>s(e.error)})}async function ke(){return L(A("scripts").getAll())}async function R(e){return L(A("scripts").get(e))}async function Ee(e){return L(A("scripts","readwrite").put(e))}async function _e(e){return L(A("scripts","readwrite").delete(e))}async function Me(){return L(A("sessions").getAll())}async function qe(e){return L(A("sessions").get(e))}async function Ne(e){return L(A("sessions","readwrite").put(e))}async function Te(e){return L(A("sessions","readwrite").delete(e))}async function ft(e){let s=A("sessions").index("scriptId");return L(s.getAll(e))}async function q(e){let n=await L(A("settings").get(e));return n?n.value:null}async function z(e,n){return L(A("settings","readwrite").put({key:e,value:n}))}var mt,Se,j=$e(()=>{mt="ScriptSimulator",Se=null});var se={};xe(se,{addEventEffects:()=>Oe,checkEventTriggers:()=>Ie,checkStageTransition:()=>Ae,evaluateCondition:()=>pe,extractKeyEvents:()=>Le,extractNarrative:()=>te,extractValues:()=>ee,parseScript:()=>Y,processEffects:()=>je});function Y(e){return{id:e.id||crypto.randomUUID(),name:e.name||"\u672A\u547D\u540D\u5267\u672C",description:e.description||"",cover:e.cover||"",rules:e.rules||{writing_style:"",forbidden:[],requirements:[]},dimensions:e.dimensions||[],characters:e.characters||[],events:e.events||[],stages:e.stages||[],endings:e.endings||[],setup:e.setup||[],createdAt:Date.now()}}function pe(e,n){if(!e)return!1;if(e.op){let s=(e.conditions||[]).map(t=>pe(t,n));switch(e.op){case"and":return s.every(Boolean);case"or":return s.some(Boolean);case"not":return s.length?!s[0]:!1;default:return!1}}if(e.dim){let s=n[e.dim];return!(s===void 0||e.min!==void 0&&s<e.min||e.max!==void 0&&s>e.max||e.probability!==void 0&&Math.random()>e.probability)}for(let[s,t]of Object.entries(e)){let a=n[s];if(a===void 0||t.min!==void 0&&a<t.min||t.max!==void 0&&a>t.max||t.probability!==void 0&&Math.random()>t.probability)return!1}return!0}function Ie(e,n,s,t){let a=new Set;t&&t.forEach(l=>{l.type==="cooldown"&&a.add(l.eventName)});let i=[];for(let l of e)l.stage!==void 0&&l.stage!==s||l.trigger&&(a.has(l.name)||pe(l.trigger,n)&&i.push(l));return i}function je(e){if(!e.activeEffects||e.activeEffects.length===0)return;let n=[];e.activeEffects.forEach((s,t)=>{if(s.type==="sticky"&&s.dims)for(let[a,i]of Object.entries(s.dims))e.values[a]=(e.values[a]||0)+i;s.remaining--,s.remaining<=0&&n.push(t)});for(let s=n.length-1;s>=0;s--)e.activeEffects.splice(n[s],1)}function Oe(e,n){n.effects&&(e.activeEffects||(e.activeEffects=[]),n.effects.sticky&&e.activeEffects.push({eventName:n.name,type:"sticky",dims:n.effects.sticky.dims||{},remaining:n.effects.sticky.duration||3}),n.effects.cooldown&&e.activeEffects.push({eventName:n.name,type:"cooldown",remaining:n.effects.cooldown}))}function Ae(e,n,s){if(s>=e.length-1)return s;let t=e[s+1];return t?.transition&&pe(t.transition,n)?s+1:s}function ee(e,n){let s={},t=e.match(/【数值更新】([\s\S]*?)(?=【|$)/);if(!t)return null;let a=t[1];for(let i of n){let l=new RegExp(`${i.name}\\s*[\uFF1A:]?\\s*(\\d+)`),o=a.match(l);o&&(s[i.id]=parseInt(o[1],10))}return Object.keys(s).length?s:null}function Le(e){let n=e.match(/【关键事件】(.+)/);return n?n[1].trim():null}function te(e){return e.replace(/【选项】[\s\S]*$/,"").replace(/【数值更新】[\s\S]*$/,"").replace(/【关键事件】[\s\S]*$/,"").trim()}var B=$e(()=>{});var We={};xe(We,{assertValidScript:()=>ne,formatValidationResult:()=>ae,validateScript:()=>G});function G(e){let n=[],s=[],t=Array.isArray(e?.dimensions)?e.dimensions:[],a=Array.isArray(e?.characters)?e.characters:[],i=Array.isArray(e?.events)?e.events:[],l=Array.isArray(e?.stages)?e.stages:[],o=Array.isArray(e?.endings)?e.endings:[];(!e||typeof e!="object")&&n.push("\u5267\u672C\u5FC5\u987B\u662F JSON \u5BF9\u8C61"),e?.name||s.push("\u7F3A\u5C11\u5267\u672C\u540D\u79F0"),Ue(t,"\u7EF4\u5EA6",n),Ue(a,"\u89D2\u8272",n),a.some(r=>r.id==="player")||n.push("\u5FC5\u987B\u5305\u542B id \u4E3A player \u7684\u73A9\u5BB6\u89D2\u8272");let p=new Set(t.map(r=>r.id).filter(Boolean));return t.forEach((r,c)=>{r.id||n.push(`\u7EF4\u5EA6 ${c+1} \u7F3A\u5C11 id`),r.name||n.push(`\u7EF4\u5EA6 ${r.id||c+1} \u7F3A\u5C11\u540D\u79F0`),Fe(r.range)||n.push(`\u7EF4\u5EA6 ${r.id||c+1} \u7684 range \u5FC5\u987B\u662F\u4E24\u4E2A\u6570\u5B57`),Fe(r.initial)||s.push(`\u7EF4\u5EA6 ${r.id||c+1} \u7F3A\u5C11\u5408\u6CD5 initial\uFF0C\u5C06\u4F7F\u7528\u9ED8\u8BA4\u503C`)}),i.forEach((r,c)=>{r.name||s.push(`\u4E8B\u4EF6 ${c+1} \u7F3A\u5C11\u540D\u79F0`),r.stage!==void 0&&!vt(r.stage,l.length)&&n.push(`\u4E8B\u4EF6 ${r.name||c+1} \u7684 stage \u8D85\u51FA\u9636\u6BB5\u8303\u56F4`),me(r.trigger,p,`\u4E8B\u4EF6 ${r.name||c+1} \u89E6\u53D1\u6761\u4EF6`,n),ht(r.effects,p,`\u4E8B\u4EF6 ${r.name||c+1}`,n)}),l.forEach((r,c)=>{me(r.transition,p,`\u9636\u6BB5 ${r.name||c+1} \u8FC7\u6E21\u6761\u4EF6`,n)}),o.forEach((r,c)=>{me(r.condition,p,`\u7ED3\u5C40 ${r.name||c+1} \u6761\u4EF6`,n)}),{ok:n.length===0,errors:n,warnings:s}}function ne(e){let n=G(e);if(!n.ok){let s=new Error(n.errors.join(`
+`));throw s.validation=n,s}return n}function ae(e){let n=[];return e.errors?.length&&(n.push("\u9519\u8BEF:"),e.errors.forEach(s=>n.push(`- ${s}`))),e.warnings?.length&&(n.push("\u8B66\u544A:"),e.warnings.forEach(s=>n.push(`- ${s}`))),n.join(`
+`)||"\u6821\u9A8C\u901A\u8FC7"}function Ue(e,n,s){let t=new Set;e.forEach((a,i)=>{a.id&&(t.has(a.id)&&s.push(`${n} id \u91CD\u590D: ${a.id}`),t.add(a.id),/^[A-Za-z_][A-Za-z0-9_-]*$/.test(a.id)||s.push(`${n} ${i+1} \u7684 id \u53EA\u80FD\u4F7F\u7528\u82F1\u6587\u3001\u6570\u5B57\u3001\u4E0B\u5212\u7EBF\u6216\u77ED\u6A2A\u7EBF\uFF0C\u5E76\u4E14\u4E0D\u80FD\u4EE5\u6570\u5B57\u5F00\u5934`))})}function Fe(e){return Array.isArray(e)&&e.length===2&&e.every(n=>Number.isFinite(Number(n)))}function vt(e,n){let s=Number(e);return Number.isInteger(s)&&s>=0&&(n===0||s<n)}function me(e,n,s,t){if(!(!e||typeof e!="object"||!Object.keys(e).length)){if(e.op){if(["and","or","not"].includes(e.op)||t.push(`${s} \u4F7F\u7528\u672A\u77E5 op: ${e.op}`),!Array.isArray(e.conditions)){t.push(`${s} \u7684 conditions \u5FC5\u987B\u662F\u6570\u7EC4`);return}e.conditions.forEach((a,i)=>me(a,n,`${s}.${i+1}`,t));return}if(e.dim){n.has(e.dim)||t.push(`${s} \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${e.dim}`),Ke(e,s,t);return}for(let[a,i]of Object.entries(e))n.has(a)||t.push(`${s} \u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${a}`),i&&typeof i=="object"&&Ke(i,`${s}.${a}`,t)}}function Ke(e,n,s){if(["min","max","probability"].forEach(t=>{e[t]!==void 0&&!Number.isFinite(Number(e[t]))&&s.push(`${n}.${t} \u5FC5\u987B\u662F\u6570\u5B57`)}),e.probability!==void 0){let t=Number(e.probability);(t<0||t>1)&&s.push(`${n}.probability \u5FC5\u987B\u5728 0 \u5230 1 \u4E4B\u95F4`)}}function ht(e,n,s,t){let a=e?.sticky?.dims;if(!(!a||typeof a!="object"))for(let[i,l]of Object.entries(a))n.has(i)||t.push(`${s} \u7684\u6301\u7EED\u6548\u679C\u5F15\u7528\u4E86\u4E0D\u5B58\u5728\u7684\u7EF4\u5EA6: ${i}`),Number.isFinite(Number(l))||t.push(`${s} \u7684\u6301\u7EED\u6548\u679C ${i} \u5FC5\u987B\u662F\u6570\u5B57`)}var Ce=$e(()=>{});j();var bt=()=>document.getElementById("app"),ue=null,Ve={},gt=new Set(["scriptDetail"]);function W(e,n){Ve[e]=n}function k(e,n={}){ue&&ue.destroy&&ue.destroy();let s=bt();s.setAttribute("data-page",gt.has(e)?"editor":"phone"),s.innerHTML="",ue={destroy:Ve[e](s,n)?.destroy||null}}j();async function ie(e){let n=await ke(),s=await Me(),t=[...s].sort((o,p)=>p.updatedAt-o.updatedAt),a=t[0];e.innerHTML=`
+    <div class="header home-header">
+      <div>
+        <h1>\u5267\u672C\u6A21\u62DF\u5668</h1>
+        <p>${n.length?"\u7BA1\u7406\u5267\u672C\uFF0C\u7EE7\u7EED\u4F60\u7684\u6A21\u62DF\u5BF9\u8BDD":"\u5BFC\u5165\u6216\u521B\u5EFA\u5267\u672C\u540E\u5F00\u59CB\u6A21\u62DF"}</p>
+      </div>
       <button class="header-btn" id="btn-settings" title="\u8BBE\u7F6E">\u2699</button>
     </div>
-    <div class="page-scroll">
-      <div class="section">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <h2 style="font-size:15px;color:var(--text-dim)">\u5267\u672C\u5E93</h2>
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-sm btn-secondary" id="btn-create">+ \u65B0\u5EFA\u5267\u672C</button>
-            <button class="btn btn-sm btn-secondary" id="btn-import">\u5BFC\u5165\u5267\u672C</button>
+    <div class="page-scroll home-scroll">
+      <div class="home-summary">
+        <div class="summary-item">
+          <span class="summary-value">${n.length}</span>
+          <span class="summary-label">\u5267\u672C</span>
+        </div>
+        <div class="summary-item">
+          <span class="summary-value">${s.length}</span>
+          <span class="summary-label">\u4F1A\u8BDD</span>
+        </div>
+        <div class="summary-item summary-wide">
+          <span class="summary-value">${a?xt(a.updatedAt):"\u6682\u65E0"}</span>
+          <span class="summary-label">\u6700\u8FD1\u66F4\u65B0</span>
+        </div>
+      </div>
+
+      <section class="home-section">
+        <div class="section-toolbar">
+          <h2>\u5267\u672C\u5E93</h2>
+          <div class="toolbar-actions">
+            <button class="btn btn-sm btn-secondary" id="btn-create">\u65B0\u5EFA</button>
+            <button class="btn btn-sm btn-primary" id="btn-import">\u5BFC\u5165 JSON</button>
           </div>
         </div>
-        <div id="script-list"></div>
-      </div>
-      <div class="section" style="margin-top:24px">
-        <h2 style="font-size:15px;color:var(--text-dim);margin-bottom:12px">\u6211\u7684\u4F1A\u8BDD</h2>
-        <div id="session-list"></div>
-      </div>
+        <div id="script-list" class="home-list"></div>
+      </section>
+
+      <section class="home-section">
+        <div class="section-toolbar">
+          <h2>\u6211\u7684\u4F1A\u8BDD</h2>
+          <span class="section-count">${s.length} \u4E2A</span>
+        </div>
+        <div id="session-list" class="home-list"></div>
+      </section>
     </div>
     <input type="file" id="file-input" accept=".json" style="display:none">
-  `;let e=t.querySelector("#script-list"),i=t.querySelector("#session-list");n.length===0?(e.innerHTML=`
-      <div class="empty-state" style="padding:30px">
-        <div class="icon">\u{1F4D6}</div>
-        <p>\u8FD8\u6CA1\u6709\u5267\u672C\uFF0C\u65B0\u5EFA\u4E00\u4E2A\u6216\u52A0\u8F7D\u793A\u4F8B\u5F00\u59CB\u5427</p>
-        <div style="display:flex;gap:8px;margin-top:12px">
-          <button class="btn btn-primary" id="btn-sample">\u52A0\u8F7D\u793A\u4F8B\u5267\u672C</button>
+  `;let i=e.querySelector("#script-list"),l=e.querySelector("#session-list");n.length===0?(i.innerHTML=`
+      <div class="empty-panel">
+        <div class="empty-mark">JSON</div>
+        <h3>\u8FD8\u6CA1\u6709\u5267\u672C</h3>
+        <p>\u65B0\u5EFA\u4E00\u4E2A\u7A7A\u5267\u672C\uFF0C\u6216\u52A0\u8F7D\u793A\u4F8B\u5267\u672C\u5FEB\u901F\u4F53\u9A8C\u5B8C\u6574\u6D41\u7A0B\u3002</p>
+        <div class="empty-actions">
+          <button class="btn btn-primary" id="btn-sample">\u52A0\u8F7D\u793A\u4F8B</button>
           <button class="btn btn-secondary" id="btn-create-empty">\u65B0\u5EFA\u5267\u672C</button>
         </div>
-      </div>`,t.querySelector("#btn-create-empty").onclick=async()=>{let{parseScript:a}=await Promise.resolve().then(()=>(P(),F)),{saveScript:o}=await Promise.resolve().then(()=>(I(),U)),r=a({name:"\u672A\u547D\u540D\u5267\u672C",description:""});await o(r),$("scriptDetail",{scriptId:r.id})},t.querySelector("#btn-sample").onclick=async()=>{try{let a;window.__SAMPLE_SCRIPT__?a=window.__SAMPLE_SCRIPT__:a=await(await fetch("/data/scripts/dangerous-relationships.json")).json();let{parseScript:o}=await Promise.resolve().then(()=>(P(),F)),{saveScript:r}=await Promise.resolve().then(()=>(I(),U));await r(o(a)),G(t)}catch(a){alert("\u52A0\u8F7D\u5931\u8D25: "+a.message)}}):e.innerHTML=n.map(a=>`
-      <div class="card" data-script-id="${a.id}">
-        <h3>${_t(a.name)}</h3>
-        <p>${_t(a.description)}</p>
-        <span class="card-tag">${(a.dimensions||[]).length} \u4E2A\u7EF4\u5EA6</span>
-        <span class="card-tag">${(a.stages||[]).length} \u4E2A\u9636\u6BB5</span>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;margin-right:6px" data-action="play">\u5F00\u59CB</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;margin-right:6px" data-action="edit">\u7F16\u8F91</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;color:var(--accent)" data-action="delete">\u5220\u9664</button>
-      </div>
-    `).join(""),s.length===0?i.innerHTML='<p style="color:var(--text-dim);font-size:13px">\u6682\u65E0\u4F1A\u8BDD</p>':i.innerHTML=s.sort((a,o)=>o.updatedAt-a.updatedAt).map(a=>`
-      <div class="card" data-session-id="${a.id}">
-        <h3>${_t(a.scriptName||"\u672A\u77E5\u5267\u672C")}</h3>
-        <p>\u9636\u6BB5 ${(a.currentStage||0)+1} \xB7 ${(a.messages||[]).length} \u6761\u6D88\u606F</p>
-        <p style="font-size:11px;color:var(--text-dim)">${new Date(a.updatedAt).toLocaleString()}</p>
-        <button class="btn btn-sm btn-primary" style="margin-top:8px;margin-right:6px" data-action="resume">\u7EE7\u7EED</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;margin-right:6px" data-action="branch">\u590D\u5236\u5206\u652F</button>
-        <button class="btn btn-sm btn-secondary" style="margin-top:8px;color:var(--accent)" data-action="delete">\u5220\u9664</button>
-      </div>
-    `).join(""),t.querySelector("#btn-settings").onclick=()=>$("settings"),t.querySelector("#btn-create").onclick=async()=>{let{parseScript:a}=await Promise.resolve().then(()=>(P(),F)),{saveScript:o}=await Promise.resolve().then(()=>(I(),U)),r=a({name:"\u672A\u547D\u540D\u5267\u672C",description:""});await o(r),$("scriptDetail",{scriptId:r.id})},t.querySelector("#btn-import").onclick=()=>t.querySelector("#file-input").click(),t.querySelector("#file-input").onchange=a=>te(a,n),e.onclick=a=>{let o=a.target.closest("[data-script-id]");if(!o)return;let r=o.dataset.scriptId,d=a.target.dataset.action;d==="play"?$("setup",{scriptId:r}):d==="edit"?$("scriptDetail",{scriptId:r}):d==="delete"&&(ft(r),G(t))},i.onclick=a=>{let o=a.target.closest("[data-session-id]");if(!o)return;let r=o.dataset.sessionId,d=a.target.dataset.action;d==="resume"?$("chat",{sessionId:r}):d==="branch"?ee(r,s):d==="delete"&&(yt(r),G(t))}}async function te(t,n){let s=t.target.files?.[0];if(s)try{let e=await s.text(),i=JSON.parse(e),{parseScript:a}=await Promise.resolve().then(()=>(P(),F)),{saveScript:o}=await Promise.resolve().then(()=>(I(),U)),r=a(i);await o(r),$("home")}catch(e){alert("\u5BFC\u5165\u5931\u8D25: "+e.message)}}async function ee(t,n){let{saveSession:s,getSession:e}=await Promise.resolve().then(()=>(I(),U)),i=await e(t);if(!i)return;let a={...i,id:crypto.randomUUID(),messages:[...i.messages],updatedAt:Date.now()};await s(a),$("chat",{sessionId:a.id})}function _t(t){let n=document.createElement("div");return n.textContent=t,n.innerHTML}I();P();var c={},W=new Set(["basic","rules","dimensions","characters","events","stages","endings","setup"]),h={},S=new Set,nt=null;async function Ot(t,{scriptId:n}){if(c=await J(n),!c){$("home");return}c.rules=c.rules||{writing_style:"",forbidden:[],requirements:[]},c.dimensions=c.dimensions||[],c.characters=c.characters||[],c.events=c.events||[],c.stages=c.stages||[],c.endings=c.endings||[],c.setup=c.setup||[],Ht(t)}function Ht(t){t.innerHTML=`
+      </div>`,e.querySelector("#btn-create-empty").onclick=async()=>{let{parseScript:o}=await Promise.resolve().then(()=>(B(),se)),{saveScript:p}=await Promise.resolve().then(()=>(j(),K)),r=o({name:"\u672A\u547D\u540D\u5267\u672C",description:""});await p(r),k("scriptDetail",{scriptId:r.id})},e.querySelector("#btn-sample").onclick=async()=>{try{let o;window.__SAMPLE_SCRIPT__?o=window.__SAMPLE_SCRIPT__:o=await(await fetch("/data/scripts/dangerous-relationships.json")).json();let{parseScript:p}=await Promise.resolve().then(()=>(B(),se)),{saveScript:r}=await Promise.resolve().then(()=>(j(),K));await r(p(o)),ie(e)}catch(o){alert("\u52A0\u8F7D\u5931\u8D25: "+o.message)}}):i.innerHTML=n.map(o=>`
+      <article class="card home-card" data-script-id="${o.id}">
+        <div class="card-main">
+          <h3>${Pe(o.name)}</h3>
+          <p>${Pe(o.description||"\u6682\u65E0\u63CF\u8FF0")}</p>
+          <div class="card-tags">
+            <span class="card-tag">${(o.dimensions||[]).length} \u7EF4\u5EA6</span>
+            <span class="card-tag">${(o.stages||[]).length} \u9636\u6BB5</span>
+            <span class="card-tag">${(o.characters||[]).length} \u89D2\u8272</span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-sm btn-primary" data-action="play">\u5F00\u59CB</button>
+          <button class="btn btn-sm btn-secondary" data-action="edit">\u7F16\u8F91</button>
+          <button class="btn btn-sm btn-ghost" data-action="delete">\u5220\u9664</button>
+        </div>
+      </article>
+    `).join(""),s.length===0?l.innerHTML='<div class="muted-row">\u6682\u65E0\u4F1A\u8BDD</div>':l.innerHTML=t.map(o=>`
+      <article class="card home-card" data-session-id="${o.id}">
+        <div class="card-main">
+          <h3>${Pe(o.scriptName||"\u672A\u77E5\u5267\u672C")}</h3>
+          <p>\u9636\u6BB5 ${(o.currentStage||0)+1} \xB7 ${(o.messages||[]).length} \u6761\u6D88\u606F</p>
+          <p class="card-time">${new Date(o.updatedAt).toLocaleString()}</p>
+        </div>
+        <div class="card-actions">
+          <button class="btn btn-sm btn-primary" data-action="resume">\u7EE7\u7EED</button>
+          <button class="btn btn-sm btn-secondary" data-action="branch">\u590D\u5236\u5206\u652F</button>
+          <button class="btn btn-sm btn-ghost" data-action="delete">\u5220\u9664</button>
+        </div>
+      </article>
+    `).join(""),e.querySelector("#btn-settings").onclick=()=>k("settings"),e.querySelector("#btn-create").onclick=async()=>{let{parseScript:o}=await Promise.resolve().then(()=>(B(),se)),{saveScript:p}=await Promise.resolve().then(()=>(j(),K)),r=o({name:"\u672A\u547D\u540D\u5267\u672C",description:""});await p(r),k("scriptDetail",{scriptId:r.id})},e.querySelector("#btn-import").onclick=()=>e.querySelector("#file-input").click(),e.querySelector("#file-input").onchange=o=>yt(o),i.onclick=async o=>{let p=o.target.closest("[data-script-id]");if(!p)return;let r=p.dataset.scriptId,c=o.target.dataset.action;c==="play"?k("setup",{scriptId:r}):c==="edit"?k("scriptDetail",{scriptId:r}):c==="delete"&&confirm("\u786E\u5B9A\u5220\u9664\u8FD9\u4E2A\u5267\u672C\u5417\uFF1F\u76F8\u5173\u4F1A\u8BDD\u4E0D\u4F1A\u81EA\u52A8\u5220\u9664\u3002")&&(await _e(r),ie(e))},l.onclick=async o=>{let p=o.target.closest("[data-session-id]");if(!p)return;let r=p.dataset.sessionId,c=o.target.dataset.action;c==="resume"?k("chat",{sessionId:r}):c==="branch"?$t(r):c==="delete"&&confirm("\u786E\u5B9A\u5220\u9664\u8FD9\u4E2A\u4F1A\u8BDD\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002")&&(await Te(r),ie(e))}}async function yt(e){let n=e.target.files?.[0];if(n)try{let s=await n.text(),t=JSON.parse(s),{parseScript:a}=await Promise.resolve().then(()=>(B(),se)),{assertValidScript:i,formatValidationResult:l,validateScript:o}=await Promise.resolve().then(()=>(Ce(),We)),{saveScript:p}=await Promise.resolve().then(()=>(j(),K)),r=a(t),c=o(r);if(i(r),c.warnings.length&&!confirm(`\u5BFC\u5165\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+
+${l(c)}`))return;await p(r),k("home")}catch(s){alert("\u5BFC\u5165\u5931\u8D25: "+s.message)}}async function $t(e){let{saveSession:n,getSession:s}=await Promise.resolve().then(()=>(j(),K)),t=await s(e);if(!t)return;let a={...t,id:crypto.randomUUID(),messages:[...t.messages],updatedAt:Date.now()};await n(a),k("chat",{sessionId:a.id})}function xt(e){if(!e)return"\u6682\u65E0";let n=Date.now()-e,s=60*1e3,t=60*s,a=24*t;return n<t?`${Math.max(1,Math.floor(n/s))} \u5206\u949F\u524D`:n<a?`${Math.floor(n/t)} \u5C0F\u65F6\u524D`:new Date(e).toLocaleDateString()}function Pe(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}j();B();Ce();var d={},re=new Set(["basic","rules","dimensions","characters","events","stages","endings","setup"]),$={},E=new Set,fe=null;async function Xe(e,{scriptId:n}){if(d=await R(n),!d){k("home");return}d.rules=d.rules||{writing_style:"",forbidden:[],requirements:[]},d.dimensions=d.dimensions||[],d.characters=d.characters||[],d.events=d.events||[],d.stages=d.stages||[],d.endings=d.endings||[],d.setup=d.setup||[],Ye(e)}function Ye(e){e.innerHTML=`
     <div class="header">
       <button class="header-btn" id="btn-back">&larr;</button>
       <h1 style="font-size:15px">\u7F16\u8F91\u5267\u672C</h1>
@@ -619,226 +1055,234 @@ select.form-input { appearance: none; }
       </div>
     </div>
     <div class="page-scroll" id="editor-scroll">
-      ${D("basic","\u57FA\u672C\u4FE1\u606F",ae(),"editor-full")}
-      ${D("rules","\u5199\u4F5C\u89C4\u5219",ie(),"editor-full")}
+      ${D("basic","\u57FA\u672C\u4FE1\u606F",kt(),"editor-full")}
+      ${D("rules","\u5199\u4F5C\u89C4\u5219",Et(),"editor-full")}
       <div class="editor-grid">
-        ${D("dimensions","\u6570\u503C\u7EF4\u5EA6",oe())}
-        ${D("characters","\u89D2\u8272\u8BBE\u5B9A",re())}
-        ${D("events","\u5173\u952E\u4E8B\u4EF6",le())}
-        ${D("stages","\u5267\u60C5\u9636\u6BB5",ce())}
-        ${D("endings","\u7ED3\u5C40\u8BBE\u5B9A",de())}
-        ${D("setup","\u5F00\u5C40\u9009\u9879",pe())}
+        ${D("dimensions","\u6570\u503C\u7EF4\u5EA6",_t())}
+        ${D("characters","\u89D2\u8272\u8BBE\u5B9A",Mt())}
+        ${D("events","\u5173\u952E\u4E8B\u4EF6",qt())}
+        ${D("stages","\u5267\u60C5\u9636\u6BB5",Nt())}
+        ${D("endings","\u7ED3\u5C40\u8BBE\u5B9A",Tt())}
+        ${D("setup","\u5F00\u5C40\u9009\u9879",It())}
       </div>
-      ${D("json","\u9AD8\u7EA7 JSON \u7F16\u8F91",ue(),"editor-full")}
+      ${D("json","\u9AD8\u7EA7 JSON \u7F16\u8F91",jt(),"editor-full")}
     </div>
     <input type="file" id="file-import" accept=".json" style="display:none">
-  `,be(t)}function D(t,n,s,e){let i=W.has(t);return`<div class="editor-section${e?" "+e:""}" data-section="${t}">
-    <div class="section-header ${i?"open":""}" data-section-toggle="${t}">
-      <span class="section-arrow">${i?"&#9660;":"&#9654;"}</span>
+  `,Lt(e)}function D(e,n,s,t){let a=re.has(e);return`<div class="editor-section${t?" "+t:""}" data-section="${e}">
+    <div class="section-header ${a?"open":""}" data-section-toggle="${e}">
+      <span class="section-arrow">${a?"&#9660;":"&#9654;"}</span>
       <span>${n}</span>
     </div>
-    <div class="section-body" style="${i?"":"display:none"}">${s}</div>
-  </div>`}function ne(t){W.has(t)?W.delete(t):W.add(t)}function ae(){return`
+    <div class="section-body" style="${a?"":"display:none"}">${s}</div>
+  </div>`}function wt(e){re.has(e)?re.delete(e):re.add(e)}function kt(){return`
     <div class="form-group">
       <label class="form-label">\u5267\u672C\u540D\u79F0</label>
-      <input class="form-input" data-field="name" value="${x(c.name||"")}">
+      <input class="form-input" data-field="name" value="${S(d.name||"")}">
     </div>
     <div class="form-group">
       <label class="form-label">\u63CF\u8FF0</label>
-      <textarea class="form-input" data-field="description" rows="3">${x(c.description||"")}</textarea>
-    </div>`}function ie(){let t=c.rules;return`
+      <textarea class="form-input" data-field="description" rows="3">${S(d.description||"")}</textarea>
+    </div>`}function Et(){let e=d.rules;return`
     <div class="form-group">
       <label class="form-label">\u5199\u4F5C\u98CE\u683C</label>
-      <textarea class="form-input" data-field="rules.writing_style" rows="3">${x(t.writing_style||"")}</textarea>
+      <textarea class="form-input" data-field="rules.writing_style" rows="3">${S(e.writing_style||"")}</textarea>
     </div>
     <div class="form-group">
       <label class="form-label">\u7981\u6B62\u4E8B\u9879</label>
-      ${zt(t.forbidden||[],"rules.forbidden")}
+      ${Ge(e.forbidden||[],"rules.forbidden")}
     </div>
     <div class="form-group">
       <label class="form-label">\u5199\u4F5C\u8981\u6C42</label>
-      ${zt(t.requirements||[],"rules.requirements")}
-    </div>`}function oe(){let t=c.dimensions||[],n="";return t.forEach((s,e)=>{h[`dim_${e}`]?n+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${x(s.id||"")}" data-dim="${e}" data-subfield="id"></div>
-        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${x(s.name||"")}" data-dim="${e}" data-subfield="name"></div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0\uFF08\u8FD9\u4E2A\u6570\u503C\u4EE3\u8868\u4EC0\u4E48\uFF09</label><input class="form-input" value="${x(s.description||"")}" data-dim="${e}" data-subfield="description" placeholder="\u5982\uFF1A\u73A9\u5BB6\u5BF9\u5371\u9669\u5BF9\u8C61\u7684\u5FC3\u52A8\u7A0B\u5EA6"></div>
-        <div class="form-group"><label class="form-label">\u4F5C\u7528\u5BF9\u8C61\uFF08\u53EF\u9009\uFF0C\u652F\u6301\u5B8F\u5982 {{target}}\uFF09</label><input class="form-input" value="${x(s.scope||"")}" data-dim="${e}" data-subfield="scope" placeholder="\u5982\uFF1A\u5BF9{{target}}"></div>
+      ${Ge(e.requirements||[],"rules.requirements")}
+    </div>`}function _t(){let e=d.dimensions||[],n="";return e.forEach((s,t)=>{$[`dim_${t}`]?n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${S(s.id||"")}" data-dim="${t}" data-subfield="id"></div>
+        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${S(s.name||"")}" data-dim="${t}" data-subfield="name"></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0\uFF08\u8FD9\u4E2A\u6570\u503C\u4EE3\u8868\u4EC0\u4E48\uFF09</label><input class="form-input" value="${S(s.description||"")}" data-dim="${t}" data-subfield="description" placeholder="\u5982\uFF1A\u73A9\u5BB6\u5BF9\u5371\u9669\u5BF9\u8C61\u7684\u5FC3\u52A8\u7A0B\u5EA6"></div>
+        <div class="form-group"><label class="form-label">\u4F5C\u7528\u5BF9\u8C61\uFF08\u53EF\u9009\uFF0C\u652F\u6301\u5B8F\u5982 {{target}}\uFF09</label><input class="form-input" value="${S(s.scope||"")}" data-dim="${t}" data-subfield="scope" placeholder="\u5982\uFF1A\u5BF9{{target}}"></div>
         <div style="display:flex;gap:8px">
-          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 min</label><input class="form-input" type="number" value="${s.range?.[0]??0}" data-dim="${e}" data-subfield="range_min"></div>
-          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 max</label><input class="form-input" type="number" value="${s.range?.[1]??100}" data-dim="${e}" data-subfield="range_max"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 min</label><input class="form-input" type="number" value="${s.range?.[0]??0}" data-dim="${t}" data-subfield="range_min"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u8303\u56F4 max</label><input class="form-input" type="number" value="${s.range?.[1]??100}" data-dim="${t}" data-subfield="range_max"></div>
         </div>
         <div style="display:flex;gap:8px">
-          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB min</label><input class="form-input" type="number" value="${s.initial?.[0]??0}" data-dim="${e}" data-subfield="initial_min"></div>
-          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB max</label><input class="form-input" type="number" value="${s.initial?.[1]??0}" data-dim="${e}" data-subfield="initial_max"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB min</label><input class="form-input" type="number" value="${s.initial?.[0]??0}" data-dim="${t}" data-subfield="initial_min"></div>
+          <div class="form-group" style="flex:1"><label class="form-label">\u521D\u59CB max</label><input class="form-input" type="number" value="${s.initial?.[1]??0}" data-dim="${t}" data-subfield="initial_max"></div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" data-action="dim-save" data-idx="${e}">\u786E\u5B9A</button>
-          <button class="btn btn-sm btn-secondary" data-action="dim-cancel" data-idx="${e}">\u53D6\u6D88</button>
+          <button class="btn btn-sm btn-primary" data-action="dim-save" data-idx="${t}">\u786E\u5B9A</button>
+          <button class="btn btn-sm btn-secondary" data-action="dim-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
       </div>`:n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;min-width:0">
-            <div><strong>${x(s.name||s.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${s.range?.[0]}-${s.range?.[1]} \u521D\u59CB ${s.initial?.[0]}-${s.initial?.[1]}</span></div>
-            ${s.scope?`<div style="color:var(--accent);font-size:11px;margin-top:2px">${x(s.scope)}</div>`:""}
-            ${s.description?`<div style="color:var(--text-dim);font-size:11px;margin-top:2px">${x(s.description)}</div>`:""}
+            <div><strong>${S(s.name||s.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${s.range?.[0]}-${s.range?.[1]} \u521D\u59CB ${s.initial?.[0]}-${s.initial?.[1]}</span></div>
+            ${s.scope?`<div style="color:var(--accent);font-size:11px;margin-top:2px">${S(s.scope)}</div>`:""}
+            ${s.description?`<div style="color:var(--text-dim);font-size:11px;margin-top:2px">${S(s.description)}</div>`:""}
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="btn btn-sm btn-secondary" data-action="dim-edit" data-idx="${e}">\u7F16\u8F91</button>
-            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="dim-delete" data-idx="${e}">&times;</button>
+            <button class="btn btn-sm btn-secondary" data-action="dim-edit" data-idx="${t}">\u7F16\u8F91</button>
+            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="dim-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="dim-add" style="margin-top:8px">+ \u65B0\u589E\u7EF4\u5EA6</button>',n}function re(){let t=c.characters||[],n="";return t.forEach((s,e)=>{h[`char_${e}`]?n+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${x(s.id||"")}" data-char="${e}" data-subfield="id"></div>
-        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${x(s.name||"")}" data-char="${e}" data-subfield="name"></div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-char="${e}" data-subfield="description">${x(s.description||"")}</textarea></div>
+      </div>`}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="dim-add" style="margin-top:8px">+ \u65B0\u589E\u7EF4\u5EA6</button>',n}function Mt(){let e=d.characters||[],n="";return e.forEach((s,t)=>{$[`char_${t}`]?n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">ID</label><input class="form-input" value="${S(s.id||"")}" data-char="${t}" data-subfield="id"></div>
+        <div class="form-group"><label class="form-label">\u540D\u79F0</label><input class="form-input" value="${S(s.name||"")}" data-char="${t}" data-subfield="name"></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-char="${t}" data-subfield="description">${S(s.description||"")}</textarea></div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" data-action="char-save" data-idx="${e}">\u786E\u5B9A</button>
-          <button class="btn btn-sm btn-secondary" data-action="char-cancel" data-idx="${e}">\u53D6\u6D88</button>
+          <button class="btn btn-sm btn-primary" data-action="char-save" data-idx="${t}">\u786E\u5B9A</button>
+          <button class="btn btn-sm btn-secondary" data-action="char-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
       </div>`:n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center">
-          <div><strong>${x(s.name||s.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${x(s.description||"").substring(0,30)}</span></div>
+          <div><strong>${S(s.name||s.id)}</strong> <span style="color:var(--text-dim);font-size:12px">${S(s.description||"").substring(0,30)}</span></div>
           <div style="display:flex;gap:4px">
-            <button class="btn btn-sm btn-secondary" data-action="char-edit" data-idx="${e}">\u7F16\u8F91</button>
-            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="char-delete" data-idx="${e}">&times;</button>
+            <button class="btn btn-sm btn-secondary" data-action="char-edit" data-idx="${t}">\u7F16\u8F91</button>
+            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="char-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="char-add" style="margin-top:8px">+ \u65B0\u589E\u89D2\u8272</button>',n}function le(){let t=c.events||[],n="";return t.forEach((s,e)=>{if(h[`event_${e}`])n+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u4E8B\u4EF6\u540D\u79F0</label><input class="form-input" value="${x(s.name||"")}" data-event="${e}" data-subfield="name"></div>
-        <div class="form-group"><label class="form-label">\u6240\u5C5E\u9636\u6BB5 (0-${(c.stages?.length||1)-1})</label><input class="form-input" type="number" min="0" value="${s.stage??0}" data-event="${e}" data-subfield="stage"></div>
+      </div>`}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="char-add" style="margin-top:8px">+ \u65B0\u589E\u89D2\u8272</button>',n}function qt(){let e=d.events||[],n="";return e.forEach((s,t)=>{if($[`event_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u4E8B\u4EF6\u540D\u79F0</label><input class="form-input" value="${S(s.name||"")}" data-event="${t}" data-subfield="name"></div>
+        <div class="form-group"><label class="form-label">\u6240\u5C5E\u9636\u6BB5 (0-${(d.stages?.length||1)-1})</label><input class="form-input" type="number" min="0" value="${s.stage??0}" data-event="${t}" data-subfield="stage"></div>
         <div class="form-group"><label class="form-label">\u89E6\u53D1\u6761\u4EF6</label>
-          ${qt(s.trigger||{},`event_${e}_trigger`)}
+          ${He(s.trigger||{},`event_${t}_trigger`)}
         </div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-event="${e}" data-subfield="description">${x(s.description||"")}</textarea></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-event="${t}" data-subfield="description">${S(s.description||"")}</textarea></div>
         <div class="form-group">
           <label class="form-label">\u6301\u7EED\u6548\u679C</label>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <div style="flex:1;min-width:120px">
               <label class="form-label" style="font-size:11px">Sticky \u6301\u7EED\u8F6E\u6570</label>
-              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${s.effects?.sticky?.duration||""}" data-event="${e}" data-subfield="sticky_duration">
+              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${s.effects?.sticky?.duration||""}" data-event="${t}" data-subfield="sticky_duration">
             </div>
             <div style="flex:1;min-width:120px">
               <label class="form-label" style="font-size:11px">Cooldown \u51B7\u5374\u8F6E\u6570</label>
-              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${s.effects?.cooldown||""}" data-event="${e}" data-subfield="cooldown">
+              <input class="form-input" type="number" min="0" placeholder="0=\u4E0D\u542F\u7528" value="${s.effects?.cooldown||""}" data-event="${t}" data-subfield="cooldown">
             </div>
           </div>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" data-action="event-save" data-idx="${e}">\u786E\u5B9A</button>
-          <button class="btn btn-sm btn-secondary" data-action="event-cancel" data-idx="${e}">\u53D6\u6D88</button>
+          <button class="btn btn-sm btn-primary" data-action="event-save" data-idx="${t}">\u786E\u5B9A</button>
+          <button class="btn btn-sm btn-secondary" data-action="event-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let a=Mt(s.trigger);n+=`<div class="card">
+      </div>`;else{let i=De(s.trigger);n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${x(s.name||"\u672A\u547D\u540D")}</strong>
-            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">\u9636\u6BB5 ${s.stage??0} &middot; ${a}</div>
+            <strong>${S(s.name||"\u672A\u547D\u540D")}</strong>
+            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">\u9636\u6BB5 ${s.stage??0} &middot; ${i}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="btn btn-sm btn-secondary" data-action="event-edit" data-idx="${e}">\u7F16\u8F91</button>
-            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="event-delete" data-idx="${e}">&times;</button>
+            <button class="btn btn-sm btn-secondary" data-action="event-edit" data-idx="${t}">\u7F16\u8F91</button>
+            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="event-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="event-add" style="margin-top:8px">+ \u65B0\u589E\u4E8B\u4EF6</button>',n}function ce(){let t=c.stages||[],n="";return t.forEach((s,e)=>{if(h[`stage_${e}`])n+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u9636\u6BB5\u540D\u79F0</label><input class="form-input" value="${x(s.name||"")}" data-stage="${e}" data-subfield="name"></div>
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="event-add" style="margin-top:8px">+ \u65B0\u589E\u4E8B\u4EF6</button>',n}function Nt(){let e=d.stages||[],n="";return e.forEach((s,t)=>{if($[`stage_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u9636\u6BB5\u540D\u79F0</label><input class="form-input" value="${S(s.name||"")}" data-stage="${t}" data-subfield="name"></div>
         <div class="form-group"><label class="form-label">\u8FC7\u6E21\u6761\u4EF6</label>
-          ${qt(s.transition||{},`stage_${e}_transition`)}
+          ${He(s.transition||{},`stage_${t}_transition`)}
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" data-action="stage-save" data-idx="${e}">\u786E\u5B9A</button>
-          <button class="btn btn-sm btn-secondary" data-action="stage-cancel" data-idx="${e}">\u53D6\u6D88</button>
+          <button class="btn btn-sm btn-primary" data-action="stage-save" data-idx="${t}">\u786E\u5B9A</button>
+          <button class="btn btn-sm btn-secondary" data-action="stage-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let a=Mt(s.transition);n+=`<div class="card">
+      </div>`;else{let i=De(s.transition);n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${e+1}. ${x(s.name||"\u672A\u547D\u540D")}</strong>
-            ${a?`<div style="color:var(--text-dim);font-size:12px;margin-top:2px">${a}</div>`:""}
+            <strong>${t+1}. ${S(s.name||"\u672A\u547D\u540D")}</strong>
+            ${i?`<div style="color:var(--text-dim);font-size:12px;margin-top:2px">${i}</div>`:""}
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="btn btn-sm btn-secondary" data-action="stage-edit" data-idx="${e}">\u7F16\u8F91</button>
-            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="stage-delete" data-idx="${e}">&times;</button>
+            <button class="btn btn-sm btn-secondary" data-action="stage-edit" data-idx="${t}">\u7F16\u8F91</button>
+            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="stage-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="stage-add" style="margin-top:8px">+ \u65B0\u589E\u9636\u6BB5</button>',n}function de(){let t=c.endings||[],n="";return t.forEach((s,e)=>{if(h[`ending_${e}`])n+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u7ED3\u5C40\u540D\u79F0</label><input class="form-input" value="${x(s.name||"")}" data-ending="${e}" data-subfield="name"></div>
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="stage-add" style="margin-top:8px">+ \u65B0\u589E\u9636\u6BB5</button>',n}function Tt(){let e=d.endings||[],n="";return e.forEach((s,t)=>{if($[`ending_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u7ED3\u5C40\u540D\u79F0</label><input class="form-input" value="${S(s.name||"")}" data-ending="${t}" data-subfield="name"></div>
         <div class="form-group"><label class="form-label">\u8FBE\u6210\u6761\u4EF6</label>
-          ${qt(s.condition||{},`ending_${e}_condition`)}
+          ${He(s.condition||{},`ending_${t}_condition`)}
         </div>
-        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-ending="${e}" data-subfield="description">${x(s.description||"")}</textarea></div>
+        <div class="form-group"><label class="form-label">\u63CF\u8FF0</label><textarea class="form-input" rows="2" data-ending="${t}" data-subfield="description">${S(s.description||"")}</textarea></div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" data-action="ending-save" data-idx="${e}">\u786E\u5B9A</button>
-          <button class="btn btn-sm btn-secondary" data-action="ending-cancel" data-idx="${e}">\u53D6\u6D88</button>
+          <button class="btn btn-sm btn-primary" data-action="ending-save" data-idx="${t}">\u786E\u5B9A</button>
+          <button class="btn btn-sm btn-secondary" data-action="ending-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let a=Mt(s.condition);n+=`<div class="card">
+      </div>`;else{let i=De(s.condition);n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${x(s.name||"\u672A\u547D\u540D")}</strong>
-            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${a||"\u65E0\u6761\u4EF6"}</div>
+            <strong>${S(s.name||"\u672A\u547D\u540D")}</strong>
+            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${i||"\u65E0\u6761\u4EF6"}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="btn btn-sm btn-secondary" data-action="ending-edit" data-idx="${e}">\u7F16\u8F91</button>
-            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="ending-delete" data-idx="${e}">&times;</button>
+            <button class="btn btn-sm btn-secondary" data-action="ending-edit" data-idx="${t}">\u7F16\u8F91</button>
+            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="ending-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="ending-add" style="margin-top:8px">+ \u65B0\u589E\u7ED3\u5C40</button>',n}function pe(){let t=c.setup||[],n="";return t.forEach((s,e)=>{if(h[`setup_${e}`])n+=`<div class="card" style="border-color:var(--accent)">
-        <div class="form-group"><label class="form-label">\u6B65\u9AA4\u540D\u79F0</label><input class="form-input" value="${x(s.step||"")}" data-setup="${e}" data-subfield="step"></div>
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="ending-add" style="margin-top:8px">+ \u65B0\u589E\u7ED3\u5C40</button>',n}function It(){let e=d.setup||[],n="";return e.forEach((s,t)=>{if($[`setup_${t}`])n+=`<div class="card" style="border-color:var(--accent)">
+        <div class="form-group"><label class="form-label">\u6B65\u9AA4\u540D\u79F0</label><input class="form-input" value="${S(s.step||"")}" data-setup="${t}" data-subfield="step"></div>
         <div class="form-group"><label class="form-label">\u9009\u9879\u5217\u8868</label>
-          ${me(s.options||[],e)}
+          ${Ot(s.options||[],t)}
         </div>
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" ${s.allow_custom?"checked":""} data-setup="${e}" data-subfield="allow_custom" style="width:16px;height:16px">
+            <input type="checkbox" ${s.allow_custom?"checked":""} data-setup="${t}" data-subfield="allow_custom" style="width:16px;height:16px">
             \u5141\u8BB8\u81EA\u5B9A\u4E49\u8F93\u5165
           </label>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-sm btn-primary" data-action="setup-save" data-idx="${e}">\u786E\u5B9A</button>
-          <button class="btn btn-sm btn-secondary" data-action="setup-cancel" data-idx="${e}">\u53D6\u6D88</button>
+          <button class="btn btn-sm btn-primary" data-action="setup-save" data-idx="${t}">\u786E\u5B9A</button>
+          <button class="btn btn-sm btn-secondary" data-action="setup-cancel" data-idx="${t}">\u53D6\u6D88</button>
         </div>
-      </div>`;else{let a=(s.options||[]).length;n+=`<div class="card">
+      </div>`;else{let i=(s.options||[]).length;n+=`<div class="card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;word-break:break-word">
-            <strong>${x(s.step||"\u672A\u547D\u540D")}</strong>
-            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${a} \u4E2A\u9009\u9879${s.allow_custom?" \xB7 \u5141\u8BB8\u81EA\u5B9A\u4E49":""}</div>
+            <strong>${S(s.step||"\u672A\u547D\u540D")}</strong>
+            <div style="color:var(--text-dim);font-size:12px;margin-top:2px">${i} \u4E2A\u9009\u9879${s.allow_custom?" \xB7 \u5141\u8BB8\u81EA\u5B9A\u4E49":""}</div>
           </div>
           <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="btn btn-sm btn-secondary" data-action="setup-edit" data-idx="${e}">\u7F16\u8F91</button>
-            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="setup-delete" data-idx="${e}">&times;</button>
+            <button class="btn btn-sm btn-secondary" data-action="setup-edit" data-idx="${t}">\u7F16\u8F91</button>
+            <button class="btn btn-sm btn-secondary" style="color:var(--accent)" data-action="setup-delete" data-idx="${t}">&times;</button>
           </div>
         </div>
-      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="setup-add" style="margin-top:8px">+ \u65B0\u589E\u5F00\u5C40\u9009\u9879</button>',n}function ue(){return`
+      </div>`}}),n+='<button class="btn btn-sm btn-secondary btn-block" data-action="setup-add" style="margin-top:8px">+ \u65B0\u589E\u5F00\u5C40\u9009\u9879</button>',n}function jt(){return`
     <div class="form-group">
       <label class="form-label">\u539F\u59CB JSON\uFF08\u4EC5\u5728\u9700\u8981\u5FAE\u8C03\u65F6\u4F7F\u7528\uFF09</label>
-      <textarea class="form-input" id="f-json" rows="12" style="font-family:monospace;font-size:12px;resize:vertical">${x(JSON.stringify(c,null,2))}</textarea>
+      <textarea class="form-input" id="f-json" rows="12" style="font-family:monospace;font-size:12px;resize:vertical">${S(JSON.stringify(d,null,2))}</textarea>
     </div>
-    <button class="btn btn-sm btn-secondary" data-action="json-apply">\u4ECE JSON \u540C\u6B65\u5230\u8868\u5355</button>`}function x(t){let n=document.createElement("div");return n.textContent=t,n.innerHTML}function zt(t,n){let s='<div class="field-list">';return t.forEach((e,i)=>{s+=`<span class="field-tag">${x(e)}<button class="field-tag-x" data-action="tag-remove" data-field="${n}" data-idx="${i}">&times;</button></span>`}),s+=`</div>
+    <button class="btn btn-sm btn-secondary" data-action="json-apply">\u4ECE JSON \u540C\u6B65\u5230\u8868\u5355</button>`}function S(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}function Ge(e,n){let s='<div class="field-list">';return e.forEach((t,a)=>{s+=`<span class="field-tag">${S(t)}<button class="field-tag-x" data-action="tag-remove" data-field="${n}" data-idx="${a}">&times;</button></span>`}),s+=`</div>
     <div style="display:flex;gap:6px;margin-top:6px">
       <input class="form-input" style="flex:1" placeholder="\u8F93\u5165\u5185\u5BB9..." data-tag-input="${n}">
       <button class="btn btn-sm btn-secondary" data-action="tag-add" data-field="${n}">\u6DFB\u52A0</button>
-    </div>`,s}function qt(t,n){let s=c.dimensions||[],e=[],i="and";t&&t.op&&t.conditions?(i=t.op,e=t.conditions.map(r=>[r.dim||"",{min:r.min,max:r.max,probability:r.probability}])):t&&typeof t=="object"&&(e=Object.entries(t).filter(([r])=>r!=="op"&&r!=="conditions")),e.length===0&&e.push(["",{min:"",max:"",probability:""}]);let a=e.length>1,o="";return a&&(o+=`<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;font-size:12px;color:var(--text-dim)">
-      <label style="cursor:pointer"><input type="radio" name="op_${n}" value="and" ${i==="and"?"checked":""} data-cond-op="${n}"> \u5168\u90E8\u6EE1\u8DB3 (AND)</label>
-      <label style="cursor:pointer"><input type="radio" name="op_${n}" value="or" ${i==="or"?"checked":""} data-cond-op="${n}"> \u4EFB\u4E00\u6EE1\u8DB3 (OR)</label>
-    </div>`),o+='<div class="condition-list">',e.forEach(([r,d],l)=>{o+=`<div class="condition-row" data-cond-prefix="${n}" data-cond-idx="${l}">
-      <select class="form-input cond-dim" style="flex:2;font-size:12px" data-cond-prefix="${n}" data-cond-idx="${l}" data-cond-field="dimId">
+    </div>`,s}function He(e,n){let s=d.dimensions||[],t=[],a="and";e&&e.op&&e.conditions?(a=e.op,t=e.conditions.map(o=>[o.dim||"",{min:o.min,max:o.max,probability:o.probability}])):e&&typeof e=="object"&&(t=Object.entries(e).filter(([o])=>o!=="op"&&o!=="conditions")),t.length===0&&t.push(["",{min:"",max:"",probability:""}]);let i=t.length>1,l="";return i&&(l+=`<div style="display:flex;gap:8px;margin-bottom:6px;align-items:center;font-size:12px;color:var(--text-dim)">
+      <label style="cursor:pointer"><input type="radio" name="op_${n}" value="and" ${a==="and"?"checked":""} data-cond-op="${n}"> \u5168\u90E8\u6EE1\u8DB3 (AND)</label>
+      <label style="cursor:pointer"><input type="radio" name="op_${n}" value="or" ${a==="or"?"checked":""} data-cond-op="${n}"> \u4EFB\u4E00\u6EE1\u8DB3 (OR)</label>
+    </div>`),l+='<div class="condition-list">',t.forEach(([o,p],r)=>{l+=`<div class="condition-row" data-cond-prefix="${n}" data-cond-idx="${r}">
+      <select class="form-input cond-dim" style="flex:2;font-size:12px" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="dimId">
         <option value="">\u9009\u62E9\u7EF4\u5EA6</option>
-        ${s.map(u=>`<option value="${u.id}" ${u.id===r?"selected":""}>${x(u.name||u.id)}</option>`).join("")}
+        ${s.map(c=>`<option value="${c.id}" ${c.id===o?"selected":""}>${S(c.name||c.id)}</option>`).join("")}
       </select>
-      <input class="form-input cond-min" style="flex:1;font-size:12px" type="number" placeholder="min" value="${d.min??""}" data-cond-prefix="${n}" data-cond-idx="${l}" data-cond-field="min">
-      <input class="form-input cond-max" style="flex:1;font-size:12px" type="number" placeholder="max" value="${d.max??""}" data-cond-prefix="${n}" data-cond-idx="${l}" data-cond-field="max">
-      <input class="form-input cond-prob" style="flex:1;font-size:12px" type="number" step="0.1" min="0" max="1" placeholder="\u6982\u7387" value="${d.probability??""}" data-cond-prefix="${n}" data-cond-idx="${l}" data-cond-field="probability">
-      <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="cond-remove" data-cond-prefix="${n}" data-cond-idx="${l}">&times;</button>
-    </div>`}),o+=`</div>
-    <button class="btn btn-sm btn-secondary" data-action="cond-add" data-cond-prefix="${n}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u6761\u4EF6</button>`,o}function me(t,n){let s='<div class="option-list">';return t.forEach((e,i)=>{s+=`<div class="option-row" data-setup-idx="${n}" data-opt-idx="${i}" style="flex-direction:column;gap:4px">
+      <input class="form-input cond-min" style="flex:1;font-size:12px" type="number" placeholder="min" value="${p.min??""}" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="min">
+      <input class="form-input cond-max" style="flex:1;font-size:12px" type="number" placeholder="max" value="${p.max??""}" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="max">
+      <input class="form-input cond-prob" style="flex:1;font-size:12px" type="number" step="0.1" min="0" max="1" placeholder="\u6982\u7387" value="${p.probability??""}" data-cond-prefix="${n}" data-cond-idx="${r}" data-cond-field="probability">
+      <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="cond-remove" data-cond-prefix="${n}" data-cond-idx="${r}">&times;</button>
+    </div>`}),l+=`</div>
+    <button class="btn btn-sm btn-secondary" data-action="cond-add" data-cond-prefix="${n}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u6761\u4EF6</button>`,l}function Ot(e,n){let s='<div class="option-list">';return e.forEach((t,a)=>{s+=`<div class="option-row" data-setup-idx="${n}" data-opt-idx="${a}" style="flex-direction:column;gap:4px">
       <div style="display:flex;gap:4px;width:100%">
-        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u663E\u793A\u6587\u672C" value="${x(e.label||"")}" data-setup="${n}" data-opt="${i}" data-opt-field="label">
-        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u5B9E\u9645\u503C" value="${x(e.value||"")}" data-setup="${n}" data-opt="${i}" data-opt-field="value">
-        <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="opt-remove" data-setup-idx="${n}" data-opt-idx="${i}">&times;</button>
+        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u663E\u793A\u6587\u672C" value="${S(t.label||"")}" data-setup="${n}" data-opt="${a}" data-opt-field="label">
+        <input class="form-input" style="flex:1;font-size:12px" placeholder="\u5B9E\u9645\u503C" value="${S(t.value||"")}" data-setup="${n}" data-opt="${a}" data-opt-field="value">
+        <button class="btn btn-sm btn-secondary" style="padding:4px 8px;color:var(--accent)" data-action="opt-remove" data-setup-idx="${n}" data-opt-idx="${a}">&times;</button>
       </div>
-      <input class="form-input" style="width:100%;font-size:11px" placeholder="\u63CF\u8FF0\uFF08\u53EF\u9009\uFF0C\u5E2E\u52A9LLM\u7406\u89E3\u6B64\u9009\u9879\u7684\u542B\u4E49\uFF0C\u5982\uFF1A\u4E24\u4EBA\u4E0D\u4F4F\u5728\u4E00\u8D77\uFF0C\u89C1\u9762\u9700\u8981\u7EA6\u65F6\u95F4\uFF09" value="${x(e.description||"")}" data-setup="${n}" data-opt="${i}" data-opt-field="description">
+      <input class="form-input" style="width:100%;font-size:11px" placeholder="\u63CF\u8FF0\uFF08\u53EF\u9009\uFF0C\u5E2E\u52A9LLM\u7406\u89E3\u6B64\u9009\u9879\u7684\u542B\u4E49\uFF0C\u5982\uFF1A\u4E24\u4EBA\u4E0D\u4F4F\u5728\u4E00\u8D77\uFF0C\u89C1\u9762\u9700\u8981\u7EA6\u65F6\u95F4\uFF09" value="${S(t.description||"")}" data-setup="${n}" data-opt="${a}" data-opt-field="description">
     </div>`}),s+=`</div>
-    <button class="btn btn-sm btn-secondary" data-action="opt-add" data-setup-idx="${n}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u9009\u9879</button>`,s}function Mt(t){if(!t||typeof t!="object")return"";let n=c.dimensions||[];if(t.op&&t.conditions){let s=t.op==="or"?" \u6216 ":" \u4E14 ";return t.conditions.map(e=>{let i=n.find(r=>r.id===e.dim),a=i?i.name:e.dim,o=[];return e.min!=null&&e.min!==""&&o.push(`>=${e.min}`),e.max!=null&&e.max!==""&&o.push(`<=${e.max}`),e.probability!=null&&e.probability!==""&&o.push(`p=${e.probability}`),`${a} ${o.join(" ")}`}).filter(Boolean).join(s)}return Object.entries(t).map(([s,e])=>{if(!e||typeof e!="object")return"";let i=n.find(r=>r.id===s),a=i?i.name:s,o=[];return e.min!=null&&e.min!==""&&o.push(`>=${e.min}`),e.max!=null&&e.max!==""&&o.push(`<=${e.max}`),e.probability!=null&&e.probability!==""&&o.push(`p=${e.probability}`),`${a} ${o.join(" ")}`}).filter(Boolean).join(", ")}function Z(t){let n=document.querySelectorAll(`[data-cond-prefix="${t}"]`),s=[],e=new Set;if(n.forEach(o=>{let r=o.dataset.condIdx;if(e.has(r))return;e.add(r);let d=document.querySelector(`[data-cond-prefix="${t}"][data-cond-idx="${r}"][data-cond-field="dimId"]`)?.value;if(!d)return;let l=document.querySelector(`[data-cond-prefix="${t}"][data-cond-idx="${r}"][data-cond-field="min"]`)?.value,u=document.querySelector(`[data-cond-prefix="${t}"][data-cond-idx="${r}"][data-cond-field="max"]`)?.value,f=document.querySelector(`[data-cond-prefix="${t}"][data-cond-idx="${r}"][data-cond-field="probability"]`)?.value,b={dim:d};l!==""&&l!==void 0&&(b.min=Number(l)),u!==""&&u!==void 0&&(b.max=Number(u)),f!==""&&f!==void 0&&(b.probability=Number(f)),s.push(b)}),s.length===0)return{};if(s.length===1){let o=s[0],r={},d={};return o.min!==void 0&&(d.min=o.min),o.max!==void 0&&(d.max=o.max),o.probability!==void 0&&(d.probability=o.probability),r[o.dim]=d,r}return{op:document.querySelector(`[data-cond-op="${t}"]:checked`)?.value||"and",conditions:s}}function fe(t){let n=[];return document.querySelectorAll(`[data-setup-idx="${t}"][data-opt-idx]`).forEach(s=>{let e=s.dataset.optIdx,i=document.querySelector(`[data-setup="${t}"][data-opt="${e}"][data-opt-field="label"]`)?.value?.trim(),a=document.querySelector(`[data-setup="${t}"][data-opt="${e}"][data-opt-field="value"]`)?.value?.trim(),o=document.querySelector(`[data-setup="${t}"][data-opt="${e}"][data-opt-field="description"]`)?.value?.trim();if(i){let r={label:i,value:a||i};o&&(r.description=o),n.push(r)}}),n}function Et(t){let n=s=>t.querySelector(s)?.value;c.name=n('[data-field="name"]')||c.name,c.description=n('[data-field="description"]')??c.description,c.rules&&(c.rules.writing_style=n('[data-field="rules.writing_style"]')??c.rules.writing_style)}function v(t){let s=t.querySelector("#editor-scroll")?.scrollTop||0;Et(t),Ht(t);let e=t.querySelector("#editor-scroll");e&&(e.scrollTop=s)}function be(t){t.querySelector("#btn-back").onclick=()=>$("home"),t.querySelector("#btn-save").onclick=async()=>{Et(t);let n=K(c);await mt(n),alert("\u5DF2\u4FDD\u5B58")},t.querySelector("#btn-export").onclick=()=>{Et(t);let n=new Blob([JSON.stringify(c,null,2)],{type:"application/json"}),s=document.createElement("a");s.href=URL.createObjectURL(n),s.download=`${c.name||"script"}.json`,s.click(),URL.revokeObjectURL(s.href)},t.querySelector("#btn-import").onclick=()=>t.querySelector("#file-import").click(),t.querySelector("#file-import").onchange=async n=>{let s=n.target.files?.[0];if(s)try{let e=await s.text(),i=JSON.parse(e);c=K(i),c.id=(await J(c.id))?.id||c.id,h={},v(t)}catch(e){alert("\u5BFC\u5165\u5931\u8D25: "+e.message)}},t.querySelectorAll("[data-section-toggle]").forEach(n=>{n.onclick=()=>{let s=n.dataset.sectionToggle;ne(s);let e=n.nextElementSibling,i=n.querySelector(".section-arrow"),a=W.has(s);e.style.display=a?"":"none",n.classList.toggle("open",a),i.innerHTML=a?"&#9660;":"&#9654;"}}),nt&&t.removeEventListener("click",nt),nt=n=>{let s=n.target.closest("[data-action]");if(!s)return;let e=s.dataset.action,i=parseInt(s.dataset.idx);if(e==="dim-add"){c.dimensions.push({id:"",name:"",range:[0,100],initial:[0,0]});let a=`dim_${c.dimensions.length-1}`;h[a]=!0,S.add(a),v(t)}else if(e==="dim-edit")h[`dim_${i}`]=!0,v(t);else if(e==="dim-cancel"){let a=`dim_${i}`;S.has(a)&&(c.dimensions.splice(i,1),S.delete(a)),delete h[a],v(t)}else if(e==="dim-save")ge(t,i),delete h[`dim_${i}`],S.delete(`dim_${i}`),v(t);else if(e==="dim-delete")c.dimensions.splice(i,1),v(t);else if(e==="char-add"){c.characters.push({id:"",name:"",description:""});let a=`char_${c.characters.length-1}`;h[a]=!0,S.add(a),v(t)}else if(e==="char-edit")h[`char_${i}`]=!0,v(t);else if(e==="char-cancel"){let a=`char_${i}`;S.has(a)&&(c.characters.splice(i,1),S.delete(a)),delete h[a],v(t)}else if(e==="char-save")ve(t,i),delete h[`char_${i}`],S.delete(`char_${i}`),v(t);else if(e==="char-delete")c.characters.splice(i,1),v(t);else if(e==="event-add"){c.events.push({name:"",stage:0,trigger:{},description:""});let a=`event_${c.events.length-1}`;h[a]=!0,S.add(a),v(t)}else if(e==="event-edit")h[`event_${i}`]=!0,v(t);else if(e==="event-cancel"){let a=`event_${i}`;S.has(a)&&(c.events.splice(i,1),S.delete(a)),delete h[a],v(t)}else if(e==="event-save")ye(t,i),delete h[`event_${i}`],S.delete(`event_${i}`),v(t);else if(e==="event-delete")c.events.splice(i,1),v(t);else if(e==="stage-add"){c.stages.push({name:"",transition:{}});let a=`stage_${c.stages.length-1}`;h[a]=!0,S.add(a),v(t)}else if(e==="stage-edit")h[`stage_${i}`]=!0,v(t);else if(e==="stage-cancel"){let a=`stage_${i}`;S.has(a)&&(c.stages.splice(i,1),S.delete(a)),delete h[a],v(t)}else if(e==="stage-save")he(t,i),delete h[`stage_${i}`],S.delete(`stage_${i}`),v(t);else if(e==="stage-delete")c.stages.splice(i,1),v(t);else if(e==="ending-add"){c.endings.push({name:"",condition:{},description:""});let a=`ending_${c.endings.length-1}`;h[a]=!0,S.add(a),v(t)}else if(e==="ending-edit")h[`ending_${i}`]=!0,v(t);else if(e==="ending-cancel"){let a=`ending_${i}`;S.has(a)&&(c.endings.splice(i,1),S.delete(a)),delete h[a],v(t)}else if(e==="ending-save")xe(t,i),delete h[`ending_${i}`],S.delete(`ending_${i}`),v(t);else if(e==="ending-delete")c.endings.splice(i,1),v(t);else if(e==="setup-add"){c.setup.push({step:"",options:[],allow_custom:!1});let a=`setup_${c.setup.length-1}`;h[a]=!0,S.add(a),v(t)}else if(e==="setup-edit")h[`setup_${i}`]=!0,v(t);else if(e==="setup-cancel"){let a=`setup_${i}`;S.has(a)&&(c.setup.splice(i,1),S.delete(a)),delete h[a],v(t)}else if(e==="setup-save")$e(t,i),delete h[`setup_${i}`],S.delete(`setup_${i}`),v(t);else if(e==="setup-delete")c.setup.splice(i,1),v(t);else if(e==="tag-add"){let a=s.dataset.field,o=t.querySelector(`[data-tag-input="${a}"]`),r=o?.value?.trim();if(!r)return;let d=At(c,a)||[];d.push(r),Ct(c,a,d),o.value="",v(t)}else if(e==="tag-remove"){let a=s.dataset.field,o=parseInt(s.dataset.idx),r=At(c,a)||[];r.splice(o,1),Ct(c,a,r),v(t)}else if(e==="cond-add"){let a=s.dataset.condPrefix,[o,r,d]=a.split("_"),l=parseInt(r),u=Z(a);u[""]={min:"",max:"",probability:""},o==="event"?c.events[l].trigger=u:o==="stage"?c.stages[l].transition=u:o==="ending"&&(c.endings[l].condition=u),v(t),h[`${o}_${l}`]=!0,v(t)}else if(e==="cond-remove"){let a=s.dataset.condPrefix,o=s.dataset.condIdx,[r,d,l]=a.split("_"),u=parseInt(d),f=Z(a),b=Object.keys(f);b[o]&&delete f[b[o]],r==="event"?c.events[u].trigger=f:r==="stage"?c.stages[u].transition=f:r==="ending"&&(c.endings[u].condition=f),h[`${r}_${u}`]=!0,v(t)}else if(e==="opt-add"){let a=parseInt(s.dataset.setupIdx);c.setup[a].options=c.setup[a].options||[],c.setup[a].options.push({label:"",value:""}),h[`setup_${a}`]=!0,v(t)}else if(e==="opt-remove"){let a=parseInt(s.dataset.setupIdx),o=parseInt(s.dataset.optIdx);c.setup[a].options.splice(o,1),h[`setup_${a}`]=!0,v(t)}else if(e==="json-apply")try{let a=JSON.parse(t.querySelector("#f-json").value);c=K(a),h={},v(t)}catch(a){alert("JSON \u89E3\u6790\u5931\u8D25: "+a.message)}},t.addEventListener("click",nt)}function ge(t,n){let s=a=>t.querySelector(`[data-dim="${n}"][data-subfield="${a}"]`)?.value,e=s("scope")?.trim(),i=s("description")?.trim();c.dimensions[n]={id:s("id")||`dim_${n}`,name:s("name")||"",...i?{description:i}:{},...e?{scope:e}:{},range:[Number(s("range_min")||0),Number(s("range_max")||100)],initial:[Number(s("initial_min")||0),Number(s("initial_max")||0)]}}function ve(t,n){let s=e=>t.querySelector(`[data-char="${n}"][data-subfield="${e}"]`)?.value;c.characters[n]={id:s("id")||`char_${n}`,name:s("name")||"",description:s("description")||""}}function ye(t,n){let s=o=>t.querySelector(`[data-event="${n}"][data-subfield="${o}"]`)?.value,e={},i=Number(s("sticky_duration")||0),a=Number(s("cooldown")||0);i>0&&(e.sticky={dims:{},duration:i}),a>0&&(e.cooldown=a),c.events[n]={name:s("name")||"",stage:Number(s("stage")||0),trigger:Z(`event_${n}_trigger`),description:s("description")||"",...Object.keys(e).length>0?{effects:e}:{}}}function he(t,n){let s=e=>t.querySelector(`[data-stage="${n}"][data-subfield="${e}"]`)?.value;c.stages[n]={name:s("name")||"",transition:Z(`stage_${n}_transition`)}}function xe(t,n){let s=e=>t.querySelector(`[data-ending="${n}"][data-subfield="${e}"]`)?.value;c.endings[n]={name:s("name")||"",condition:Z(`ending_${n}_condition`),description:s("description")||""}}function $e(t,n){let s=t.querySelector(`[data-setup="${n}"][data-subfield="step"]`)?.value||"",e=t.querySelector(`[data-setup="${n}"][data-subfield="allow_custom"]`)?.checked||!1;c.setup[n]={step:s,options:fe(n),allow_custom:e}}function At(t,n){return n.split(".").reduce((s,e)=>s?.[e],t)}function Ct(t,n,s){let e=n.split("."),i=e.pop(),a=e.reduce((o,r)=>o[r],t);a[i]=s}I();I();async function Pt(){let[t,n,s,e,i,a]=await Promise.all([_("api_url"),_("api_key"),_("api_model"),_("thinking_enabled"),_("reasoning_effort"),_("temperature")]);if(!t||!n)throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E LLM API");return{url:t.endsWith("/chat/completions")?t:t.replace(/\/+$/,"")+"/chat/completions",key:n,model:s||"deepseek-v4-flash",thinking:e!==!1,effort:i||"high",temperature:a??.85}}function Dt(t,n,{stream:s=!1,maxTokens:e=2048}={}){let i={model:t.model,messages:n,stream:s,max_tokens:e};return t.thinking?i.thinking={type:"enabled",reasoning_effort:t.effort}:i.temperature=t.temperature,i}async function at(t,{onChunk:n}={}){let s=await Pt(),e=await fetch(s.url,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${s.key}`},body:JSON.stringify(Dt(s,t,{stream:!!n}))});if(!e.ok){let o=await e.text();throw new Error(`API \u9519\u8BEF ${e.status}: ${o}`)}return n?we(e,n):(await e.json()).choices[0].message.content||""}async function we(t,n){let s=t.body.getReader(),e=new TextDecoder,i="",a="",o="";for(;;){let{done:r,value:d}=await s.read();if(r)break;o+=e.decode(d,{stream:!0});let l=o.split(`
-`);o=l.pop();for(let u of l){if(!u.startsWith("data: "))continue;let f=u.slice(6);if(f==="[DONE]")break;try{let p=JSON.parse(f).choices?.[0]?.delta;p?.reasoning_content&&(a+=p.reasoning_content),p?.content&&(i+=p.content,n(i,a))}catch{}}}return i}async function Tt(t){let n=await Pt();return(await(await fetch(n.url,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${n.key}`},body:JSON.stringify(Dt(n,[{role:"system",content:"\u4F60\u662F\u4E00\u4E2A\u5BF9\u8BDD\u6458\u8981\u52A9\u624B\u3002\u5C06\u4EE5\u4E0B\u5BF9\u8BDD\u538B\u7F29\u4E3A1-2\u53E5\u8BDD\u7684\u6458\u8981\uFF0C\u5305\u542B\u5173\u952E\u4E8B\u5B9E\u3001\u60C5\u611F\u53D8\u5316\u548C\u6570\u503C\u53D8\u5316\u8D8B\u52BF\u3002\u53EA\u8F93\u51FA\u6458\u8981\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"},...t],{maxTokens:200}))})).json()).choices[0].message.content}P();I();function Bt({autoInterval:t=10,maxMemories:n=10}={}){let s=[],e=0,i=[];function a(b,p){return e++,i.push({role:b,content:p}),e%t===0?o():null}async function o(){if(i.length===0)return null;let b=i.splice(0);try{let p=await Tt(b.map(y=>({role:y.role==="player"?"user":"assistant",content:y.content})));return s.push(p),d(),p}catch{return null}}async function r(b){if(!b?.length)return null;try{let p=await Tt(b.map(y=>({role:y.role==="player"?"user":"assistant",content:y.content})));return s.push(p),d(),p}catch{return null}}function d(){if(s.length<=n)return;let b=s.length-n,y=s.splice(0,Math.max(b,2)).join("\uFF1B");s.unshift(y)}function l(){return[...s]}function u(){return{memories:[...s],turnCount:e,pendingMessages:[...i]}}function f(b){s=b.memories||[],e=b.turnCount||0,i=b.pendingMessages||[]}return{addTurn:a,autoSummarize:o,manualSummarize:r,getMemories:l,getState:u,loadState:f}}function Jt(t,n={}){let s={};return(t.dimensions||[]).forEach(e=>{s[e.id]=e.initial?.[0]??50}),{id:crypto.randomUUID(),scriptId:t.id,scriptName:t.name,selections:n,values:s,messages:[],currentStage:0,memoryState:null,createdAt:Date.now(),updatedAt:Date.now()}}function it(t,n){let s=Bt();t.memoryState&&s.loadState(t.memoryState);function e(d=3){return t.messages.slice(-d)}function i(d){t.messages.push({role:"player",content:d,timestamp:Date.now()}),s.addTurn("player",d)}function a(d){return t.messages.push({role:"ai",content:d,timestamp:Date.now()}),s.addTurn("ai",d)}function o(d){d&&Object.assign(t.values,d)}function r(){return t.memoryState=s.getState(),t.updatedAt=Date.now(),vt({...t})}return{session:t,script:n,memoryMgr:s,getRecentMessages:e,addPlayerMessage:i,addAIMessage:a,updateValues:o,save:r}}function ke(t,n){if(!t||typeof t!="string")return t;let{script:s,values:e,currentStage:i}=n,a=s.characters||[],o=s.dimensions||[],r=s.stages||[],d={};return a.forEach(l=>{d[l.id]=l.name}),t.replace(/\{\{(\w+)(?::([^}]*))?\}\}/g,(l,u,f)=>{switch(u){case"player":return d.player||"\u73A9\u5BB6";case"partner":return d.partner||"\u73B0\u4EFB";case"target":return d.target||"\u5371\u9669\u5BF9\u8C61";case"stage":return r[i]?.name||`\u9636\u6BB5${(i||0)+1}`;case"stage_num":return String((i||0)+1);case"dim":{if(!f)return"";let b=o.find(y=>y.name===f||y.id===f);if(!b)return"";let p=e?.[b.id];return p!==void 0?String(p):""}case"random":{if(!f)return"";let b=f.split(",").map(p=>p.trim()).filter(Boolean);return b.length?b[Math.floor(Math.random()*b.length)]:""}default:return`{{${u}${f?":"+f:""}}}`}})}function Q(t,n){return ke(t,n)}function Rt({script:t,values:n,selections:s,memories:e,recentMessages:i,scenePrompt:a,playerInput:o,currentStage:r}){let d={script:t,values:n,currentStage:r},l=[];if(s&&Object.keys(s).length){l.push("\u3010\u73A9\u5BB6\u521D\u59CB\u8BBE\u5B9A - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\uFF0C\u4E0D\u53EF\u5FFD\u7565\u6216\u66F4\u6539\u3011"),t.setup?.forEach((y,q)=>{let w=s[q];if(w){let k=(y.options||[]).find(O=>O.value===w),C=k?.description?`\uFF08${k.description}\uFF09`:"";l.push(`- ${y.step}\uFF1A${w}${C}`)}});let p=[];t.setup?.forEach((y,q)=>{let w=s[q];if(!w)return;let k=(y.options||[]).find(C=>C.value===w);k?.constraints&&p.push(...k.constraints)}),p.length&&(l.push(""),l.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),p.forEach(y=>l.push(`- ${y}`))),l.push("")}let f=(t.characters||[]).filter(p=>p.id!=="player");return l.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),l.push("- \u4F60\u662F\u89D2\u8272\u672C\u8EAB\uFF0C\u4E0D\u8981\u8DF3\u51FA\u89D2\u8272"),l.push("- \u4E0D\u8981\u7528 AI \u7684\u53E3\u543B\u89E3\u91CA\u6216\u8BC4\u4EF7\u5267\u60C5"),l.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4F60\u53EF\u4EE5\u4E3A\u89D2\u8272\u8D77\u4EBA\u540D\uFF0C\u4F46\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),l.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"\u3002\u540E\u7EED\u53EF\u7528\u4EBA\u540D\uFF0C\u4F46\u6570\u503C\u66F4\u65B0\u548C\u5173\u952E\u4E8B\u4EF6\u4E2D\u5FC5\u987B\u540C\u65F6\u6807\u6CE8\u8EAB\u4EFD'),l.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),l.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),t.rules?.forbidden&&t.rules.forbidden.forEach(p=>l.push(`- ${Q(p,d)}`)),l.push(""),t.rules?.writing_style&&(l.push("\u3010\u5199\u4F5C\u89C4\u8303\u3011"),l.push(Q(t.rules.writing_style,d)),t.rules.requirements&&t.rules.requirements.forEach(p=>l.push(`- ${Q(p,d)}`)),l.push("")),l.push("\u3010\u4F60\u626E\u6F14\u4EE5\u4E0B\u89D2\u8272\u3011"),(t.characters||[]).forEach(p=>{let y=n?.[p.id]?`\uFF0C\u5F53\u524D\u72B6\u6001\uFF1A${JSON.stringify(n[p.id])}`:"",q=p.id==="player",w=q?"":`\u3010\u8EAB\u4EFD\u6807\u7B7E\uFF1A${p.name}\u3011`,k=q?"":"\uFF0C\u4F60\u9700\u8981\u5728\u5F00\u573A\u65F6\u4E3A\u8BE5\u89D2\u8272\u8D77\u4E00\u4E2A\u5177\u4F53\u4EBA\u540D\uFF0C\u4F46\u8EAB\u4EFD\u6807\u7B7E\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559";l.push(`${w}${p.name}\uFF1A${Q(p.description,d)}${k}${y}`)}),l.push(""),t.dimensions?.length&&n&&(l.push("\u3010\u5F53\u524D\u6570\u503C - \u7528\u7CBE\u786E\u6570\u5B57\u3011"),l.push("\uFF08\u6570\u503C\u4E2D\u7684\u8EAB\u4EFD\u6807\u7B7E\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u4E0E\u89D2\u8272\u4EBA\u540D\u5BF9\u5E94\u5173\u7CFB\u89C1\u4E0A\u65B9\u89D2\u8272\u5217\u8868\uFF09"),t.dimensions.forEach(p=>{let y=n[p.id];if(y===void 0)return;let q=p.scope?`\uFF08${Q(p.scope,d)}\uFF09`:"";l.push(`${p.name}${q}\uFF1A${y}`)}),l.push("")),e?.length&&(l.push("\u3010\u8BB0\u5FC6\u6458\u8981\u3011"),e.forEach((p,y)=>l.push(`${y+1}. ${p}`)),l.push("")),i?.length&&(l.push("\u3010\u6700\u8FD1\u5BF9\u8BDD\u3011"),i.forEach(p=>{let y=p.role==="player"?"\u73A9\u5BB6":"AI";l.push(`[${y}]\uFF1A${p.content}`)}),l.push("")),a&&(l.push("\u3010\u5F53\u524D\u573A\u666F\u3011"),l.push(a),l.push("")),l.push("\u3010\u8F93\u51FA\u683C\u5F0F\u8981\u6C42\u3011"),l.push("1. \u8F93\u51FA\u5267\u60C5\u5185\u5BB9\uFF08200-400\u5B57\uFF0C\u7B80\u6D01\u6709\u529B\uFF0C\u91CD\u5BF9\u8BDD\u548C\u5173\u952E\u52A8\u4F5C\uFF0C\u4E0D\u8981\u5927\u6BB5\u73AF\u5883\u63CF\u5199\uFF09"),l.push("2. \u5267\u60C5\u7ED3\u675F\u540E\uFF0C\u5FC5\u987B\u7ED9\u51FA 3-4 \u4E2A\u9009\u9879\u4F9B\u73A9\u5BB6\u9009\u62E9\uFF0C\u683C\u5F0F\u5982\u4E0B\uFF1A"),l.push("\u3010\u9009\u9879\u3011"),l.push("A. \u9009\u9879\u5185\u5BB9"),l.push("B. \u9009\u9879\u5185\u5BB9"),l.push("C. \u9009\u9879\u5185\u5BB9"),l.push("\u9009\u9879\u5E94\u8BE5\u4F53\u73B0\u4E0D\u540C\u7684\u6001\u5EA6\u548C\u7B56\u7565\uFF08\u5982\uFF1A\u4E3B\u52A8/\u88AB\u52A8\u3001\u5766\u8BDA/\u9690\u7792\u3001\u8FDB\u653B/\u9000\u7F29\uFF09\uFF0C\u8BA9\u73A9\u5BB6\u6709\u771F\u6B63\u7684\u9009\u62E9\u7A7A\u95F4\u3002"),l.push("3. \u9009\u9879\u4E4B\u540E\uFF0C\u53E6\u8D77\u4E00\u884C\u8F93\u51FA\u6570\u503C\u66F4\u65B0\u5757\uFF1A"),l.push("\u3010\u6570\u503C\u66F4\u65B0\u3011"),l.push("\u5C5E\u6027\u540D \u503C \u5C5E\u6027\u540D \u503C ..."),t.events?.some(p=>p.trigger)&&(l.push("4. \u5982\u679C\u53D1\u751F\u4E86\u5173\u952E\u4E8B\u4EF6\uFF08\u91CD\u5927\u8F6C\u6298\u3001\u51B2\u7A81\u3001\u60C5\u611F\u7206\u53D1\uFF09\uFF0C\u5728\u6570\u503C\u66F4\u65B0\u540E\u53E6\u8D77\u4E00\u884C\u8F93\u51FA\uFF1A"),l.push("\u3010\u5173\u952E\u4E8B\u4EF6\u3011\u4E8B\u4EF6\u7B80\u8FF0")),l.push(""),l.push("\u3010\u73A9\u5BB6\u8F93\u5165\u3011"),l.push(o),l.push("\u8BF7\u57FA\u4E8E\u4EE5\u4E0A\u4FE1\u606F\u7EE7\u7EED\u5267\u60C5\u3002"),l.join(`
-`)}function Ut({script:t,selections:n}){let s={script:t,values:{},currentStage:0},e=[],i=(t.characters||[]).filter(r=>r.id!=="player"),a=i.map(r=>`\u300C${r.name}\u300D`).join("\u548C");e.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),e.push(`- \u4F60\u5FC5\u987B\u4E3A${a}\u5404\u8D77\u4E00\u4E2A\u5177\u4F53\u7684\u4EBA\u540D\uFF08\u4E2D\u6587\u540D\uFF09`),e.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),e.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"'),e.push('- \u6D89\u53CA\u591A\u4E2A\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u7528\u89D2\u8272\u4EBA\u540D\u800C\u975E"\u4ED6""\u5979""\u4F60"\uFF0C\u786E\u4FDD\u73A9\u5BB6\u80FD\u5206\u6E05\u6BCF\u53E5\u8BDD\u7684\u4E3B\u4F53\u548C\u5BF9\u8C61'),e.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),e.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),e.push(""),e.push("\u4EE5\u4E0B\u662F\u73A9\u5BB6\u7684\u5F00\u5C40\u9009\u62E9\uFF1A"),t.setup?.forEach((r,d)=>{let l=n[d]||"\u968F\u673A",u=(r.options||[]).find(b=>b.value===l),f=u?.description?`\uFF08${u.description}\uFF09`:"";e.push(`${r.step}\uFF1A${l}${f}`)}),e.push("");let o=[];return t.setup?.forEach((r,d)=>{let l=n[d];if(!l)return;let u=(r.options||[]).find(f=>f.value===l);u?.constraints&&o.push(...u.constraints)}),o.length&&(e.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),o.forEach(r=>e.push(`- ${r}`)),e.push("")),e.push("\u8BF7\u6839\u636E\u4EE5\u4E0A\u9009\u62E9\u751F\u6210\u5F00\u573A\u3002\u8981\u6C42\uFF1A"),e.push(""),e.push("\u7B2C\u4E00\u90E8\u5206\uFF1A\u72B6\u6001\u6982\u89C8\uFF08\u7B80\u6D01\uFF0C3-5\u53E5\uFF09"),e.push("- \u73A9\u5BB6\u662F\u8C01\uFF08\u804C\u4E1A\u3001\u6027\u683C\uFF09"),i.forEach(r=>{e.push(`- ${r.name}\u662F\u8C01\uFF08\u8D77\u4E00\u4E2A\u4EBA\u540D\uFF0C\u683C\u5F0F"\u4EBA\u540D\uFF08${r.name}\uFF09"\u3001\u8EAB\u4EFD\u3001\u6027\u683C\uFF09`)}),e.push("- \u5F53\u524D\u573A\u666F\u80CC\u666F\uFF08\u65F6\u95F4\u3001\u5730\u70B9\uFF0C\u6CE8\u610F\u5173\u7CFB\u7C7B\u578B\u5BF9\u573A\u666F\u7684\u5F71\u54CD\uFF09"),e.push(""),e.push("\u7B2C\u4E8C\u90E8\u5206\uFF1A\u5F00\u573A\u4E8B\u4EF6\uFF08\u7EA6200-300\u5B57\uFF09"),e.push("- \u4E00\u4E2A\u81EA\u7136\u7684\u573A\u666F\u5207\u5165\uFF0C\u5F15\u51FA\u73A9\u5BB6\u7684\u7B2C\u4E00\u4E2A\u9009\u62E9"),e.push("- \u573A\u666F\u548C\u89D2\u8272\u4E92\u52A8\u5FC5\u987B\u7B26\u5408\u73A9\u5BB6\u9009\u62E9\u7684\u5173\u7CFB\u72B6\u6001\u3001\u804C\u4E1A\u7B49\u8BBE\u5B9A"),e.push("- \u4E0D\u8981\u5927\u6BB5\u63CF\u5199\uFF0C\u7B80\u6D01\u6709\u529B"),e.push(""),e.push("\u8F93\u51FA\u683C\u5F0F\uFF1A"),e.push("1. \u5148\u5199\u72B6\u6001\u6982\u89C8"),e.push("2. \u518D\u5199\u5F00\u573A\u4E8B\u4EF6"),e.push("3. \u7ED9\u51FA 3-4 \u4E2A\u9009\u9879\uFF1A"),e.push("\u3010\u9009\u9879\u3011"),e.push("A. \u9009\u9879\u5185\u5BB9"),e.push("B. \u9009\u9879\u5185\u5BB9"),e.push("C. \u9009\u9879\u5185\u5BB9"),e.push("D. \u9009\u9879\u5185\u5BB9"),e.push("4. \u8F93\u51FA\u6570\u503C\u66F4\u65B0\uFF1A"),e.push("\u3010\u6570\u503C\u66F4\u65B0\u3011"),e.push("\u5C5E\u6027\u540D \u503C ..."),e.join(`
-`)}I();async function Vt(t,{scriptId:n}){let s=await J(n);if(!s){$("home");return}let[e,i]=await Promise.all([_("api_url"),_("api_key")]);if(!e||!i){t.innerHTML=`
+    <button class="btn btn-sm btn-secondary" data-action="opt-add" data-setup-idx="${n}" style="margin-top:6px;font-size:12px">+ \u6DFB\u52A0\u9009\u9879</button>`,s}function De(e){if(!e||typeof e!="object")return"";let n=d.dimensions||[];if(e.op&&e.conditions){let s=e.op==="or"?" \u6216 ":" \u4E14 ";return e.conditions.map(t=>{let a=n.find(o=>o.id===t.dim),i=a?a.name:t.dim,l=[];return t.min!=null&&t.min!==""&&l.push(`>=${t.min}`),t.max!=null&&t.max!==""&&l.push(`<=${t.max}`),t.probability!=null&&t.probability!==""&&l.push(`p=${t.probability}`),`${i} ${l.join(" ")}`}).filter(Boolean).join(s)}return Object.entries(e).map(([s,t])=>{if(!t||typeof t!="object")return"";let a=n.find(o=>o.id===s),i=a?a.name:s,l=[];return t.min!=null&&t.min!==""&&l.push(`>=${t.min}`),t.max!=null&&t.max!==""&&l.push(`<=${t.max}`),t.probability!=null&&t.probability!==""&&l.push(`p=${t.probability}`),`${i} ${l.join(" ")}`}).filter(Boolean).join(", ")}function oe(e){let n=document.querySelectorAll(`[data-cond-prefix="${e}"]`),s=[],t=new Set;if(n.forEach(l=>{let o=l.dataset.condIdx;if(t.has(o))return;t.add(o);let p=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${o}"][data-cond-field="dimId"]`)?.value;if(!p)return;let r=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${o}"][data-cond-field="min"]`)?.value,c=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${o}"][data-cond-field="max"]`)?.value,b=document.querySelector(`[data-cond-prefix="${e}"][data-cond-idx="${o}"][data-cond-field="probability"]`)?.value,v={dim:p};r!==""&&r!==void 0&&(v.min=Number(r)),c!==""&&c!==void 0&&(v.max=Number(c)),b!==""&&b!==void 0&&(v.probability=Number(b)),s.push(v)}),s.length===0)return{};if(s.length===1){let l=s[0],o={},p={};return l.min!==void 0&&(p.min=l.min),l.max!==void 0&&(p.max=l.max),l.probability!==void 0&&(p.probability=l.probability),o[l.dim]=p,o}return{op:document.querySelector(`[data-cond-op="${e}"]:checked`)?.value||"and",conditions:s}}function At(e){let n=[];return document.querySelectorAll(`[data-setup-idx="${e}"][data-opt-idx]`).forEach(s=>{let t=s.dataset.optIdx,a=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="label"]`)?.value?.trim(),i=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="value"]`)?.value?.trim(),l=document.querySelector(`[data-setup="${e}"][data-opt="${t}"][data-opt-field="description"]`)?.value?.trim();if(a){let o={label:a,value:i||a};l&&(o.description=l),n.push(o)}}),n}function ze(e){let n=s=>e.querySelector(s)?.value;d.name=n('[data-field="name"]')||d.name,d.description=n('[data-field="description"]')??d.description,d.rules&&(d.rules.writing_style=n('[data-field="rules.writing_style"]')??d.rules.writing_style)}function h(e){let s=e.querySelector("#editor-scroll")?.scrollTop||0;ze(e),Ye(e);let t=e.querySelector("#editor-scroll");t&&(t.scrollTop=s)}function Lt(e){e.querySelector("#btn-back").onclick=()=>k("home"),e.querySelector("#btn-save").onclick=async()=>{ze(e);let n=Y(d),s=G(n);ne(n),!(s.warnings.length&&!confirm(`\u4FDD\u5B58\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+
+${ae(s)}`))&&(await Ee(n),alert("\u5DF2\u4FDD\u5B58"))},e.querySelector("#btn-export").onclick=()=>{ze(e);let n=new Blob([JSON.stringify(d,null,2)],{type:"application/json"}),s=document.createElement("a");s.href=URL.createObjectURL(n),s.download=`${d.name||"script"}.json`,s.click(),URL.revokeObjectURL(s.href)},e.querySelector("#btn-import").onclick=()=>e.querySelector("#file-import").click(),e.querySelector("#file-import").onchange=async n=>{let s=n.target.files?.[0];if(s)try{let t=await s.text(),a=JSON.parse(t);d=Y(a);let i=G(d);if(ne(d),i.warnings.length&&!confirm(`\u5BFC\u5165\u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+
+${ae(i)}`))return;d.id=(await R(d.id))?.id||d.id,$={},h(e)}catch(t){alert("\u5BFC\u5165\u5931\u8D25: "+t.message)}},e.querySelectorAll("[data-section-toggle]").forEach(n=>{n.onclick=()=>{let s=n.dataset.sectionToggle;wt(s);let t=n.nextElementSibling,a=n.querySelector(".section-arrow"),i=re.has(s);t.style.display=i?"":"none",n.classList.toggle("open",i),a.innerHTML=i?"&#9660;":"&#9654;"}}),fe&&e.removeEventListener("click",fe),fe=n=>{let s=n.target.closest("[data-action]");if(!s)return;let t=s.dataset.action,a=parseInt(s.dataset.idx);if(!(t.endsWith("-delete")&&!confirm("\u786E\u5B9A\u5220\u9664\u8FD9\u4E00\u9879\u5417\uFF1F\u6B64\u64CD\u4F5C\u65E0\u6CD5\u64A4\u9500\u3002"))){if(t==="dim-add"){d.dimensions.push({id:"",name:"",range:[0,100],initial:[0,0]});let i=`dim_${d.dimensions.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="dim-edit")$[`dim_${a}`]=!0,h(e);else if(t==="dim-cancel"){let i=`dim_${a}`;E.has(i)&&(d.dimensions.splice(a,1),E.delete(i)),delete $[i],h(e)}else if(t==="dim-save")Ct(e,a),delete $[`dim_${a}`],E.delete(`dim_${a}`),h(e);else if(t==="dim-delete")d.dimensions.splice(a,1),h(e);else if(t==="char-add"){d.characters.push({id:"",name:"",description:""});let i=`char_${d.characters.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="char-edit")$[`char_${a}`]=!0,h(e);else if(t==="char-cancel"){let i=`char_${a}`;E.has(i)&&(d.characters.splice(a,1),E.delete(i)),delete $[i],h(e)}else if(t==="char-save")Pt(e,a),delete $[`char_${a}`],E.delete(`char_${a}`),h(e);else if(t==="char-delete")d.characters.splice(a,1),h(e);else if(t==="event-add"){d.events.push({name:"",stage:0,trigger:{},description:""});let i=`event_${d.events.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="event-edit")$[`event_${a}`]=!0,h(e);else if(t==="event-cancel"){let i=`event_${a}`;E.has(i)&&(d.events.splice(a,1),E.delete(i)),delete $[i],h(e)}else if(t==="event-save")zt(e,a),delete $[`event_${a}`],E.delete(`event_${a}`),h(e);else if(t==="event-delete")d.events.splice(a,1),h(e);else if(t==="stage-add"){d.stages.push({name:"",transition:{}});let i=`stage_${d.stages.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="stage-edit")$[`stage_${a}`]=!0,h(e);else if(t==="stage-cancel"){let i=`stage_${a}`;E.has(i)&&(d.stages.splice(a,1),E.delete(i)),delete $[i],h(e)}else if(t==="stage-save")Ht(e,a),delete $[`stage_${a}`],E.delete(`stage_${a}`),h(e);else if(t==="stage-delete")d.stages.splice(a,1),h(e);else if(t==="ending-add"){d.endings.push({name:"",condition:{},description:""});let i=`ending_${d.endings.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="ending-edit")$[`ending_${a}`]=!0,h(e);else if(t==="ending-cancel"){let i=`ending_${a}`;E.has(i)&&(d.endings.splice(a,1),E.delete(i)),delete $[i],h(e)}else if(t==="ending-save")Dt(e,a),delete $[`ending_${a}`],E.delete(`ending_${a}`),h(e);else if(t==="ending-delete")d.endings.splice(a,1),h(e);else if(t==="setup-add"){d.setup.push({step:"",options:[],allow_custom:!1});let i=`setup_${d.setup.length-1}`;$[i]=!0,E.add(i),h(e)}else if(t==="setup-edit")$[`setup_${a}`]=!0,h(e);else if(t==="setup-cancel"){let i=`setup_${a}`;E.has(i)&&(d.setup.splice(a,1),E.delete(i)),delete $[i],h(e)}else if(t==="setup-save")Jt(e,a),delete $[`setup_${a}`],E.delete(`setup_${a}`),h(e);else if(t==="setup-delete")d.setup.splice(a,1),h(e);else if(t==="tag-add"){let i=s.dataset.field,l=e.querySelector(`[data-tag-input="${i}"]`),o=l?.value?.trim();if(!o)return;let p=Ze(d,i)||[];p.push(o),Qe(d,i,p),l.value="",h(e)}else if(t==="tag-remove"){let i=s.dataset.field,l=parseInt(s.dataset.idx),o=Ze(d,i)||[];o.splice(l,1),Qe(d,i,o),h(e)}else if(t==="cond-add"){let i=s.dataset.condPrefix,[l,o,p]=i.split("_"),r=parseInt(o),c=oe(i);c[""]={min:"",max:"",probability:""},l==="event"?d.events[r].trigger=c:l==="stage"?d.stages[r].transition=c:l==="ending"&&(d.endings[r].condition=c),h(e),$[`${l}_${r}`]=!0,h(e)}else if(t==="cond-remove"){let i=s.dataset.condPrefix,l=s.dataset.condIdx,[o,p,r]=i.split("_"),c=parseInt(p),b=oe(i),v=Object.keys(b);v[l]&&delete b[v[l]],o==="event"?d.events[c].trigger=b:o==="stage"?d.stages[c].transition=b:o==="ending"&&(d.endings[c].condition=b),$[`${o}_${c}`]=!0,h(e)}else if(t==="opt-add"){let i=parseInt(s.dataset.setupIdx);d.setup[i].options=d.setup[i].options||[],d.setup[i].options.push({label:"",value:""}),$[`setup_${i}`]=!0,h(e)}else if(t==="opt-remove"){let i=parseInt(s.dataset.setupIdx),l=parseInt(s.dataset.optIdx);d.setup[i].options.splice(l,1),$[`setup_${i}`]=!0,h(e)}else if(t==="json-apply")try{let i=JSON.parse(e.querySelector("#f-json").value);d=Y(i);let l=G(d);if(ne(d),l.warnings.length&&!confirm(`JSON \u6821\u9A8C\u6709\u8B66\u544A\uFF0C\u662F\u5426\u7EE7\u7EED\uFF1F
+
+${ae(l)}`))return;$={},h(e)}catch(i){alert("JSON \u89E3\u6790\u5931\u8D25: "+i.message)}}},e.addEventListener("click",fe)}function Ct(e,n){let s=i=>e.querySelector(`[data-dim="${n}"][data-subfield="${i}"]`)?.value,t=s("scope")?.trim(),a=s("description")?.trim();d.dimensions[n]={id:s("id")||`dim_${n}`,name:s("name")||"",...a?{description:a}:{},...t?{scope:t}:{},range:[Number(s("range_min")||0),Number(s("range_max")||100)],initial:[Number(s("initial_min")||0),Number(s("initial_max")||0)]}}function Pt(e,n){let s=t=>e.querySelector(`[data-char="${n}"][data-subfield="${t}"]`)?.value;d.characters[n]={id:s("id")||`char_${n}`,name:s("name")||"",description:s("description")||""}}function zt(e,n){let s=l=>e.querySelector(`[data-event="${n}"][data-subfield="${l}"]`)?.value,t={},a=Number(s("sticky_duration")||0),i=Number(s("cooldown")||0);a>0&&(t.sticky={dims:{},duration:a}),i>0&&(t.cooldown=i),d.events[n]={name:s("name")||"",stage:Number(s("stage")||0),trigger:oe(`event_${n}_trigger`),description:s("description")||"",...Object.keys(t).length>0?{effects:t}:{}}}function Ht(e,n){let s=t=>e.querySelector(`[data-stage="${n}"][data-subfield="${t}"]`)?.value;d.stages[n]={name:s("name")||"",transition:oe(`stage_${n}_transition`)}}function Dt(e,n){let s=t=>e.querySelector(`[data-ending="${n}"][data-subfield="${t}"]`)?.value;d.endings[n]={name:s("name")||"",condition:oe(`ending_${n}_condition`),description:s("description")||""}}function Jt(e,n){let s=e.querySelector(`[data-setup="${n}"][data-subfield="step"]`)?.value||"",t=e.querySelector(`[data-setup="${n}"][data-subfield="allow_custom"]`)?.checked||!1;d.setup[n]={step:s,options:At(n),allow_custom:t}}function Ze(e,n){return n.split(".").reduce((s,t)=>s?.[t],e)}function Qe(e,n,s){let t=n.split("."),a=t.pop(),i=t.reduce((l,o)=>l[o],e);i[a]=s}j();j();async function et(){let[e,n,s,t,a,i,l]=await Promise.all([q("api_url"),q("api_key"),q("api_model"),q("thinking_enabled"),q("reasoning_effort"),q("temperature"),q("api_proxy_enabled")]);if(!e)throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E LLM API \u5730\u5740");if(!l&&!n)throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E LLM API Key\uFF0C\u6216\u542F\u7528\u540E\u7AEF\u4EE3\u7406\u6A21\u5F0F");return{url:e.endsWith("/chat/completions")?e:e.replace(/\/+$/,"")+"/chat/completions",key:n,proxyEnabled:!!l,model:s||"deepseek-v4-flash",thinking:t!==!1,effort:a||"high",temperature:i??.85}}function tt(e,n,{stream:s=!1,maxTokens:t=2048}={}){let a={model:e.model,messages:n,stream:s,max_tokens:t};return e.thinking?a.thinking={type:"enabled",reasoning_effort:e.effort}:a.temperature=e.temperature,a}async function Z(e,{onChunk:n}={}){let s=await et(),t=await fetch(s.url,{method:"POST",headers:st(s),body:JSON.stringify(tt(s,e,{stream:!!n}))});if(!t.ok){let l=await t.text();throw new Error(`API \u9519\u8BEF ${t.status}: ${l}`)}return n?Bt(t,n):(await t.json()).choices[0].message.content||""}async function Bt(e,n){let s=e.body.getReader(),t=new TextDecoder,a="",i="",l="";for(;;){let{done:o,value:p}=await s.read();if(o)break;l+=t.decode(p,{stream:!0});let r=l.split(`
+`);l=r.pop();for(let c of r){if(!c.startsWith("data: "))continue;let b=c.slice(6);if(b==="[DONE]")break;try{let u=JSON.parse(b).choices?.[0]?.delta;u?.reasoning_content&&(i+=u.reasoning_content),u?.content&&(a+=u.content,n(a,i))}catch{}}}return a}async function Je(e){let n=await et(),s=await fetch(n.url,{method:"POST",headers:st(n),body:JSON.stringify(tt(n,[{role:"system",content:"\u4F60\u662F\u4E00\u4E2A\u5BF9\u8BDD\u6458\u8981\u52A9\u624B\u3002\u5C06\u4EE5\u4E0B\u5BF9\u8BDD\u538B\u7F29\u4E3A1-2\u53E5\u8BDD\u7684\u6458\u8981\uFF0C\u5305\u542B\u5173\u952E\u4E8B\u5B9E\u3001\u60C5\u611F\u53D8\u5316\u548C\u6570\u503C\u53D8\u5316\u8D8B\u52BF\u3002\u53EA\u8F93\u51FA\u6458\u8981\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"},...e],{maxTokens:200}))});if(!s.ok){let a=await s.text();throw new Error(`API \u9519\u8BEF ${s.status}: ${a}`)}return(await s.json()).choices[0].message.content}function st(e){let n={"Content-Type":"application/json"};return!e.proxyEnabled&&e.key&&(n.Authorization=`Bearer ${e.key}`),n}j();function nt({autoInterval:e=10,maxMemories:n=10}={}){let s=[],t=0,a=[],i=null;function l(m,y){return t++,a.push({role:m,content:y}),t%e===0?(i=o().finally(()=>{i=null}),i):null}async function o(){if(a.length===0)return null;let m=a.splice(0);try{let y=await Je(m.map(x=>({role:x.role==="player"?"user":"assistant",content:x.content})));return s.push(y),r(),y}catch{return null}}async function p(m){if(!m?.length)return null;try{let y=await Je(m.map(x=>({role:x.role==="player"?"user":"assistant",content:x.content})));return s.push(y),r(),y}catch{return null}}function r(){if(s.length<=n)return;let m=s.length-n,x=s.splice(0,Math.max(m,2)).join("\uFF1B");s.unshift(x)}function c(){return[...s]}function b(){return{memories:[...s],turnCount:t,pendingMessages:[...a]}}function v(m){s=m.memories||[],t=m.turnCount||0,a=m.pendingMessages||[]}async function u(){i&&await i}return{addTurn:l,autoSummarize:o,manualSummarize:p,flushPending:u,getMemories:c,getState:b,loadState:v}}function at(e,n={}){let s={};return(e.dimensions||[]).forEach(t=>{s[t.id]=t.initial?.[0]??50}),{id:crypto.randomUUID(),scriptId:e.id,scriptName:e.name,selections:n,values:s,messages:[],currentStage:0,activeEffects:[],snapshots:[],memoryState:null,createdAt:Date.now(),updatedAt:Date.now()}}function be(e,n){let s=nt();e.memoryState&&s.loadState(e.memoryState),e.activeEffects=e.activeEffects||[],e.snapshots=e.snapshots||[],e.snapshots.length||o("initial");function t(c=3){return e.messages.slice(-c)}function a(c){e.messages.push({role:"player",content:c,timestamp:Date.now()}),s.addTurn("player",c)}function i(c,b=null,v=null){return e.messages.push({role:"ai",content:c,parsed:b,parseStatus:v,timestamp:Date.now()}),s.addTurn("ai",c)}function l(c){c&&Object.assign(e.values,c)}function o(c="manual"){e.snapshots.push({reason:c,messageCount:e.messages.length,values:{...e.values},currentStage:e.currentStage||0,activeEffects:JSON.parse(JSON.stringify(e.activeEffects||[])),memoryState:s.getState(),timestamp:Date.now()}),e.snapshots.length>80&&e.snapshots.splice(0,e.snapshots.length-80)}function p(c){let b=e.snapshots||[],v=b[0];for(let u of b)if(u.messageCount<=c)v=u;else break;e.messages.splice(c),v&&(e.values={...v.values},e.currentStage=v.currentStage||0,e.activeEffects=JSON.parse(JSON.stringify(v.activeEffects||[])),v.memoryState&&s.loadState(v.memoryState),e.memoryState=s.getState(),e.snapshots=b.filter(u=>u.messageCount<=c),e.snapshots.length||o("restored-initial"))}async function r(){return await s.flushPending?.(),e.memoryState=s.getState(),e.updatedAt=Date.now(),Ne({...e})}return{session:e,script:n,memoryMgr:s,getRecentMessages:t,addPlayerMessage:a,addAIMessage:i,updateValues:l,createSnapshot:o,restoreToMessage:p,save:r}}function Vt(e,n){if(!e||typeof e!="string")return e;let{script:s,values:t,currentStage:a}=n,i=s.characters||[],l=s.dimensions||[],o=s.stages||[],p={};return i.forEach(r=>{p[r.id]=r.name}),e.replace(/\{\{(\w+)(?::([^}]*))?\}\}/g,(r,c,b)=>{switch(c){case"player":return p.player||"\u73A9\u5BB6";case"partner":return p.partner||"\u73B0\u4EFB";case"target":return p.target||"\u5371\u9669\u5BF9\u8C61";case"stage":return o[a]?.name||`\u9636\u6BB5${(a||0)+1}`;case"stage_num":return String((a||0)+1);case"dim":{if(!b)return"";let v=l.find(m=>m.name===b||m.id===b);if(!v)return"";let u=t?.[v.id];return u!==void 0?String(u):""}case"random":{if(!b)return"";let v=b.split(",").map(u=>u.trim()).filter(Boolean);return v.length?v[Math.floor(Math.random()*v.length)]:""}default:return`{{${c}${b?":"+b:""}}}`}})}function le(e,n){return Vt(e,n)}function it({script:e,values:n,selections:s,memories:t,recentMessages:a,scenePrompt:i,playerInput:l,currentStage:o}){let p={script:e,values:n,currentStage:o},r=[];if(s&&Object.keys(s).length){r.push("\u3010\u73A9\u5BB6\u521D\u59CB\u8BBE\u5B9A - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\uFF0C\u4E0D\u53EF\u5FFD\u7565\u6216\u66F4\u6539\u3011"),e.setup?.forEach((m,y)=>{let x=s[y];if(x){let w=(m.options||[]).find(Q=>Q.value===x),O=w?.description?`\uFF08${w.description}\uFF09`:"";r.push(`- ${m.step}\uFF1A${x}${O}`)}});let u=[];e.setup?.forEach((m,y)=>{let x=s[y];if(!x)return;let w=(m.options||[]).find(O=>O.value===x);w?.constraints&&u.push(...w.constraints)}),u.length&&(r.push(""),r.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),u.forEach(m=>r.push(`- ${m}`))),r.push("")}let b=(e.characters||[]).filter(u=>u.id!=="player");return r.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),r.push("- \u4F60\u662F\u89D2\u8272\u672C\u8EAB\uFF0C\u4E0D\u8981\u8DF3\u51FA\u89D2\u8272"),r.push("- \u4E0D\u8981\u7528 AI \u7684\u53E3\u543B\u89E3\u91CA\u6216\u8BC4\u4EF7\u5267\u60C5"),r.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4F60\u53EF\u4EE5\u4E3A\u89D2\u8272\u8D77\u4EBA\u540D\uFF0C\u4F46\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),r.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"\u3002\u540E\u7EED\u53EF\u7528\u4EBA\u540D\uFF0C\u4F46\u6570\u503C\u66F4\u65B0\u548C\u5173\u952E\u4E8B\u4EF6\u4E2D\u5FC5\u987B\u540C\u65F6\u6807\u6CE8\u8EAB\u4EFD'),r.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),r.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),e.rules?.forbidden&&e.rules.forbidden.forEach(u=>r.push(`- ${le(u,p)}`)),r.push(""),e.rules?.writing_style&&(r.push("\u3010\u5199\u4F5C\u89C4\u8303\u3011"),r.push(le(e.rules.writing_style,p)),e.rules.requirements&&e.rules.requirements.forEach(u=>r.push(`- ${le(u,p)}`)),r.push("")),r.push("\u3010\u4F60\u626E\u6F14\u4EE5\u4E0B\u89D2\u8272\u3011"),(e.characters||[]).forEach(u=>{let m=n?.[u.id]?`\uFF0C\u5F53\u524D\u72B6\u6001\uFF1A${JSON.stringify(n[u.id])}`:"",y=u.id==="player",x=y?"":`\u3010\u8EAB\u4EFD\u6807\u7B7E\uFF1A${u.name}\u3011`,w=y?"":"\uFF0C\u4F60\u9700\u8981\u5728\u5F00\u573A\u65F6\u4E3A\u8BE5\u89D2\u8272\u8D77\u4E00\u4E2A\u5177\u4F53\u4EBA\u540D\uFF0C\u4F46\u8EAB\u4EFD\u6807\u7B7E\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559";r.push(`${x}${u.name}\uFF1A${le(u.description,p)}${w}${m}`)}),r.push(""),e.dimensions?.length&&n&&(r.push("\u3010\u5F53\u524D\u6570\u503C - \u7528\u7CBE\u786E\u6570\u5B57\u3011"),r.push("\uFF08\u6570\u503C\u4E2D\u7684\u8EAB\u4EFD\u6807\u7B7E\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u4E0E\u89D2\u8272\u4EBA\u540D\u5BF9\u5E94\u5173\u7CFB\u89C1\u4E0A\u65B9\u89D2\u8272\u5217\u8868\uFF09"),e.dimensions.forEach(u=>{let m=n[u.id];if(m===void 0)return;let y=u.scope?`\uFF08${le(u.scope,p)}\uFF09`:"";r.push(`${u.name}${y}\uFF1A${m}`)}),r.push("")),t?.length&&(r.push("\u3010\u8BB0\u5FC6\u6458\u8981\u3011"),t.forEach((u,m)=>r.push(`${m+1}. ${u}`)),r.push("")),a?.length&&(r.push("\u3010\u6700\u8FD1\u5BF9\u8BDD\u3011"),a.forEach(u=>{let m=u.role==="player"?"\u73A9\u5BB6":"AI";r.push(`[${m}]\uFF1A${u.content}`)}),r.push("")),i&&(r.push("\u3010\u5F53\u524D\u573A\u666F\u3011"),r.push(i),r.push("")),r.push("\u3010\u8F93\u51FA\u683C\u5F0F\u8981\u6C42\u3011"),r.push("\u53EA\u8F93\u51FA\u4E00\u4E2A\u5408\u6CD5 JSON \u5BF9\u8C61\uFF0C\u4E0D\u8981 Markdown\uFF0C\u4E0D\u8981\u4EE3\u7801\u5757\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"),r.push("JSON schema:"),r.push("{"),r.push('  "narrative": "\u5267\u60C5\u5185\u5BB9\uFF0C200-400\u5B57\uFF0C\u7B80\u6D01\u6709\u529B\uFF0C\u91CD\u5BF9\u8BDD\u548C\u5173\u952E\u52A8\u4F5C\uFF0C\u4E0D\u8981\u5927\u6BB5\u73AF\u5883\u63CF\u5199",'),r.push('  "options": ['),r.push('    {"label": "A", "text": "\u9009\u9879\u5185\u5BB9", "value": "\u73A9\u5BB6\u9009\u62E9\u65F6\u53D1\u9001\u7ED9\u7CFB\u7EDF\u7684\u6587\u672C"}'),r.push("  ],"),r.push('  "values": {"\u7EF4\u5EA6ID": \u6570\u5B57},'),r.push('  "keyEvent": null,'),r.push('  "stageHint": null'),r.push("}"),r.push("options \u5FC5\u987B\u6709 3-4 \u4E2A\uFF0C\u4F53\u73B0\u4E0D\u540C\u6001\u5EA6\u548C\u7B56\u7565\uFF08\u4E3B\u52A8/\u88AB\u52A8\u3001\u5766\u8BDA/\u9690\u7792\u3001\u8FDB\u653B/\u9000\u7F29\uFF09\u3002"),r.push(`values \u53EA\u80FD\u4F7F\u7528\u8FD9\u4E9B\u7EF4\u5EA6 ID\uFF1A${(e.dimensions||[]).map(u=>u.id).join(", ")||"\u65E0"}`),r.push("values \u586B\u5199\u672C\u8F6E\u540E\u7684\u7EDD\u5BF9\u503C\uFF0C\u4E0D\u8981\u586B\u5199\u589E\u91CF\uFF1B\u6570\u503C\u5FC5\u987B\u5728\u5404\u81EA range \u5185\u3002"),r.push("keyEvent \u53EA\u6709\u53D1\u751F\u91CD\u5927\u8F6C\u6298\u3001\u51B2\u7A81\u6216\u60C5\u611F\u7206\u53D1\u65F6\u624D\u586B\u5B57\u7B26\u4E32\uFF0C\u5426\u5219\u4E3A null\u3002"),r.push("stageHint \u53EA\u662F\u5267\u60C5\u9636\u6BB5\u5EFA\u8BAE\uFF1B\u4E0D\u786E\u5B9A\u65F6\u586B null\u3002"),r.push(""),r.push("\u3010\u73A9\u5BB6\u8F93\u5165\u3011"),r.push(l),r.push("\u8BF7\u57FA\u4E8E\u4EE5\u4E0A\u4FE1\u606F\u7EE7\u7EED\u5267\u60C5\u3002"),r.join(`
+`)}function rt({script:e,selections:n}){let s={script:e,values:{},currentStage:0},t=[],a=(e.characters||[]).filter(o=>o.id!=="player"),i=a.map(o=>`\u300C${o.name}\u300D`).join("\u548C");t.push("\u3010\u94C1\u5F8B - \u6C38\u8FDC\u4E0D\u53EF\u8FDD\u53CD\u3011"),t.push(`- \u4F60\u5FC5\u987B\u4E3A${i}\u5404\u8D77\u4E00\u4E2A\u5177\u4F53\u7684\u4EBA\u540D\uFF08\u4E2D\u6587\u540D\uFF09`),t.push('- \u89D2\u8272\u8EAB\u4EFD\u6807\u7B7E\uFF08\u5982"\u73B0\u4EFB""\u5371\u9669\u5BF9\u8C61"\uFF09\u662F\u7CFB\u7EDF\u6807\u8BC6\uFF0C\u5FC5\u987B\u59CB\u7EC8\u4FDD\u7559\u3002\u4EBA\u540D\u53EA\u662F\u522B\u540D\uFF0C\u8EAB\u4EFD\u6807\u7B7E\u624D\u662F\u89D2\u8272\u7684\u552F\u4E00\u6807\u8BC6'),t.push('- \u7B2C\u4E00\u6B21\u63D0\u5230\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u4F7F\u7528"\u4EBA\u540D\uFF08\u8EAB\u4EFD\u6807\u7B7E\uFF09"\u683C\u5F0F\uFF0C\u5982"\u5F20\u660E\uFF08\u73B0\u4EFB\uFF09"'),t.push('- \u6D89\u53CA\u591A\u4E2A\u89D2\u8272\u65F6\uFF0C\u5FC5\u987B\u7528\u89D2\u8272\u4EBA\u540D\u800C\u975E"\u4ED6""\u5979""\u4F60"\uFF0C\u786E\u4FDD\u73A9\u5BB6\u80FD\u5206\u6E05\u6BCF\u53E5\u8BDD\u7684\u4E3B\u4F53\u548C\u5BF9\u8C61'),t.push("- \u5BF9\u8BDD\u573A\u666F\u4E2D\uFF0C\u6BCF\u53E5\u8BDD\u524D\u5FC5\u987B\u6807\u6CE8\u8BF4\u8BDD\u4EBA\u540D\u5B57"),t.push('- \u53D9\u8FF0\u4E2D\u6307\u4EE3\u73A9\u5BB6\u65F6\u7528"\u4F60"\uFF0C\u6307\u4EE3\u5176\u4ED6\u89D2\u8272\u65F6\u5FC5\u987B\u7528\u540D\u5B57\uFF0C\u7981\u6B62\u7528"\u4ED6""\u5979"\u6307\u4EE3\u89D2\u8272'),t.push(""),t.push("\u4EE5\u4E0B\u662F\u73A9\u5BB6\u7684\u5F00\u5C40\u9009\u62E9\uFF1A"),e.setup?.forEach((o,p)=>{let r=n[p]||"\u968F\u673A",c=(o.options||[]).find(v=>v.value===r),b=c?.description?`\uFF08${c.description}\uFF09`:"";t.push(`${o.step}\uFF1A${r}${b}`)}),t.push("");let l=[];return e.setup?.forEach((o,p)=>{let r=n[p];if(!r)return;let c=(o.options||[]).find(b=>b.value===r);c?.constraints&&l.push(...c.constraints)}),l.length&&(t.push("\u3010\u5267\u60C5\u7EA6\u675F - \u5FC5\u987B\u4E25\u683C\u9075\u5B88\u3011"),l.forEach(o=>t.push(`- ${o}`)),t.push("")),t.push("\u8BF7\u6839\u636E\u4EE5\u4E0A\u9009\u62E9\u751F\u6210\u5F00\u573A\u3002\u8981\u6C42\uFF1A"),t.push(""),t.push("\u7B2C\u4E00\u90E8\u5206\uFF1A\u72B6\u6001\u6982\u89C8\uFF08\u7B80\u6D01\uFF0C3-5\u53E5\uFF09"),t.push("- \u73A9\u5BB6\u662F\u8C01\uFF08\u804C\u4E1A\u3001\u6027\u683C\uFF09"),a.forEach(o=>{t.push(`- ${o.name}\u662F\u8C01\uFF08\u8D77\u4E00\u4E2A\u4EBA\u540D\uFF0C\u683C\u5F0F"\u4EBA\u540D\uFF08${o.name}\uFF09"\u3001\u8EAB\u4EFD\u3001\u6027\u683C\uFF09`)}),t.push("- \u5F53\u524D\u573A\u666F\u80CC\u666F\uFF08\u65F6\u95F4\u3001\u5730\u70B9\uFF0C\u6CE8\u610F\u5173\u7CFB\u7C7B\u578B\u5BF9\u573A\u666F\u7684\u5F71\u54CD\uFF09"),t.push(""),t.push("\u7B2C\u4E8C\u90E8\u5206\uFF1A\u5F00\u573A\u4E8B\u4EF6\uFF08\u7EA6200-300\u5B57\uFF09"),t.push("- \u4E00\u4E2A\u81EA\u7136\u7684\u573A\u666F\u5207\u5165\uFF0C\u5F15\u51FA\u73A9\u5BB6\u7684\u7B2C\u4E00\u4E2A\u9009\u62E9"),t.push("- \u573A\u666F\u548C\u89D2\u8272\u4E92\u52A8\u5FC5\u987B\u7B26\u5408\u73A9\u5BB6\u9009\u62E9\u7684\u5173\u7CFB\u72B6\u6001\u3001\u804C\u4E1A\u7B49\u8BBE\u5B9A"),t.push("- \u4E0D\u8981\u5927\u6BB5\u63CF\u5199\uFF0C\u7B80\u6D01\u6709\u529B"),t.push(""),t.push("\u8F93\u51FA\u683C\u5F0F\uFF1A"),t.push("\u53EA\u8F93\u51FA\u4E00\u4E2A\u5408\u6CD5 JSON \u5BF9\u8C61\uFF0C\u4E0D\u8981 Markdown\uFF0C\u4E0D\u8981\u4EE3\u7801\u5757\uFF0C\u4E0D\u8981\u89E3\u91CA\u3002"),t.push("{"),t.push('  "narrative": "\u5148\u5199\u72B6\u6001\u6982\u89C8\uFF0C\u518D\u5199\u5F00\u573A\u4E8B\u4EF6",'),t.push('  "options": ['),t.push('    {"label": "A", "text": "\u9009\u9879\u5185\u5BB9", "value": "\u73A9\u5BB6\u9009\u62E9\u65F6\u53D1\u9001\u7ED9\u7CFB\u7EDF\u7684\u6587\u672C"}'),t.push("  ],"),t.push('  "values": {"\u7EF4\u5EA6ID": \u6570\u5B57},'),t.push('  "keyEvent": null,'),t.push('  "stageHint": null'),t.push("}"),t.push(`values \u53EA\u80FD\u4F7F\u7528\u8FD9\u4E9B\u7EF4\u5EA6 ID\uFF1A${(e.dimensions||[]).map(o=>o.id).join(", ")||"\u65E0"}`),t.join(`
+`)}B();function U(e,n={}){let s=String(e||"").trim(),t=Ut(s),a=[];for(let l of t)try{let o=JSON.parse(l),p=ot(o,n,"json");if(p.turn.narrative||p.turn.options.length)return p}catch(o){a.push(o.message)}let i=Wt(s,n);return{status:i.turn.narrative?"legacy":"fallback",turn:i.turn,errors:a,warnings:i.warnings}}function ge(e,n={}){return["\u4E0B\u9762\u7684\u6A21\u578B\u8F93\u51FA\u4E0D\u662F\u5408\u6CD5 JSON\uFF0C\u6216\u4E0D\u7B26\u5408\u6307\u5B9A schema\u3002","\u4E0D\u8981\u7EED\u5199\u5267\u60C5\uFF0C\u4E0D\u8981\u89E3\u91CA\u539F\u56E0\uFF0C\u53EA\u628A\u539F\u8F93\u51FA\u4FEE\u590D\u4E3A\u4E00\u4E2A JSON \u5BF9\u8C61\u3002","schema:","{",'  "narrative": "\u5267\u60C5\u6B63\u6587\u5B57\u7B26\u4E32",','  "options": [{"label":"A","text":"\u9009\u9879\u5185\u5BB9","value":"\u73A9\u5BB6\u9009\u62E9\u65F6\u53D1\u9001\u7684\u6587\u672C"}],','  "values": {"\u7EF4\u5EA6ID": 0},','  "keyEvent": null,','  "stageHint": null',"}",`\u53EF\u7528\u7EF4\u5EA6 ID: ${(n.dimensions||[]).map(t=>t.id).filter(Boolean).join(", ")||"\u65E0"}`,"\u539F\u8F93\u51FA:",e].join(`
+`)}function Re(e,n={}){return e?.parsed?e.parsed:U(e?.content||"",n).turn}function Ut(e){let n=[];if(!e)return n;n.push(e);let s=e.match(/```(?:json)?\s*([\s\S]*?)```/i);s&&n.push(s[1].trim());let t=e.match(/(?:<json>|【JSON】)([\s\S]*?)(?:<\/json>|$)/i);t&&n.push(t[1].trim());let a=Ft(e);return a&&n.push(a),[...new Set(n.map(Kt))]}function Ft(e){let n=e.indexOf("{");if(n<0)return null;let s=0,t=!1,a="",i=!1;for(let l=n;l<e.length;l++){let o=e[l];if(t){i?i=!1:o==="\\"?i=!0:o===a&&(t=!1);continue}if(o==='"'||o==="'"){t=!0,a=o;continue}if(o==="{"&&s++,o==="}"&&s--,s===0)return e.slice(n,l+1)}return null}function Kt(e){return String(e||"").trim().replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/,\s*([}\]])/g,"$1")}function Wt(e,n){let s=Zt(e),t=ee(e,n.dimensions||[])||{};return ot({narrative:te(e)||e,options:s,values:t,keyEvent:Le(e),stageHint:null},n,"legacy")}function ot(e,n,s){let t=[],a=n.dimensions||[],i=new Map(a.map(c=>[c.id,c])),l=new Map(a.map(c=>[c.name,c.id])),o=e?.values&&typeof e.values=="object"?e.values:{},p={};for(let[c,b]of Object.entries(o)){let v=i.has(c)?c:l.get(c);if(!v){t.push(`\u5FFD\u7565\u672A\u77E5\u7EF4\u5EA6: ${c}`);continue}let u=Number(b);if(!Number.isFinite(u)){t.push(`\u5FFD\u7565\u975E\u6570\u5B57\u7EF4\u5EA6\u503C: ${c}`);continue}let m=i.get(v),y=Number(m.range?.[0]??-1/0),x=Number(m.range?.[1]??1/0),w=Math.max(y,Math.min(x,Math.round(u)));w!==u&&t.push(`\u7EF4\u5EA6 ${v} \u5DF2\u9650\u5236\u5230\u8303\u56F4 ${y}-${x}`),p[v]=w}let r=Gt(e?.options);return r.length||t.push("\u672A\u89E3\u6790\u5230\u9009\u9879"),{status:s,turn:{narrative:typeof e?.narrative=="string"?e.narrative.trim():"",options:r,values:p,keyEvent:typeof e?.keyEvent=="string"&&e.keyEvent.trim()?e.keyEvent.trim():null,stageHint:typeof e?.stageHint=="string"&&e.stageHint.trim()?e.stageHint.trim():null},errors:[],warnings:t}}function Gt(e){return Array.isArray(e)?e.map((n,s)=>{if(typeof n=="string")return{label:String.fromCharCode(65+s),text:n.trim(),value:n.trim()};if(!n||typeof n!="object")return null;let t=String(n.text||n.content||n.label||n.value||"").trim();return t?{label:String(n.label||String.fromCharCode(65+s)).trim().slice(0,3),text:t,value:String(n.value||t).trim()}:null}).filter(Boolean).slice(0,4):[]}function Zt(e){let n=String(e||"").match(/【选项】([\s\S]*?)(?=【|$)/);return n?n[1].split(`
+`).map(s=>{let t=s.match(/^([A-Z])[.、)）]\s*(.+)/);return t?{label:t[1],text:t[2].trim(),value:t[2].trim()}:null}).filter(Boolean).slice(0,4):[]}async function lt(e,{scriptId:n}){let s=await R(n);if(!s){k("home");return}let[t,a]=await Promise.all([q("api_url"),q("api_key")]);if(!t||!a){e.innerHTML=`
       <div class="wizard-step">
         <div class="icon" style="font-size:48px;margin-bottom:16px">\u2699</div>
         <h2>\u672A\u914D\u7F6E LLM</h2>
@@ -846,42 +1290,42 @@ select.form-input { appearance: none; }
         <button class="btn btn-primary" id="btn-go-settings">\u524D\u5F80\u8BBE\u7F6E</button>
         <button class="btn btn-secondary" style="margin-top:10px" id="btn-go-back">\u8FD4\u56DE</button>
       </div>
-    `,t.querySelector("#btn-go-settings").onclick=()=>$("settings"),t.querySelector("#btn-go-back").onclick=()=>$("home");return}let a=s.setup||[],o=0,r=[];function d(){if(o>=a.length){l();return}let u=a[o];t.innerHTML=`
+    `,e.querySelector("#btn-go-settings").onclick=()=>k("settings"),e.querySelector("#btn-go-back").onclick=()=>k("home");return}let i=s.setup||[],l=0,o=[];function p(){if(l>=i.length){r();return}let c=i[l],b=o[l]||"";e.innerHTML=`
       <div class="wizard-step">
         <div class="wizard-progress">
-          ${a.map((w,k)=>`<div class="wizard-dot ${k<o?"done":k===o?"active":""}"></div>`).join("")}
+          ${i.map((w,O)=>`<div class="wizard-dot ${O<l?"done":O===l?"active":""}"></div>`).join("")}
         </div>
-        <h2>${ot(u.step)}</h2>
-        <p>${ot(u.description||"")}</p>
+        <h2>${ve(c.step)}</h2>
+        <p>${ve(c.description||"")}</p>
         <div class="wizard-options">
-          ${(u.options||[]).map((w,k)=>`
-            <button class="wizard-option" data-idx="${k}">${ot(w.label)}</button>
+          ${(c.options||[]).map((w,O)=>`
+            <button class="wizard-option ${b===w.value?"selected":""}" data-idx="${O}">${ve(w.label)}</button>
           `).join("")}
-          ${u.allow_custom?`
+          ${c.allow_custom?`
             <input class="form-input" id="custom-input" placeholder="\u81EA\u5B9A\u4E49\u8F93\u5165..." style="margin-top:8px">
           `:""}
         </div>
         <div class="wizard-nav">
-          ${o>0?'<button class="btn btn-secondary" id="btn-prev" style="min-width:90px">\u4E0A\u4E00\u6B65</button>':""}
+          ${l>0?'<button class="btn btn-secondary" id="btn-prev" style="min-width:90px">\u4E0A\u4E00\u6B65</button>':""}
           <button class="btn btn-primary" id="btn-next" disabled style="flex:1">\u4E0B\u4E00\u6B65</button>
         </div>
       </div>
-    `;let f=null,b=t.querySelectorAll(".wizard-option"),p=t.querySelector("#btn-next");b.forEach(w=>{w.onclick=()=>{b.forEach(k=>k.classList.remove("selected")),w.classList.add("selected"),f=parseInt(w.dataset.idx),r[o]=u.options[f].value,p.disabled=!1}});let y=t.querySelector("#custom-input");y&&(y.oninput=()=>{y.value.trim()?(r[o]=y.value.trim(),p.disabled=!1,b.forEach(w=>w.classList.remove("selected"))):p.disabled=!0}),p.onclick=()=>{o++,d()};let q=t.querySelector("#btn-prev");q&&(q.onclick=()=>{o--,d()})}async function l(){t.innerHTML=`
+    `;let v=null,u=e.querySelectorAll(".wizard-option"),m=e.querySelector("#btn-next");m.disabled=!o[l],u.forEach(w=>{w.onclick=()=>{u.forEach(O=>O.classList.remove("selected")),w.classList.add("selected"),v=parseInt(w.dataset.idx),o[l]=c.options[v].value,m.disabled=!1}});let y=e.querySelector("#custom-input");y&&(y.oninput=()=>{y.value.trim()?(o[l]=y.value.trim(),m.disabled=!1,u.forEach(w=>w.classList.remove("selected"))):m.disabled=!0}),m.onclick=()=>{l++,p()};let x=e.querySelector("#btn-prev");x&&(x.onclick=()=>{l--,p()})}async function r(){e.innerHTML=`
       <div class="wizard-step">
         <div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div>
         <p style="margin-top:16px;color:var(--text-dim)">\u6B63\u5728\u751F\u6210\u5F00\u573A\u573A\u666F...</p>
       </div>
-    `;try{let u=Jt(s,r),f=Ut({script:s,selections:r}),b=await at([{role:"user",content:f}]);u.messages.push({role:"ai",content:b,timestamp:Date.now()});let p=it(u,s),{extractValues:y}=await Promise.resolve().then(()=>(P(),F)),q=y(b,s.dimensions);q&&p.updateValues(q),await p.save(),$("chat",{sessionId:u.id})}catch(u){t.innerHTML=`
+    `;try{let c=at(s,o),b=be(c,s),v=rt({script:s,selections:o}),u=await Z([{role:"user",content:v}]),m=U(u,s);if(Qt(m))try{let x=await Z([{role:"user",content:ge(u,s)}]),w=U(x,s);w.status==="json"&&(u=x,m={...w,status:"repaired"})}catch(x){console.warn("Opening JSON repair failed:",x)}b.addAIMessage(u,m.turn,m.status);let y=m.turn.values&&Object.keys(m.turn.values).length?m.turn.values:null;y&&b.updateValues(y),b.createSnapshot("after-opening"),await b.save(),k("chat",{sessionId:c.id})}catch(c){e.innerHTML=`
         <div class="empty-state">
           <div class="icon">\u26A0\uFE0F</div>
-          <p>${ot(u.message)}</p>
+          <p>${ve(c.message)}</p>
           <button class="btn btn-primary" onclick="location.reload()">\u91CD\u8BD5</button>
         </div>
-      `}}d()}function ot(t){let n=document.createElement("div");return n.textContent=t,n.innerHTML}I();P();var T=null,rt=!1,lt={};async function Ft(t,{sessionId:n}){let s=await gt(n);if(!s){$("home");return}let e=await J(s.scriptId);if(!e){$("home");return}T=it(s,e);let i=T.session;lt={...i.values},t.innerHTML=`
+      `}}p()}function Qt(e){return e.status!=="json"||!e.turn.narrative||!(e.turn.options||[]).length}function ve(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}j();B();var _=null,he=!1,ye={};async function ct(e,{sessionId:n}){let s=await qe(n);if(!s){k("home");return}let t=await R(s.scriptId);if(!t){k("home");return}_=be(s,t);let a=_.session;ye={...a.values},e.innerHTML=`
     <div class="chat-page">
       <div class="header">
         <button class="header-btn" id="btn-back-chat">\u2190</button>
-        <h1 style="font-size:15px">${X(e.name)}</h1>
+        <h1 style="font-size:15px">${ce(t.name)}</h1>
         <button class="header-btn" id="btn-menu">\u22EF</button>
       </div>
       <div class="numerical-toggle" id="num-toggle">\u25B2 \u6570\u503C\u9762\u677F</div>
@@ -904,8 +1348,7 @@ select.form-input { appearance: none; }
         </div>
       </div>
     </div>
-  `;let a=t.querySelector("#messages"),o=-1;p(),f(),a.scrollTop=a.scrollHeight,t.querySelector("#num-toggle").onclick=()=>{rt=!rt;let m=t.querySelector("#num-panel"),g=t.querySelector("#num-toggle");m.classList.toggle("open",rt),g.textContent=rt?"\u25BC \u6570\u503C\u9762\u677F":"\u25B2 \u6570\u503C\u9762\u677F"};let r=t.querySelector("#chat-input");r.onkeydown=m=>{m.key==="Enter"&&!m.shiftKey&&(m.preventDefault(),l())},r.oninput=()=>{r.style.height="auto",r.style.height=Math.min(r.scrollHeight,120)+"px"},t.querySelector("#nav-top").onclick=()=>{a.scrollTo({top:0,behavior:"smooth"})},t.querySelector("#nav-bottom").onclick=()=>{a.scrollTo({top:a.scrollHeight,behavior:"smooth"})},t.querySelector("#nav-prev").onclick=()=>{d(-1)},t.querySelector("#nav-next").onclick=()=>{d(1)};function d(m){let g=a.querySelectorAll(".msg");g.length!==0&&(o=Math.max(0,Math.min(g.length-1,o+m)),g[o].scrollIntoView({behavior:"smooth",block:"center"}))}t.querySelector("#btn-send").onclick=()=>l(),y();async function l(m){let g=m||r.value.trim();!g||T._sending||(r.value="",r.style.height="auto",t.querySelector("#chat-options").innerHTML="",T.addPlayerMessage(g),f(),await u(g))}async function u(m){T._sending=!0;let g=document.createElement("div");g.className="msg msg-ai",g.textContent="",a.appendChild(g),a.scrollTop=a.scrollHeight;try{let E=Rt({script:e,values:i.values,selections:i.selections,memories:T.memoryMgr.getMemories(),recentMessages:T.getRecentMessages(3),scenePrompt:O(e,i),playerInput:m,currentStage:i.currentStage}),L=await at([{role:"user",content:E}],{onChunk:(N,B)=>{N?g.textContent=N:B&&(g.innerHTML='<span style="color:var(--text-dim);font-size:12px">\u601D\u8003\u4E2D...</span>'),a.scrollTop=a.scrollHeight}});T.addAIMessage(L);let R=st(L,e.dimensions);R&&T.updateValues(R),xt(i);let j=ht(e.events,i.values,i.currentStage,i.activeEffects);if(j.length>0){j.forEach(B=>$t(i,B));let N=St(e.stages,i.values,i.currentStage);N!==i.currentStage&&(i.currentStage=N)}let M=wt(L);M&&C(),await T.save(),f(),p(),y(),requestAnimationFrame(()=>{a.scrollTop=a.scrollHeight});let Y=t.querySelector("#memory-prompt-area");M||(Y.innerHTML="")}catch(E){g.remove(),k("\u53D1\u9001\u5931\u8D25: "+E.message)}T._sending=!1}function f(){a.innerHTML=i.messages.map((m,g)=>{let E=m.role==="player"?"msg-player":"msg-ai",L=m.content,R="";if(m.role==="ai"){L=kt(m.content);let M=st(m.content,e.dimensions);if(M&&e.dimensions?.length){let Y=e.dimensions.filter(N=>M[N.id]!==void 0&&M[N.id]!==lt[N.id]).map(N=>{let B=lt[N.id],ct=M[N.id],Gt=B!==void 0&&ct>B?"\u2191":B!==void 0&&ct<B?"\u2193":"";return`${N.name} ${ct}${Gt}`}).slice(0,5);Y.length&&(R=`<div class="msg-values">${Y.join(" \xB7 ")}</div>`),Object.assign(lt,M)}}let j=m.role==="ai"?`<div class="msg-regen" data-idx="${g}">\u21BB \u91CD\u65B0\u751F\u6210</div>`:"";return`<div class="msg ${E}">${X(L)}${R}${j}</div>`}).join(""),o=a.querySelectorAll(".msg").length-1,a.scrollTop=a.scrollHeight}a.addEventListener("click",m=>{let g=m.target.closest(".msg-regen");g&&b(parseInt(g.dataset.idx))});async function b(m){if(T._sending)return;let g=m-1;if(m===0||g<0||i.messages[g]?.role!=="player"){i.messages.splice(m,1),f(),await u("\u8BF7\u91CD\u65B0\u751F\u6210\u5F00\u573A\u573A\u666F");return}let E=i.messages[g].content;i.messages.splice(g,2),f(),await u(E)}function p(){let m=t.querySelector("#num-panel");if(!e.dimensions?.length){m.innerHTML='<p style="color:var(--text-dim);font-size:13px">\u6B64\u5267\u672C\u65E0\u6570\u503C\u7CFB\u7EDF</p>';return}m.innerHTML=e.dimensions.map(g=>{let E=i.values[g.id];return`<div class="num-row"><span class="num-label">${X(g.name)}</span><span class="num-value">${E??"-"}</span></div>`}).join("")}function y(){let m=t.querySelector("#chat-options"),g=[...i.messages].reverse().find(j=>j.role==="ai");if(!g){m.innerHTML="";return}let E=g.content.match(/【选项】([\s\S]*?)(?=【|$)/);if(!E){m.innerHTML="";return}let L=[],R=E[1].split(`
-`);for(let j of R){let M=j.match(/^([A-Z])[.、)）]\s*(.+)/);M&&L.push({label:`${M[1]}. ${M[2]}`,value:M[2]})}if(L.length===0){m.innerHTML="";return}L.splice(4),m.innerHTML=L.map(j=>`<button class="chat-option-btn" data-value="${X(j.value)}">${X(j.label)}</button>`).join(""),m.onclick=j=>{let M=j.target.closest(".chat-option-btn");M&&l(M.dataset.value)}}function q(){let m=document.createElement("div");m.className="typing-indicator",m.id="typing",m.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>',a.appendChild(m),a.scrollTop=a.scrollHeight}function w(){let m=t.querySelector("#typing");m&&m.remove()}function k(m){let g=document.createElement("div");g.className="msg msg-system",g.textContent=m,a.appendChild(g),a.scrollTop=a.scrollHeight}function C(){let m=t.querySelector("#memory-prompt-area");m.innerHTML='<div class="memory-prompt" id="btn-memory">\u{1F4CC} \u53D1\u751F\u4E86\u5173\u952E\u4E8B\u4EF6\uFF0C\u70B9\u51FB\u4FDD\u5B58\u8BB0\u5FC6</div>',m.querySelector("#btn-memory").onclick=async()=>{let g=i.messages.slice(-6);await T.memoryMgr.manualSummarize(g.map(E=>({role:E.role==="player"?"user":"assistant",content:E.content}))),await T.save(),m.innerHTML='<div class="msg msg-system">\u8BB0\u5FC6\u5DF2\u4FDD\u5B58</div>'}}function O(m,g){let L=m.stages?.[g.currentStage]?.name||`\u9636\u6BB5 ${g.currentStage+1}`;return`\u9636\u6BB5\uFF1A${g.currentStage+1}/${m.stages?.length||"?"} - ${L}`}t.querySelector("#btn-back-chat").onclick=()=>{T.save(),$("home")},t.querySelector("#btn-menu").onclick=()=>{confirm("\u8FD4\u56DE\u9996\u9875\uFF1F\u5F53\u524D\u8FDB\u5EA6\u4F1A\u81EA\u52A8\u4FDD\u5B58\u3002")&&(T.save(),$("home"))}}function X(t){let n=document.createElement("div");return n.textContent=t,n.innerHTML}I();async function Kt(t){let[n,s,e,i,a,o,r]=await Promise.all([_("api_url"),_("api_key"),_("api_model"),_("memory_interval"),_("thinking_enabled"),_("reasoning_effort"),_("temperature")]),d=a!==!1;t.innerHTML=`
+  `;let i=e.querySelector("#messages"),l=-1;y(),u(),i.scrollTop=i.scrollHeight,e.querySelector("#num-toggle").onclick=()=>{he=!he;let f=e.querySelector("#num-panel"),g=e.querySelector("#num-toggle");f.classList.toggle("open",he),g.textContent=he?"\u25BC \u6570\u503C\u9762\u677F":"\u25B2 \u6570\u503C\u9762\u677F"};let o=e.querySelector("#chat-input");o.onkeydown=f=>{f.key==="Enter"&&!f.shiftKey&&(f.preventDefault(),r())},o.oninput=()=>{o.style.height="auto",o.style.height=Math.min(o.scrollHeight,120)+"px"},e.querySelector("#nav-top").onclick=()=>{i.scrollTo({top:0,behavior:"smooth"})},e.querySelector("#nav-bottom").onclick=()=>{i.scrollTo({top:i.scrollHeight,behavior:"smooth"})},e.querySelector("#nav-prev").onclick=()=>{p(-1)},e.querySelector("#nav-next").onclick=()=>{p(1)};function p(f){let g=i.querySelectorAll(".msg");g.length!==0&&(l=Math.max(0,Math.min(g.length-1,l+f)),g[l].scrollIntoView({behavior:"smooth",block:"center"}))}e.querySelector("#btn-send").onclick=()=>r(),x();async function r(f){let g=f||o.value.trim();!g||_._sending||(o.value="",o.style.height="auto",e.querySelector("#chat-options").innerHTML="",_.addPlayerMessage(g),_.createSnapshot("before-ai-response"),u(),await c(g))}async function c(f){_._sending=!0,b(!0);let g=document.createElement("div");g.className="msg msg-ai",g.textContent="",i.appendChild(g),i.scrollTop=i.scrollHeight;try{let N=it({script:t,values:a.values,selections:a.selections,memories:_.memoryMgr.getMemories(),recentMessages:_.getRecentMessages(3),scenePrompt:F(t,a),playerInput:f,currentStage:a.currentStage}),T=await Z([{role:"user",content:N}],{onChunk:(I,P)=>{I?g.textContent=I:P&&(g.innerHTML='<span style="color:var(--text-dim);font-size:12px">\u601D\u8003\u4E2D...</span>'),i.scrollTop=i.scrollHeight}}),M=U(T,t);if(v(M))try{g.textContent="\u6B63\u5728\u4FEE\u6B63\u8F93\u51FA\u683C\u5F0F...";let I=await Z([{role:"user",content:ge(T,t)}]),P=U(I,t);P.status==="json"&&(T=I,M={...P,status:"repaired"})}catch(I){console.warn("LLM JSON repair failed:",I)}M.warnings?.length&&console.warn("LLM output warnings:",M.warnings);let C=M.turn;_.addAIMessage(T,C,M.status);let V=C.values&&Object.keys(C.values).length?C.values:null;V&&_.updateValues(V),je(a);let J=Ie(t.events,a.values,a.currentStage,a.activeEffects);if(J.length>0){J.forEach(P=>Oe(a,P));let I=Ae(t.stages,a.values,a.currentStage);I!==a.currentStage&&(a.currentStage=I)}let X=C.keyEvent;X&&de(),_.createSnapshot("after-ai-response"),await _.save(),u(),y(),x(),requestAnimationFrame(()=>{i.scrollTop=i.scrollHeight});let H=e.querySelector("#memory-prompt-area");X||(H.innerHTML="")}catch(N){g.remove(),Q("\u53D1\u9001\u5931\u8D25: "+N.message)}_._sending=!1,b(!1)}function b(f){o.disabled=f,e.querySelector("#btn-send").disabled=f,e.querySelectorAll(".chat-option-btn").forEach(g=>{g.disabled=f})}function v(f){return f.status!=="json"||!f.turn.narrative||!(f.turn.options||[]).length}function u(){i.innerHTML=a.messages.map((f,g)=>{let N=f.role==="player"?"msg-player":"msg-ai",T=f.content,M="";if(f.role==="ai"){let V=Re(f,t);T=V.narrative||te(f.content);let J=V.values&&Object.keys(V.values).length?V.values:ee(f.content,t.dimensions);if(J&&t.dimensions?.length){let X=t.dimensions.filter(H=>J[H.id]!==void 0&&J[H.id]!==ye[H.id]).map(H=>{let I=ye[H.id],P=J[H.id],ut=I!==void 0&&P>I?"\u2191":I!==void 0&&P<I?"\u2193":"";return`${H.name} ${P}${ut}`}).slice(0,5);X.length&&(M=`<div class="msg-values">${X.join(" \xB7 ")}</div>`),Object.assign(ye,J)}}let C=f.role==="ai"?`<div class="msg-regen" data-idx="${g}">\u21BB \u91CD\u65B0\u751F\u6210</div>`:"";return`<div class="msg ${N}">${ce(T)}${M}${C}</div>`}).join(""),l=i.querySelectorAll(".msg").length-1,i.scrollTop=i.scrollHeight}i.addEventListener("click",f=>{let g=f.target.closest(".msg-regen");g&&m(parseInt(g.dataset.idx))});async function m(f){if(_._sending)return;let g=f-1;if(f===0||g<0||a.messages[g]?.role!=="player"){_.restoreToMessage(0),u(),await c("\u8BF7\u91CD\u65B0\u751F\u6210\u5F00\u573A\u573A\u666F");return}let N=a.messages[g].content;_.restoreToMessage(g),_.addPlayerMessage(N),_.createSnapshot("before-ai-regenerate"),u(),await c(N)}function y(){let f=e.querySelector("#num-panel");if(!t.dimensions?.length){f.innerHTML='<p style="color:var(--text-dim);font-size:13px">\u6B64\u5267\u672C\u65E0\u6570\u503C\u7CFB\u7EDF</p>';return}f.innerHTML=t.dimensions.map(g=>{let N=a.values[g.id];return`<div class="num-row"><span class="num-label">${ce(g.name)}</span><span class="num-value">${N??"-"}</span></div>`}).join("")}function x(){let f=e.querySelector("#chat-options"),g=[...a.messages].reverse().find(M=>M.role==="ai");if(!g){f.innerHTML="";return}let T=(Re(g,t).options||[]).map(M=>({label:`${M.label}. ${M.text}`,value:M.value||M.text}));if(T.length===0){f.innerHTML="";return}T.splice(4),f.innerHTML=T.map(M=>`<button class="chat-option-btn" data-value="${ce(M.value)}">${ce(M.label)}</button>`).join(""),f.onclick=M=>{let C=M.target.closest(".chat-option-btn");C&&r(C.dataset.value)}}function w(){let f=document.createElement("div");f.className="typing-indicator",f.id="typing",f.innerHTML='<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>',i.appendChild(f),i.scrollTop=i.scrollHeight}function O(){let f=e.querySelector("#typing");f&&f.remove()}function Q(f){let g=document.createElement("div");g.className="msg msg-system",g.textContent=f,i.appendChild(g),i.scrollTop=i.scrollHeight}function de(){let f=e.querySelector("#memory-prompt-area");f.innerHTML='<div class="memory-prompt" id="btn-memory">\u{1F4CC} \u53D1\u751F\u4E86\u5173\u952E\u4E8B\u4EF6\uFF0C\u70B9\u51FB\u4FDD\u5B58\u8BB0\u5FC6</div>',f.querySelector("#btn-memory").onclick=async()=>{let g=a.messages.slice(-6);await _.memoryMgr.manualSummarize(g.map(N=>({role:N.role==="player"?"user":"assistant",content:N.content}))),await _.save(),f.innerHTML='<div class="msg msg-system">\u8BB0\u5FC6\u5DF2\u4FDD\u5B58</div>'}}function F(f,g){let T=f.stages?.[g.currentStage]?.name||`\u9636\u6BB5 ${g.currentStage+1}`;return`\u9636\u6BB5\uFF1A${g.currentStage+1}/${f.stages?.length||"?"} - ${T}`}e.querySelector("#btn-back-chat").onclick=()=>{_.save(),k("home")},e.querySelector("#btn-menu").onclick=()=>{confirm("\u8FD4\u56DE\u9996\u9875\uFF1F\u5F53\u524D\u8FDB\u5EA6\u4F1A\u81EA\u52A8\u4FDD\u5B58\u3002")&&(_.save(),k("home"))}}function ce(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}j();async function dt(e){let[n,s,t,a,i,l,o,p]=await Promise.all([q("api_url"),q("api_key"),q("api_model"),q("memory_interval"),q("thinking_enabled"),q("reasoning_effort"),q("temperature"),q("api_proxy_enabled")]),r=i!==!1,c=!!p;e.innerHTML=`
     <div class="header">
       <button class="header-btn" id="btn-back">\u2190</button>
       <h1>\u8BBE\u7F6E</h1>
@@ -915,15 +1358,22 @@ select.form-input { appearance: none; }
         <h3>LLM API \u914D\u7F6E</h3>
         <div class="form-group">
           <label class="form-label">API \u5730\u5740</label>
-          <input class="form-input" id="f-url" value="${It(n||"https://api.deepseek.com/chat/completions")}" placeholder="https://api.deepseek.com/chat/completions">
+          <input class="form-input" id="f-url" value="${Be(n||"https://api.deepseek.com/chat/completions")}" placeholder="https://api.deepseek.com/chat/completions">
+        </div>
+        <div class="form-group">
+          <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="f-proxy" ${c?"checked":""} style="width:16px;height:16px">
+            \u4F7F\u7528\u540E\u7AEF\u4EE3\u7406\u6A21\u5F0F\uFF08\u524D\u7AEF\u4E0D\u4FDD\u5B58 API Key\uFF09
+          </label>
+          <p style="font-size:12px;color:var(--text-dim);margin-top:4px">\u751F\u4EA7\u73AF\u5883\u5EFA\u8BAE\u4F7F\u7528\u4EE3\u7406\u6216 token broker\uFF0C\u7531\u540E\u7AEF\u4FDD\u5B58\u957F\u671F\u5BC6\u94A5\u3002</p>
         </div>
         <div class="form-group">
           <label class="form-label">API Key</label>
-          <input class="form-input" id="f-key" type="password" value="${It(s||"")}" placeholder="sk-...">
+          <input class="form-input" id="f-key" type="password" value="${Be(c?"":s||"")}" placeholder="sk-..." ${c?"disabled":""}>
         </div>
         <div class="form-group">
           <label class="form-label">\u6A21\u578B\u540D\u79F0</label>
-          <input class="form-input" id="f-model" value="${It(e||"deepseek-v4-flash")}" placeholder="deepseek-v4-flash">
+          <input class="form-input" id="f-model" value="${Be(t||"deepseek-v4-flash")}" placeholder="deepseek-v4-flash">
         </div>
       </div>
 
@@ -931,21 +1381,21 @@ select.form-input { appearance: none; }
         <h3>\u601D\u8003\u6A21\u5F0F</h3>
         <div class="form-group">
           <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" id="f-thinking" ${d?"checked":""} style="width:16px;height:16px">
+            <input type="checkbox" id="f-thinking" ${r?"checked":""} style="width:16px;height:16px">
             \u542F\u7528\u601D\u8003\u6A21\u5F0F
           </label>
           <p style="font-size:12px;color:var(--text-dim);margin-top:4px">\u5F00\u542F\u540E\u6A21\u578B\u4F1A\u5148\u63A8\u7406\u518D\u56DE\u7B54\uFF0C\u5267\u60C5\u8D28\u91CF\u66F4\u9AD8\uFF0C\u4F46\u54CD\u5E94\u8F83\u6162\u4E14\u4E0D\u652F\u6301 temperature \u8C03\u8282</p>
         </div>
-        <div class="form-group" id="effort-group" style="${d?"":"display:none"}">
+        <div class="form-group" id="effort-group" style="${r?"":"display:none"}">
           <label class="form-label">\u601D\u8003\u5F3A\u5EA6</label>
           <select class="form-input" id="f-effort">
-            <option value="high" ${o!=="max"?"selected":""}>high - \u666E\u901A\uFF08\u63A8\u8350\uFF09</option>
-            <option value="max" ${o==="max"?"selected":""}>max - \u6DF1\u5EA6\u601D\u8003</option>
+            <option value="high" ${l!=="max"?"selected":""}>high - \u666E\u901A\uFF08\u63A8\u8350\uFF09</option>
+            <option value="max" ${l==="max"?"selected":""}>max - \u6DF1\u5EA6\u601D\u8003</option>
           </select>
         </div>
-        <div class="form-group" id="temp-group" style="${d?"display:none":""}">
-          <label class="form-label">Temperature: <span id="temp-val">${r??.85}</span></label>
-          <input type="range" id="f-temp" min="0" max="2" step="0.05" value="${r??.85}" style="width:100%">
+        <div class="form-group" id="temp-group" style="${r?"display:none":""}">
+          <label class="form-label">Temperature: <span id="temp-val">${o??.85}</span></label>
+          <input type="range" id="f-temp" min="0" max="2" step="0.05" value="${o??.85}" style="width:100%">
           <p style="font-size:12px;color:var(--text-dim);margin-top:4px">\u8D8A\u9AD8\u8D8A\u968F\u673A\u6709\u521B\u610F\uFF0C\u8D8A\u4F4E\u8D8A\u7A33\u5B9A\u4FDD\u5B88\u3002\u601D\u8003\u6A21\u5F0F\u4E0B\u6B64\u53C2\u6570\u65E0\u6548</p>
         </div>
       </div>
@@ -954,7 +1404,7 @@ select.form-input { appearance: none; }
         <h3>\u8BB0\u5FC6\u7CFB\u7EDF</h3>
         <div class="form-group">
           <label class="form-label">\u81EA\u52A8\u603B\u7ED3\u95F4\u9694\uFF08\u8F6E\u6570\uFF09</label>
-          <input class="form-input" id="f-memory" type="number" min="3" max="50" value="${i||10}">
+          <input class="form-input" id="f-memory" type="number" min="3" max="50" value="${a||10}">
         </div>
       </div>
 
@@ -966,7 +1416,7 @@ select.form-input { appearance: none; }
 
       <button class="btn btn-primary btn-block" id="btn-save">\u4FDD\u5B58\u8BBE\u7F6E</button>
     </div>
-  `,t.querySelector("#f-thinking").onchange=f=>{let b=f.target.checked;t.querySelector("#effort-group").style.display=b?"":"none",t.querySelector("#temp-group").style.display=b?"none":""};let l=t.querySelector("#f-temp"),u=t.querySelector("#temp-val");l.oninput=()=>{u.textContent=l.value},t.querySelector("#btn-back").onclick=()=>$("home"),t.querySelector("#btn-save").onclick=async()=>{await Promise.all([H("api_url",t.querySelector("#f-url").value.trim()),H("api_key",t.querySelector("#f-key").value.trim()),H("api_model",t.querySelector("#f-model").value.trim()),H("memory_interval",parseInt(t.querySelector("#f-memory").value)||10),H("thinking_enabled",t.querySelector("#f-thinking").checked),H("reasoning_effort",t.querySelector("#f-effort").value),H("temperature",parseFloat(l.value))]),alert("\u8BBE\u7F6E\u5DF2\u4FDD\u5B58")},t.querySelector("#btn-test").onclick=async()=>{let f=t.querySelector("#test-result");f.textContent="\u6D4B\u8BD5\u4E2D...",f.style.color="var(--text-dim)";let b=t.querySelector("#f-url").value.trim(),p=t.querySelector("#f-key").value.trim(),y=t.querySelector("#f-model").value.trim(),q=t.querySelector("#f-thinking").checked,w=t.querySelector("#f-effort").value;if(!b||!p){f.textContent="\u2717 \u8BF7\u5148\u586B\u5199 API \u5730\u5740\u548C Key",f.style.color="var(--accent)";return}let k={model:y||"deepseek-v4-flash",messages:[{role:"user",content:'\u56DE\u590D"\u8FDE\u63A5\u6210\u529F"'}],max_tokens:20};q&&(k.thinking={type:"enabled",reasoning_effort:w});try{let C=b.endsWith("/chat/completions")?b:b.replace(/\/+$/,"")+"/chat/completions";f.textContent=`\u6D4B\u8BD5\u4E2D... (${C})`;let O=await fetch(C,{method:"POST",headers:{"Content-Type":"application/json",Authorization:`Bearer ${p}`},body:JSON.stringify(k)});if(!O.ok){let E=await O.text();throw new Error(`${O.status} ${O.statusText}: ${E.slice(0,200)}`)}let g=(await O.json()).choices?.[0]?.message?.content||"";f.textContent="\u2713 \u8FDE\u63A5\u6210\u529F"+(g?` - "${g.slice(0,50)}"`:""),f.style.color="#4caf50"}catch(C){f.textContent="\u2717 "+C.message,f.style.color="var(--accent)"}}}function It(t){let n=document.createElement("div");return n.textContent=t,n.innerHTML}(async()=>{V("home",G),V("scriptDetail",Ot),V("setup",Vt),V("chat",Ft),V("settings",Kt);try{await pt()}catch(t){console.error("DB init failed:",t)}"serviceWorker"in navigator&&navigator.serviceWorker.register("/sw.js").catch(()=>{}),$("home"),window.onerror=(t,n,s)=>{console.error("Error:",t,"at",n,"line",s)}})();})();
+  `,e.querySelector("#f-thinking").onchange=u=>{let m=u.target.checked;e.querySelector("#effort-group").style.display=m?"":"none",e.querySelector("#temp-group").style.display=m?"none":""},e.querySelector("#f-proxy").onchange=u=>{let m=e.querySelector("#f-key");m.disabled=u.target.checked,u.target.checked&&(m.value="")};let b=e.querySelector("#f-temp"),v=e.querySelector("#temp-val");b.oninput=()=>{v.textContent=b.value},e.querySelector("#btn-back").onclick=()=>k("home"),e.querySelector("#btn-save").onclick=async()=>{let u=e.querySelector("#btn-save");u.disabled=!0;let m=u.textContent;try{await Promise.all([z("api_url",e.querySelector("#f-url").value.trim()),z("api_key",e.querySelector("#f-proxy").checked?"":e.querySelector("#f-key").value.trim()),z("api_proxy_enabled",e.querySelector("#f-proxy").checked),z("api_model",e.querySelector("#f-model").value.trim()),z("memory_interval",parseInt(e.querySelector("#f-memory").value)||10),z("thinking_enabled",e.querySelector("#f-thinking").checked),z("reasoning_effort",e.querySelector("#f-effort").value),z("temperature",parseFloat(b.value))]),u.textContent="\u5DF2\u4FDD\u5B58",setTimeout(()=>{u.textContent=m,u.disabled=!1},1200)}catch(y){u.textContent=m,u.disabled=!1,alert("\u4FDD\u5B58\u5931\u8D25: "+y.message)}},e.querySelector("#btn-test").onclick=async()=>{let u=e.querySelector("#test-result");u.textContent="\u6D4B\u8BD5\u4E2D...",u.style.color="var(--text-dim)";let m=e.querySelector("#f-url").value.trim(),y=e.querySelector("#f-key").value.trim(),x=e.querySelector("#f-proxy").checked,w=e.querySelector("#f-model").value.trim(),O=e.querySelector("#f-thinking").checked,Q=e.querySelector("#f-effort").value;if(!m||!x&&!y){u.textContent="\u2717 \u8BF7\u5148\u586B\u5199 API \u5730\u5740\u548C Key\uFF0C\u6216\u542F\u7528\u540E\u7AEF\u4EE3\u7406\u6A21\u5F0F",u.style.color="var(--accent)";return}let de={model:w||"deepseek-v4-flash",messages:[{role:"user",content:'\u56DE\u590D"\u8FDE\u63A5\u6210\u529F"'}],max_tokens:20};O&&(de.thinking={type:"enabled",reasoning_effort:Q});try{let F=m.endsWith("/chat/completions")?m:m.replace(/\/+$/,"")+"/chat/completions";u.textContent=`\u6D4B\u8BD5\u4E2D... (${F})`;let f=await fetch(F,{method:"POST",headers:x?{"Content-Type":"application/json"}:{"Content-Type":"application/json",Authorization:`Bearer ${y}`},body:JSON.stringify(de)});if(!f.ok){let T=await f.text();throw new Error(`${f.status} ${f.statusText}: ${T.slice(0,200)}`)}let N=(await f.json()).choices?.[0]?.message?.content||"";u.textContent="\u2713 \u8FDE\u63A5\u6210\u529F"+(N?` - "${N.slice(0,50)}"`:""),u.style.color="#4caf50"}catch(F){u.textContent="\u2717 "+F.message,u.style.color="var(--accent)"}}}function Be(e){let n=document.createElement("div");return n.textContent=e,n.innerHTML}(async()=>{W("home",ie),W("scriptDetail",Xe),W("setup",lt),W("chat",ct),W("settings",dt);try{await we()}catch(e){console.error("DB init failed:",e)}"serviceWorker"in navigator&&navigator.serviceWorker.register("/sw.js").catch(()=>{}),k("home"),window.onerror=(e,n,s)=>{console.error("Error:",e,"at",n,"line",s)}})();})();
 </script>
 </body>
 </html>
