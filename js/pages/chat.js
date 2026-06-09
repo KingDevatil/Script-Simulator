@@ -259,6 +259,8 @@ export async function render(container, { sessionId }) {
       if (m.role === 'ai') {
         const turn = getMessageTurn(m, script);
         display = turn.narrative || extractNarrative(m.content);
+        // 过滤身份标签，只保留人名
+        display = filterRoleTags(display);
         // 只在数值有变化时显示
         const vals = turn.values && Object.keys(turn.values).length ? turn.values : extractValues(m.content, script.dimensions);
         if (vals && script.dimensions?.length) {
@@ -313,14 +315,35 @@ export async function render(container, { sessionId }) {
 
   function renderNumericalPanel() {
     const panel = container.querySelector('#num-panel');
-    if (!script.dimensions?.length) {
+    if (!script.dimensions?.length && !Object.keys(s.characterNames || {}).length) {
       panel.innerHTML = '<p style="color:var(--text-dim);font-size:13px">此剧本无数值系统</p>';
       return;
     }
-    panel.innerHTML = script.dimensions.map(d => {
+    
+    // 角色名显示
+    let characterHtml = '';
+    const characterNames = s.characterNames || {};
+    if (Object.keys(characterNames).length) {
+      const chars = script.characters || [];
+      const nameEntries = Object.entries(characterNames)
+        .filter(([id]) => id !== 'player')
+        .map(([id, name]) => {
+          const char = chars.find(c => c.id === id);
+          const label = char ? char.name : id;
+          return `<div class="num-row"><span class="num-label">${esc(label)}</span><span class="num-value">${esc(name)}</span></div>`;
+        });
+      if (nameEntries.length) {
+        characterHtml = `<div class="num-section-title">角色人名</div>${nameEntries.join('')}`;
+      }
+    }
+    
+    // 数值显示
+    const dimensionsHtml = script.dimensions?.length ? script.dimensions.map(d => {
       const v = s.values[d.id];
       return `<div class="num-row"><span class="num-label">${esc(d.name)}</span><span class="num-value">${v ?? '-'}</span></div>`;
-    }).join('') + renderTimeline();
+    }).join('') : '';
+    
+    panel.innerHTML = characterHtml + (characterNames && dimensionsHtml ? '<div class="num-divider"></div>' : '') + dimensionsHtml + renderTimeline();
   }
 
   function renderTimeline() {
@@ -444,6 +467,14 @@ export async function render(container, { sessionId }) {
       navigate('home');
     }
   };
+}
+
+// 过滤身份标签，只保留人名
+// 例如："张明（现任）" -> "张明"
+function filterRoleTags(text) {
+  if (!text) return text;
+  // 匹配中文人名后面的身份标签，格式为"人名（身份标签）"或"人名(身份标签)"
+  return text.replace(/([\u4e00-\u9fa5]{2,4})[（(][^）)]*[）)]/g, '$1');
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
