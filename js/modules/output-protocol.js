@@ -8,7 +8,7 @@ export function buildOutputProtocol(script, { opening = false } = {}) {
     ? '  "narrative": "先写状态概览，再写开场事件",'
     : '  "narrative": "剧情内容，200-400字，简洁有力，重对话和关键动作，不要大段环境描写",');
   parts.push('  "options": [');
-  parts.push('    {"label": "A", "text": "选项内容", "value": "玩家选择时发送给系统的文本"}');
+  parts.push('    {"label": "A", "text": "选项内容"}');
   parts.push('  ],');
   parts.push('  "values": {"维度ID": 数字},');
   parts.push('  "keyEvent": null,');
