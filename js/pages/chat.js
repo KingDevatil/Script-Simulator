@@ -206,6 +206,9 @@ export async function render(container, { sessionId }) {
         s.ended = true;
         s.ending = ending;
         if (script.stages?.length) s.currentStage = script.stages.length - 1;
+        // 在对话中显示结局
+        const endingMsg = `【结局】${ending.name || '结局'}\n${ending.description || '本次模拟已结束。'}`;
+        engine.addAIMessage(endingMsg, { narrative: endingMsg }, 'ending');
       }
 
       engine.addTimelineEntry({
@@ -256,28 +259,45 @@ export async function render(container, { sessionId }) {
       const cls = m.role === 'player' ? 'msg-player' : 'msg-ai';
       let display = m.content;
       let valChanges = '';
+      let isEnding = false;
+      
       if (m.role === 'ai') {
-        const turn = getMessageTurn(m, script);
-        display = turn.narrative || extractNarrative(m.content);
-        // 过滤身份标签，只保留人名
-        display = filterRoleTags(display);
-        // 只在数值有变化时显示
-        const vals = turn.values && Object.keys(turn.values).length ? turn.values : extractValues(m.content, script.dimensions);
-        if (vals && script.dimensions?.length) {
-          const changes = script.dimensions
-            .filter(d => vals[d.id] !== undefined && vals[d.id] !== prevValues[d.id])
-            .map(d => {
-              const old = prevValues[d.id];
-              const cur = vals[d.id];
-              const arrow = old !== undefined && cur > old ? '↑' : old !== undefined && cur < old ? '↓' : '';
-              return `${d.name} ${cur}${arrow}`;
-            })
-            .slice(0, 5);
-          if (changes.length) valChanges = `<div class="msg-values">${changes.join(' · ')}</div>`;
-          // 更新 prevValues
-          Object.assign(prevValues, vals);
+        // 检测是否是结局消息
+        if (m.content.startsWith('【结局】')) {
+          isEnding = true;
+          display = m.content;
+        } else {
+          const turn = getMessageTurn(m, script);
+          display = turn.narrative || extractNarrative(m.content);
+          // 过滤身份标签，只保留人名
+          display = filterRoleTags(display);
+          // 只在数值有变化时显示
+          const vals = turn.values && Object.keys(turn.values).length ? turn.values : extractValues(m.content, script.dimensions);
+          if (vals && script.dimensions?.length) {
+            const changes = script.dimensions
+              .filter(d => vals[d.id] !== undefined && vals[d.id] !== prevValues[d.id])
+              .map(d => {
+                const old = prevValues[d.id];
+                const cur = vals[d.id];
+                const arrow = old !== undefined && cur > old ? '↑' : old !== undefined && cur < old ? '↓' : '';
+                return `${d.name} ${cur}${arrow}`;
+              })
+              .slice(0, 5);
+            if (changes.length) valChanges = `<div class="msg-values">${changes.join(' · ')}</div>`;
+            // 更新 prevValues
+            Object.assign(prevValues, vals);
+          }
         }
       }
+      
+      // 结局消息使用特殊样式
+      if (isEnding) {
+        const lines = display.split('\n');
+        const title = lines[0]?.replace('【结局】', '') || '结局';
+        const desc = lines.slice(1).join('\n') || '';
+        return `<div class="msg msg-ending"><strong>${esc(title)}</strong>${esc(desc)}</div>`;
+      }
+      
       const regenBtn = m.role === 'ai'
         ? `<div class="msg-regen" data-idx="${i}">↻ 重新生成</div>`
         : '';
@@ -418,12 +438,16 @@ export async function render(container, { sessionId }) {
       return;
     }
     area.dataset.mode = 'ending';
+    // 结局已在对话中显示，这里只显示返回按钮
     area.innerHTML = `
-      <div class="msg msg-system">
-        <strong>${esc(s.ending.name || '结局')}</strong><br>
-        ${esc(s.ending.description || '本次模拟已结束。')}
+      <div style="text-align:center;padding:12px">
+        <button class="btn btn-primary" id="btn-back-ending">返回首页</button>
       </div>
     `;
+    area.querySelector('#btn-back-ending').onclick = () => {
+      engine.save();
+      navigate('home');
+    };
     setSendingState(false);
   }
 

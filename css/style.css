@@ -571,6 +571,24 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
   font-size: 12px;
   padding: 6px 14px;
 }
+.msg-ending {
+  align-self: center;
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-card));
+  color: var(--text);
+  font-size: 14px;
+  padding: 16px 20px;
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  text-align: center;
+  max-width: 80%;
+  margin: 12px 0;
+}
+.msg-ending strong {
+  display: block;
+  font-size: 16px;
+  margin-bottom: 8px;
+  color: var(--accent);
+}
 .msg-regen {
   font-size: 11px;
   color: var(--text-dim);
