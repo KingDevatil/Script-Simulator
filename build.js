@@ -6,8 +6,6 @@ import * as esbuild from 'esbuild';
 const base = path.dirname(fileURLToPath(import.meta.url));
 
 const css = fs.readFileSync(path.join(base, 'css/style.css'), 'utf8');
-const sampleScriptPath = path.join(base, 'data/scripts/dangerous-relationships.json');
-const sampleScript = fs.existsSync(sampleScriptPath) ? fs.readFileSync(sampleScriptPath, 'utf8') : '{}';
 
 const standalonePath = path.join(base, 'index.standalone.js');
 await esbuild.build({
@@ -37,7 +35,6 @@ const html = `<!DOCTYPE html>
 </head>
 <body>
   <div id="app"></div>
-  <script>window.__SAMPLE_SCRIPT__ = ${sampleScript};</script>
   <script>${js}</script>
 </body>
 </html>`;

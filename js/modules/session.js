@@ -17,6 +17,7 @@ export function createSession(script, selections = {}, seed = null) {
     currentStage: 0,
     activeEffects: [],
     eventState: {},
+    characterNames: {},
     ended: false,
     ending: null,
     snapshots: [],

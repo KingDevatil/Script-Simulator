@@ -1,4 +1,4 @@
-const CACHE_NAME = 'script-simulator-1781010644415';
+const CACHE_NAME = 'script-simulator-1781018181262';
 const ASSETS = ["/manifest.json","/assets/icon-192.png","/assets/icon-512.png"];
 
 self.addEventListener('install', e => {

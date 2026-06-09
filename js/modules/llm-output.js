@@ -60,17 +60,7 @@ export function buildRepairPrompt(rawText, script = {}) {
 export function formatTurnForStorage(turn) {
   const lines = [];
   if (turn.narrative) lines.push(turn.narrative.trim());
-  if (turn.options?.length) {
-    lines.push('', '【选项】');
-    turn.options.forEach((opt, index) => {
-      const label = opt.label || String.fromCharCode(65 + index);
-      lines.push(`${label}. ${opt.text || opt.value || ''}`);
-    });
-  }
-  if (turn.values && Object.keys(turn.values).length) {
-    lines.push('', '【数值更新】');
-    lines.push(JSON.stringify(turn.values));
-  }
+  // 数值更新不再存入对话历史（已在 prompt 的【当前数值】部分单独注入）
   if (turn.keyEvent) lines.push('', `【关键事件】${turn.keyEvent}`);
   return lines.join('\n').trim();
 }
@@ -332,4 +322,35 @@ function extractLegacyOptions(text) {
     const m = line.match(/^([A-Z])[.、)）]\s*(.+)/);
     return m ? { label: m[1], text: m[2].trim(), value: m[2].trim() } : null;
   }).filter(Boolean).slice(0, 4);
+}
+
+/**
+ * 从 AI 输出中提取角色名（"人名（身份标签）"格式）
+ * 返回 {角色id: 人名} 映射
+ */
+export function extractCharacterNames(text, script, existingNames = {}) {
+  const names = {};
+  const chars = (script.characters || []).filter(c => c.id !== 'player');
+  if (!chars.length || !text) return names;
+
+  const textStr = String(text);
+  for (const c of chars) {
+    // 匹配 "张明（现任）" 或 "张明(现任)" 格式
+    const label = c.name;
+    const regex = new RegExp(`([\\u4e00-\\u9fa5]{2,4})[（(]${label}[）)]`, 'g');
+    let match;
+    while ((match = regex.exec(textStr)) !== null) {
+      const name = match[1];
+      if (name && name !== label && !names[c.id]) {
+        // 如果已有确定的角色名，优先使用已有的，不覆盖
+        if (existingNames[c.id] && existingNames[c.id] !== name) {
+          console.warn(`角色名不一致：已确定为"${existingNames[c.id]}"，但检测到"${name}"，保持使用已确定的名称`);
+          names[c.id] = existingNames[c.id];
+        } else {
+          names[c.id] = name;
+        }
+      }
+    }
+  }
+  return names;
 }

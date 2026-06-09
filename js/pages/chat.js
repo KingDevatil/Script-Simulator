@@ -4,7 +4,7 @@ import { chat } from '../modules/llm-client.js';
 import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
 import { addEventEffects, advanceStage, checkEnding, checkEventTriggers, extractNarrative, extractValues, processEffects } from '../modules/script-engine.js';
-import { buildRepairPrompt, formatTurnForStorage, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
+import { buildRepairPrompt, extractCharacterNames, formatTurnForStorage, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
 import { showConfirm } from '../modules/dialog.js';
 
 let engine = null;
@@ -142,7 +142,8 @@ export async function render(container, { sessionId }) {
         recentMessages: engine.getRecentMessages(3),
         scenePrompt: buildScenePrompt(script, s),
         playerInput: playerMsg,
-        currentStage: s.currentStage
+        currentStage: s.currentStage,
+        characterNames: s.characterNames
       });
 
       let aiResponse = await chat(
@@ -178,6 +179,12 @@ export async function render(container, { sessionId }) {
       const turn = parsedResult.turn;
       const displayResponse = formatTurnForStorage(turn) || aiResponse;
       engine.addAIMessage(displayResponse, turn, parsedResult.status);
+
+      // 提取角色名并存储（解决角色名不一致问题）
+      const extractedNames = extractCharacterNames(displayResponse, script, s.characterNames);
+      if (Object.keys(extractedNames).length) {
+        Object.assign(s.characterNames, extractedNames);
+      }
 
       const beforeValues = { ...s.values };
       const beforeStage = s.currentStage;

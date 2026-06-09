@@ -8,7 +8,7 @@ function applyMacros(text, ctx) {
   return substituteMacros(text, ctx);
 }
 
-export function buildPrompt({ script, values, selections, memories, recentMessages, scenePrompt, playerInput, currentStage }) {
+export function buildPrompt({ script, values, selections, memories, recentMessages, scenePrompt, playerInput, currentStage, characterNames }) {
   const macroCtx = { script, values, currentStage };
   const parts = [];
 
@@ -24,6 +24,7 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
   parts.push('- 第一次提到角色时，必须使用"人名（身份标签）"格式，如"张明（现任）"。后续可用人名，但数值更新和关键事件中必须同时标注身份');
   parts.push('- 对话场景中，每句话前必须标注说话人名字');
   parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
+  parts.push('- 【重要】角色人名一旦确定，必须全程保持一致，禁止每轮对话更换新名字。已确定的人名见下方角色列表');
   if (script.rules?.forbidden) {
     script.rules.forbidden.forEach(r => parts.push(`- ${applyMacros(r, macroCtx)}`));
   }
@@ -42,11 +43,24 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
   // 4. Characters
   parts.push('【你扮演以下角色】');
   const chars = script.characters || [];
+  const names = characterNames || {};
+  const knownNames = Object.entries(names).filter(([id, name]) => id !== 'player' && name);
+  if (knownNames.length > 0) {
+    parts.push(`已确定的角色人名（必须严格使用，禁止更换）：${knownNames.map(([id, name]) => {
+      const char = chars.find(c => c.id === id);
+      return char ? `${name}（${char.name}）` : name;
+    }).join('、')}`);
+  }
   chars.forEach(c => {
     const val = values?.[c.id] ? `，当前状态：${JSON.stringify(values[c.id])}` : '';
     const isPlayer = c.id === 'player';
+    const knownName = names[c.id];
     const roleNote = isPlayer ? '' : `【身份标签：${c.name}】`;
-    const nameNote = isPlayer ? '' : '，你需要在开场时为该角色起一个具体人名，但身份标签必须始终保留';
+    const nameNote = isPlayer
+      ? ''
+      : knownName
+        ? `，人名：${knownName}（必须始终使用此人名，禁止更换）`
+        : '，你需要在开场时为该角色起一个具体人名，但身份标签必须始终保留';
     parts.push(`${roleNote}${c.name}：${applyMacros(c.description, macroCtx)}${nameNote}${val}`);
   });
   parts.push('');

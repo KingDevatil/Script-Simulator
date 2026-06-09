@@ -63,32 +63,16 @@ export async function render(container) {
       <div class="empty-panel">
         <div class="empty-mark">JSON</div>
         <h3>还没有剧本</h3>
-        <p>新建一个空剧本，或加载示例剧本快速体验完整流程。</p>
+        <p>新建一个空剧本，或导入已有剧本开始体验。</p>
         <div class="empty-actions">
-          <button class="btn btn-primary" id="btn-sample">加载示例</button>
-          <button class="btn btn-secondary" id="btn-create-empty">新建剧本</button>
+          <button class="btn btn-primary" id="btn-create-empty">新建剧本</button>
+          <button class="btn btn-secondary" id="btn-import-empty">导入剧本</button>
         </div>
       </div>`;
     container.querySelector('#btn-create-empty').onclick = async () => {
       navigate('scriptDetail', { draft: true });
     };
-    container.querySelector('#btn-sample').onclick = async () => {
-      try {
-        let json;
-        if (window.__SAMPLE_SCRIPT__) {
-          json = window.__SAMPLE_SCRIPT__;
-        } else {
-          const res = await fetch('/data/scripts/dangerous-relationships.json');
-          json = await res.json();
-        }
-        const { parseScript } = await import('../modules/script-engine.js');
-        const { saveScript } = await import('../db.js');
-        await saveScript(parseScript(json));
-        render(container);
-      } catch (err) {
-        await showAlert('加载失败: ' + err.message, { title: '加载失败', tone: 'danger' });
-      }
-    };
+    container.querySelector('#btn-import-empty').onclick = () => container.querySelector('#file-input').click();
   } else {
     scriptList.innerHTML = scripts.map(s => `
       <article class="card home-card" data-script-id="${s.id}">
