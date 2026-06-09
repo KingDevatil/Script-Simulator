@@ -100,8 +100,8 @@ export function buildPrompt({ script, values, selections, memories, recentMessag
   return parts.join('\n');
 }
 
-export function buildSetupPrompt({ script, selections }) {
-  const macroCtx = { script, values: {}, currentStage: 0 };
+export function buildSetupPrompt({ script, selections, values = {} }) {
+  const macroCtx = { script, values, currentStage: 0 };
   const parts = [];
   // 动态获取非玩家角色
   const nonPlayerChars = (script.characters || []).filter(c => c.id !== 'player');
@@ -115,6 +115,19 @@ export function buildSetupPrompt({ script, selections }) {
   parts.push('- 对话场景中，每句话前必须标注说话人名字');
   parts.push('- 叙述中指代玩家时用"你"，指代其他角色时必须用名字，禁止用"他""她"指代角色');
   parts.push('');
+
+  // 数值维度
+  if (script.dimensions?.length && Object.keys(values).length) {
+    parts.push('【初始数值 - 用精确数字】');
+    script.dimensions.forEach(d => {
+      const v = values[d.id];
+      if (v === undefined) return;
+      const scope = d.scope ? `（${applyMacros(d.scope, macroCtx)}）` : '';
+      parts.push(`${d.name}${scope}：${v}`);
+    });
+    parts.push('');
+  }
+
   parts.push('以下是玩家的开局选择：');
   script.setup?.forEach((step, i) => {
     const val = selections[i] || '随机';

@@ -104,7 +104,7 @@ export async function render(container, { scriptId }) {
     try {
       const session = createSession(script, selections);
       const engine = createGameEngine(session, script);
-      const systemPrompt = buildSetupPrompt({ script, selections });
+      const systemPrompt = buildSetupPrompt({ script, selections, values: session.values });
       let opening = await chat([{ role: 'user', content: systemPrompt }]);
       let parsedResult = parseLLMTurn(opening, script);
       if (needsOutputRepair(parsedResult)) {
