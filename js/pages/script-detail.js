@@ -851,31 +851,85 @@ function attachEvents(container) {
 
     // ── 条件 ──
     else if (action === 'cond-add') {
-      // Handled by adding a new empty entry; we re-render with an extra empty row
       const prefix = btn.dataset.condPrefix;
-      // Read current conditions, add empty entry, re-render
-      const [module, idxStr, field] = prefix.split('_');
+      const [module, idxStr] = prefix.split('_');
       const i = parseInt(idxStr);
-      const currentCond = collectConditions(prefix);
-      currentCond[''] = { min: '', max: '', probability: '' };
-      // Store temporarily
-      if (module === 'event') script.events[i].trigger = currentCond;
-      else if (module === 'stage') script.stages[i].transition = currentCond;
-      else if (module === 'ending') script.endings[i].condition = currentCond;
-      rerender(container);
+      
+      // 获取当前条件并转换为数组格式
+      let currentCond;
+      if (module === 'event') currentCond = script.events[i].trigger;
+      else if (module === 'stage') currentCond = script.stages[i].transition;
+      else if (module === 'ending') currentCond = script.endings[i].condition;
+      
+      // 转换为数组以便添加
+      let conditions = [];
+      if (currentCond?.op && currentCond.conditions) {
+        conditions = [...currentCond.conditions];
+      } else if (currentCond && typeof currentCond === 'object') {
+        // 旧格式转换
+        for (const [dimId, val] of Object.entries(currentCond)) {
+          if (dimId === 'op' || dimId === 'conditions') continue;
+          conditions.push({ dim: dimId, ...val });
+        }
+      }
+      
+      // 添加空条件
+      conditions.push({ dim: '', min: undefined, max: undefined, probability: undefined });
+      
+      // 保存回对象
+      const newCond = conditions.length === 1 
+        ? { [conditions[0].dim || '']: { min: conditions[0].min, max: conditions[0].max, probability: conditions[0].probability } }
+        : { op: 'and', conditions };
+      
+      if (module === 'event') script.events[i].trigger = newCond;
+      else if (module === 'stage') script.stages[i].transition = newCond;
+      else if (module === 'ending') script.endings[i].condition = newCond;
+      
       editingItems[`${module}_${i}`] = true;
       rerender(container);
     } else if (action === 'cond-remove') {
       const prefix = btn.dataset.condPrefix;
-      const ci = btn.dataset.condIdx;
-      const [module, idxStr, field] = prefix.split('_');
+      const ci = parseInt(btn.dataset.condIdx);
+      const [module, idxStr] = prefix.split('_');
       const i = parseInt(idxStr);
-      const currentCond = collectConditions(prefix);
-      const keys = Object.keys(currentCond);
-      if (keys[ci]) delete currentCond[keys[ci]];
-      if (module === 'event') script.events[i].trigger = currentCond;
-      else if (module === 'stage') script.stages[i].transition = currentCond;
-      else if (module === 'ending') script.endings[i].condition = currentCond;
+      
+      // 获取当前条件
+      let currentCond;
+      if (module === 'event') currentCond = script.events[i].trigger;
+      else if (module === 'stage') currentCond = script.stages[i].transition;
+      else if (module === 'ending') currentCond = script.endings[i].condition;
+      
+      // 转换为数组以便删除
+      let conditions = [];
+      if (currentCond?.op && currentCond.conditions) {
+        conditions = [...currentCond.conditions];
+      } else if (currentCond && typeof currentCond === 'object') {
+        for (const [dimId, val] of Object.entries(currentCond)) {
+          if (dimId === 'op' || dimId === 'conditions') continue;
+          conditions.push({ dim: dimId, ...val });
+        }
+      }
+      
+      // 删除指定条件
+      if (ci >= 0 && ci < conditions.length) {
+        conditions.splice(ci, 1);
+      }
+      
+      // 保存回对象
+      let newCond;
+      if (conditions.length === 0) {
+        newCond = {};
+      } else if (conditions.length === 1) {
+        newCond = { [conditions[0].dim || '']: { min: conditions[0].min, max: conditions[0].max, probability: conditions[0].probability } };
+      } else {
+        const opEl = document.querySelector(`[data-cond-op="${prefix}"]:checked`);
+        newCond = { op: opEl?.value || 'and', conditions };
+      }
+      
+      if (module === 'event') script.events[i].trigger = newCond;
+      else if (module === 'stage') script.stages[i].transition = newCond;
+      else if (module === 'ending') script.endings[i].condition = newCond;
+      
       editingItems[`${module}_${i}`] = true;
       rerender(container);
     }
