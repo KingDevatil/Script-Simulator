@@ -47,6 +47,23 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
     }
   }
 
+  async function summarizePending() {
+    if (pendingMessages.length === 0) return null;
+    const msgs = pendingMessages.splice(0);
+    try {
+      const summary = await summarize(msgs.map(m => ({
+        role: m.role === 'player' ? 'user' : 'assistant',
+        content: m.content
+      })));
+      memories.push(summary);
+      compressIfNeeded();
+      return summary;
+    } catch {
+      pendingMessages.unshift(...msgs);
+      return null;
+    }
+  }
+
   function compressIfNeeded() {
     if (memories.length <= maxMemories) return;
     const excess = memories.length - maxMemories;
@@ -71,5 +88,5 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
     if (pendingSummary) await pendingSummary;
   }
 
-  return { addTurn, autoSummarize, manualSummarize, flushPending, getMemories, getState, loadState };
+  return { addTurn, autoSummarize, manualSummarize, summarizePending, flushPending, getMemories, getState, loadState };
 }

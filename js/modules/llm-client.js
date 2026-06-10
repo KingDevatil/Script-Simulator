@@ -24,7 +24,7 @@ function buildBody(config, messages, { stream = false, maxTokens = 2048 } = {}) 
     model: config.model,
     messages,
     stream,
-    max_tokens: maxTokens
+    [isMiMoApi(config.url) ? 'max_completion_tokens' : 'max_tokens']: maxTokens
   };
   if (config.thinking) {
     body.thinking = { type: 'enabled', reasoning_effort: config.effort };
@@ -150,6 +150,13 @@ export async function summarize(messages, { signal, timeoutMs = 30000, retries =
 
 function authHeaders(config) {
   const headers = { 'Content-Type': 'application/json' };
-  if (!config.proxyEnabled && config.key) headers.Authorization = `Bearer ${config.key}`;
+  if (!config.proxyEnabled && config.key) {
+    if (isMiMoApi(config.url)) headers['api-key'] = config.key;
+    else headers.Authorization = `Bearer ${config.key}`;
+  }
   return headers;
+}
+
+function isMiMoApi(url) {
+  return String(url || '').includes('xiaomimimo.com');
 }

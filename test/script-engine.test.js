@@ -9,7 +9,7 @@ import {
   evaluateCondition,
   initializeValues
 } from '../js/modules/script-engine.js';
-import { getMessageTurn, parseLLMTurn } from '../js/modules/llm-output.js';
+import { extractCharacterNames, getMessageTurn, parseLLMTurn } from '../js/modules/llm-output.js';
 import { createGameEngine, createSession } from '../js/modules/session.js';
 import { substituteMacros } from '../js/modules/prompt-builder.js';
 
@@ -68,7 +68,7 @@ test('events obey once, cooldown and maxTriggers', () => {
 });
 
 test('events support multiple stages and all stages', () => {
-  const multiStage = { name: 'M', stages: [0, 2], trigger: { trust: { min: 10 } } };
+  const multiStage = { name: 'M', stages: [1, 3], trigger: { trust: { min: 10 } } };
   const allStage = { name: 'A', trigger: { trust: { min: 10 } } };
   const values = { trust: 20 };
 
@@ -129,6 +129,36 @@ text",
   assert.equal(parsed.turn.narrative, 'story\ntext');
   assert.equal(parsed.turn.options.length, 2);
   assert.equal(parsed.turn.values.trust, 12);
+});
+
+test('character name extraction supports title before name in openings', () => {
+  const palaceScript = {
+    characters: [
+      { id: 'player', name: '玩家' },
+      { id: 'emperor', name: '皇帝' },
+      { id: 'consort', name: '贵妃' },
+      { id: 'eunuch', name: '太监总管' }
+    ]
+  };
+  const opening = '皇帝赵恒年约三十，喜怒无常。贵妃沈云裳是赵恒最宠爱的妃嫔。太监总管李德全是赵恒心腹。';
+  assert.deepEqual(extractCharacterNames(opening, palaceScript), {
+    emperor: '赵恒',
+    consort: '沈云裳',
+    eunuch: '李德全'
+  });
+});
+
+test('character name extraction ignores title followed by description words', () => {
+  const palaceScript = {
+    characters: [
+      { id: 'emperor', name: '皇帝' },
+      { id: 'consort', name: '贵妃' }
+    ]
+  };
+  const opening = '皇帝多疑深沉，贵妃狠辣善妒。后来赵恒（皇帝）召见新人。';
+  assert.deepEqual(extractCharacterNames(opening, palaceScript), {
+    emperor: '赵恒'
+  });
 });
 
 test('macro substitution reads characters, stages and dimensions', () => {

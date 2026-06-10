@@ -5,10 +5,8 @@ import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
 import { addEventEffects, advanceStage, checkEnding, checkEventTriggers, extractNarrative, extractValues, processEffects } from '../modules/script-engine.js';
 import { buildRepairPrompt, extractCharacterNames, formatTurnForStorage, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
-import { showConfirm } from '../modules/dialog.js';
-
 let engine = null;
-let panelOpen = false;
+let sidebarOpen = false;
 let prevValues = {};
 const FALLBACK_OPTIONS = [
   { label: 'A', text: '先观察局势，再决定下一步。', value: '先观察局势，再决定下一步。' },
@@ -26,16 +24,15 @@ export async function render(container, { sessionId }) {
   engine = createGameEngine(session, script);
   const s = engine.session;
   prevValues = { ...s.values };
+  if (refreshCharacterNamesFromHistory()) await engine.save();
 
   container.innerHTML = `
     <div class="chat-page">
       <div class="header">
         <button class="header-btn editor-back-btn" id="btn-back-chat">返回</button>
         <h1 style="font-size:15px">${esc(script.name)}</h1>
-        <button class="header-btn editor-action-btn" id="btn-menu">主页</button>
+        <button class="header-btn editor-action-btn" id="btn-sidebar" title="打开侧边栏">侧栏</button>
       </div>
-      <div class="numerical-toggle" id="num-toggle">▲ 数值面板</div>
-      <div class="numerical-panel" id="num-panel"></div>
       <div class="chat-body">
         <div class="chat-messages" id="messages"></div>
         <div class="chat-nav">
@@ -53,6 +50,17 @@ export async function render(container, { sessionId }) {
           <button class="chat-send" id="btn-send">发送</button>
         </div>
       </div>
+      <div class="chat-sidebar-backdrop" id="sidebar-backdrop"></div>
+      <aside class="chat-sidebar" id="chat-sidebar" aria-label="会话侧边栏">
+        <div class="chat-sidebar-header">
+          <div>
+            <div class="chat-sidebar-kicker">当前会话</div>
+            <h2>信息面板</h2>
+          </div>
+          <button class="chat-sidebar-close" id="btn-sidebar-close" title="关闭侧边栏">×</button>
+        </div>
+        <div class="chat-sidebar-content" id="sidebar-content"></div>
+      </aside>
     </div>
   `;
 
@@ -60,21 +68,17 @@ export async function render(container, { sessionId }) {
   const input = container.querySelector('#chat-input');
   let currentMsgIdx = -1;
 
-  renderNumericalPanel();
+  renderSidebar();
   renderMessages();
   renderEnding();
 
   // Auto-scroll
   msgContainer.scrollTop = msgContainer.scrollHeight;
 
-  // Toggle panel
-  container.querySelector('#num-toggle').onclick = () => {
-    panelOpen = !panelOpen;
-    const panel = container.querySelector('#num-panel');
-    const toggle = container.querySelector('#num-toggle');
-    panel.classList.toggle('open', panelOpen);
-    toggle.textContent = panelOpen ? '▼ 数值面板' : '▲ 数值面板';
-  };
+  setSidebarOpen(false);
+  container.querySelector('#btn-sidebar').onclick = () => setSidebarOpen(true);
+  container.querySelector('#btn-sidebar-close').onclick = () => setSidebarOpen(false);
+  container.querySelector('#sidebar-backdrop').onclick = () => setSidebarOpen(false);
 
   // Input handling
   input.onkeydown = e => {
@@ -225,7 +229,7 @@ export async function render(container, { sessionId }) {
       engine.createSnapshot('after-ai-response');
       await engine.save();
       renderMessages();
-      renderNumericalPanel();
+      renderSidebar();
       renderEnding();
       renderOptions();
       // 选项渲染后再次滚动到底部
@@ -333,44 +337,85 @@ export async function render(container, { sessionId }) {
     await callAI(playerContent);
   }
 
-  function renderNumericalPanel() {
-    const panel = container.querySelector('#num-panel');
-    if (!script.dimensions?.length && !Object.keys(s.characterNames || {}).length) {
-      panel.innerHTML = '<p style="color:var(--text-dim);font-size:13px">此剧本无数值系统</p>';
-      return;
+  function refreshCharacterNamesFromHistory() {
+    const refreshed = {};
+    for (const message of s.messages || []) {
+      if (message.role !== 'ai') continue;
+      const turn = getMessageTurn(message, script);
+      const sourceText = turn.narrative || extractNarrative(message.content) || message.content;
+      Object.assign(refreshed, extractCharacterNames(sourceText, script, refreshed));
     }
-    
-    // 角色名显示
-    let characterHtml = '';
-    const characterNames = s.characterNames || {};
-    if (Object.keys(characterNames).length) {
-      const chars = script.characters || [];
-      const nameEntries = Object.entries(characterNames)
-        .filter(([id]) => id !== 'player')
-        .map(([id, name]) => {
-          const char = chars.find(c => c.id === id);
-          const label = char ? char.name : id;
-          return `<div class="num-row"><span class="num-label">${esc(label)}</span><span class="num-value">${esc(name)}</span></div>`;
-        });
-      if (nameEntries.length) {
-        characterHtml = `<div class="num-section-title">角色人名</div>${nameEntries.join('')}`;
+    let changed = false;
+    s.characterNames = s.characterNames || {};
+    for (const [id, name] of Object.entries(refreshed)) {
+      if (!s.characterNames[id] || s.characterNames[id] !== name) {
+        s.characterNames[id] = name;
+        changed = true;
       }
     }
-    
-    // 数值显示
+    return changed;
+  }
+
+  function setSidebarOpen(open) {
+    sidebarOpen = open;
+    const sidebar = container.querySelector('#chat-sidebar');
+    const backdrop = container.querySelector('#sidebar-backdrop');
+    sidebar.classList.toggle('open', sidebarOpen);
+    backdrop.classList.toggle('open', sidebarOpen);
+  }
+
+  function renderSidebar() {
+    const panel = container.querySelector('#sidebar-content');
+    panel.innerHTML = [
+      renderCharacterModule(),
+      renderValueModule(),
+      renderTimeline(),
+      renderMemoryModule()
+    ].join('');
+
+    const memoryBtn = panel.querySelector('#btn-generate-memory');
+    if (memoryBtn) memoryBtn.onclick = () => generateIncrementalMemory(memoryBtn);
+  }
+
+  function renderCharacterModule() {
+    const characterNames = s.characterNames || {};
+    const chars = script.characters || [];
+    const rows = chars
+      .filter(c => c.id !== 'player')
+      .map(c => {
+        const realName = characterNames[c.id];
+        const value = realName ? esc(realName) : '未揭示';
+        return `<div class="num-row"><span class="num-label">${esc(c.name || c.id)}</span><span class="num-value">${value}</span></div>`;
+      });
+    Object.entries(characterNames)
+      .filter(([id]) => id !== 'player' && !chars.some(c => c.id === id))
+      .forEach(([id, name]) => {
+        rows.push(`<div class="num-row"><span class="num-label">${esc(id)}</span><span class="num-value">${esc(name)}</span></div>`);
+      });
+
+    return `<section class="sidebar-module">
+      <div class="sidebar-module-title">角色信息</div>
+      ${rows.length ? rows.join('') : '<p class="sidebar-empty">暂无角色信息</p>'}
+    </section>`;
+  }
+
+  function renderValueModule() {
     const dimensionsHtml = script.dimensions?.length ? script.dimensions.map(d => {
       const v = s.values[d.id];
       return `<div class="num-row"><span class="num-label">${esc(d.name)}</span><span class="num-value">${v ?? '-'}</span></div>`;
     }).join('') : '';
-    
-    panel.innerHTML = characterHtml + (characterNames && dimensionsHtml ? '<div class="num-divider"></div>' : '') + dimensionsHtml + renderTimeline();
+
+    return `<section class="sidebar-module">
+      <div class="sidebar-module-title">数值模块</div>
+      ${dimensionsHtml || '<p class="sidebar-empty">此剧本无数值系统</p>'}
+    </section>`;
   }
 
   function renderTimeline() {
     const items = (s.timeline || []).slice(-12).reverse();
-    if (!items.length) return '<div class="state-timeline"><div class="timeline-title">状态时间线</div><p class="timeline-empty">暂无状态变化</p></div>';
-    return `<div class="state-timeline">
-      <div class="timeline-title">状态时间线</div>
+    if (!items.length) return '<section class="sidebar-module state-timeline"><div class="sidebar-module-title">状态时间线</div><p class="timeline-empty">暂无状态变化</p></section>';
+    return `<section class="sidebar-module state-timeline">
+      <div class="sidebar-module-title">状态时间线</div>
       ${items.map(item => {
         const valueText = (item.values || []).map(v => `${v.name} ${v.from}→${v.to}`).join(' · ');
         const stageText = item.stageTo !== item.stageFrom ? `阶段 ${Number(item.stageFrom) + 1}→${Number(item.stageTo) + 1}` : '';
@@ -382,7 +427,42 @@ export async function render(container, { sessionId }) {
           <div><div class="timeline-time">${new Date(item.timestamp).toLocaleTimeString()}</div><div class="timeline-detail">${detail || '无显著变化'}</div></div>
         </div>`;
       }).join('')}
-    </div>`;
+    </section>`;
+  }
+
+  function renderMemoryModule() {
+    const state = engine.memoryMgr.getState();
+    const memories = state.memories || [];
+    const pendingCount = state.pendingMessages?.length || 0;
+    return `<section class="sidebar-module">
+      <div class="sidebar-module-title-row">
+        <div class="sidebar-module-title">记忆模块</div>
+        <span class="sidebar-badge">${pendingCount} 条待总结</span>
+      </div>
+      <div class="memory-list">
+        ${memories.length
+          ? memories.map((memory, idx) => `<div class="memory-item"><div class="memory-index">记忆 ${idx + 1}</div><p>${esc(memory)}</p></div>`).join('')
+          : '<p class="sidebar-empty">当前会话暂无记忆</p>'}
+      </div>
+      <button class="btn btn-secondary btn-block btn-sm" id="btn-generate-memory" ${pendingCount ? '' : 'disabled'}>增量生成记忆</button>
+    </section>`;
+  }
+
+  async function generateIncrementalMemory(button) {
+    if (engine._summarizingMemory) return;
+    const state = engine.memoryMgr.getState();
+    if (!state.pendingMessages?.length) {
+      renderSidebar();
+      return;
+    }
+    engine._summarizingMemory = true;
+    button.disabled = true;
+    button.textContent = '生成中...';
+    const summary = await engine.memoryMgr.summarizePending();
+    await engine.save();
+    engine._summarizingMemory = false;
+    renderSidebar();
+    showSystemMessage(summary ? '记忆已更新' : '记忆生成失败，请稍后重试');
   }
 
   function renderOptions() {
@@ -455,13 +535,10 @@ export async function render(container, { sessionId }) {
     const area = container.querySelector('#memory-prompt-area');
     area.innerHTML = `<div class="memory-prompt" id="btn-memory">📌 发生了关键事件，点击保存记忆</div>`;
     area.querySelector('#btn-memory').onclick = async () => {
-      const recent = s.messages.slice(-6);
-      await engine.memoryMgr.manualSummarize(recent.map(m => ({
-        role: m.role === 'player' ? 'user' : 'assistant',
-        content: m.content
-      })));
+      const summary = await engine.memoryMgr.summarizePending();
       await engine.save();
-      area.innerHTML = `<div class="msg msg-system">记忆已保存</div>`;
+      renderSidebar();
+      area.innerHTML = `<div class="msg msg-system">${summary ? '记忆已保存' : '暂无新的会话内容可保存'}</div>`;
     };
   }
 
@@ -484,12 +561,6 @@ export async function render(container, { sessionId }) {
   container.querySelector('#btn-back-chat').onclick = () => {
     engine.save();
     navigate('home');
-  };
-  container.querySelector('#btn-menu').onclick = async () => {
-    if (await showConfirm('返回首页？当前进度会自动保存。', { title: '返回首页', confirmText: '返回' })) {
-      engine.save();
-      navigate('home');
-    }
   };
 }
 

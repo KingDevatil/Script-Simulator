@@ -335,22 +335,68 @@ export function extractCharacterNames(text, script, existingNames = {}) {
 
   const textStr = String(text);
   for (const c of chars) {
-    // 匹配 "张明（现任）" 或 "张明(现任)" 格式
     const label = c.name;
-    const regex = new RegExp(`([\\u4e00-\\u9fa5]{2,4})[（(]${label}[）)]`, 'g');
-    let match;
-    while ((match = regex.exec(textStr)) !== null) {
-      const name = match[1];
-      if (name && name !== label && !names[c.id]) {
-        // 如果已有确定的角色名，优先使用已有的，不覆盖
-        if (existingNames[c.id] && existingNames[c.id] !== name) {
-          console.warn(`角色名不一致：已确定为"${existingNames[c.id]}"，但检测到"${name}"，保持使用已确定的名称`);
-          names[c.id] = existingNames[c.id];
-        } else {
-          names[c.id] = name;
-        }
+    const candidates = [
+      ...extractBracketNames(textStr, label),
+      ...extractTitlePrefixNames(textStr, label)
+    ];
+
+    for (const candidate of candidates) {
+      const name = normalizeChineseNameCandidate(candidate, label);
+      if (!name || names[c.id]) continue;
+      if (existingNames[c.id] && existingNames[c.id] !== name && isReliableCharacterName(existingNames[c.id], label)) {
+        console.warn(`角色名不一致：已确定为"${existingNames[c.id]}"，但检测到"${name}"，保持使用已确定的名称`);
+        names[c.id] = existingNames[c.id];
+      } else {
+        names[c.id] = name;
       }
     }
   }
   return names;
+}
+
+function extractBracketNames(text, label) {
+  const escaped = escapeRegExp(label);
+  const regex = new RegExp(`(?:^|[\\s，。；、：:！!？?《》“”"'])(?:${NAME_PREFIX_SOURCE})?(${CHINESE_NAME_SOURCE})[（(]${escaped}[）)]`, 'g');
+  return [...text.matchAll(regex)].map(match => match[1]);
+}
+
+function extractTitlePrefixNames(text, label) {
+  const aliases = getRoleLabelAliases(label).map(escapeRegExp).join('|');
+  const boundary = '(?=年|是|为|乃|，|。|、|；|：|:|！|!|？|\\?|\\s|$)';
+  const regex = new RegExp(`(?:^|[\\s，。；、：:！!？?《》“”"'])(?:${aliases})(${CHINESE_NAME_SOURCE})${boundary}`, 'g');
+  return [...text.matchAll(regex)].map(match => match[1]);
+}
+
+const CHINESE_NAME_SOURCE = '[\\u4e00-\\u9fa5]{2,3}';
+const NAME_PREFIX_SOURCE = '后来|随后|接着|只见|这时|此时|而后|却见|又见|原来|其中';
+const NAME_PREFIX_WORDS = /^(后来|随后|接着|只见|这时|此时|而后|却见|又见|原来|其中)/;
+const NON_NAME_WORDS = new Set([
+  '多疑', '深沉', '善妒', '狠辣', '圆滑', '世故', '心腹', '新人', '娘娘',
+  '陛下', '公公', '宫女', '太监', '皇帝', '贵妃', '皇后', '选侍'
+]);
+
+function normalizeChineseNameCandidate(candidate, label) {
+  let name = String(candidate || '').trim().replace(NAME_PREFIX_WORDS, '');
+  if (!isReliableCharacterName(name, label)) return '';
+  return name;
+}
+
+function isReliableCharacterName(name, label) {
+  const value = String(name || '').trim();
+  if (!new RegExp(`^${CHINESE_NAME_SOURCE}$`).test(value)) return false;
+  if (value === label || value.includes(label) || label.includes(value)) return false;
+  if (NON_NAME_WORDS.has(value)) return false;
+  return true;
+}
+
+function getRoleLabelAliases(label) {
+  const aliases = new Set([label]);
+  if (label.includes('太监')) aliases.add(label.replace('太监', '大监'));
+  if (label.includes('大监')) aliases.add(label.replace('大监', '太监'));
+  return [...aliases].filter(Boolean);
+}
+
+function escapeRegExp(text) {
+  return String(text || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

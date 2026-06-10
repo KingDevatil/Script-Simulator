@@ -6,7 +6,8 @@ const MODEL_PRESETS = [
   { id: '', label: '自定义配置', url: '', model: '', thinking: null, effort: 'high', temperature: 0.85, proxy: false },
   { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-flash', thinking: false, effort: 'high', temperature: 0.85, proxy: false },
   { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-pro', thinking: true, effort: 'high', temperature: 0.85, proxy: false },
-  { id: 'deepseek-v4-pro-max', label: 'DeepSeek V4 Pro 深度思考', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-pro', thinking: true, effort: 'max', temperature: 0.85, proxy: false },
+  { id: 'mimo-v2.5', label: 'Xiaomi MiMo V2.5', url: 'https://api.xiaomimimo.com/v1/chat/completions', model: 'mimo-v2.5', thinking: false, effort: 'high', temperature: 1.0, proxy: false },
+  { id: 'mimo-v2.5-pro', label: 'Xiaomi MiMo V2.5 Pro', url: 'https://api.xiaomimimo.com/v1/chat/completions', model: 'mimo-v2.5-pro', thinking: false, effort: 'high', temperature: 1.0, proxy: false },
   { id: 'openai-gpt-4o-mini', label: 'OpenAI GPT-4o mini', url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini', thinking: false, effort: 'high', temperature: 0.7, proxy: false },
   { id: 'proxy', label: '后端代理', url: '/api/chat/completions', model: 'deepseek-v4-flash', thinking: false, effort: 'high', temperature: 0.85, proxy: true }
 ];
@@ -24,7 +25,7 @@ export async function render(container) {
 
   container.innerHTML = `
     <div class="header">
-      <button class="header-btn" id="btn-back">←</button>
+      <button class="header-btn editor-back-btn" id="btn-back">返回</button>
       <h1>设置</h1>
     </div>
     <div class="page-scroll">
@@ -177,10 +178,11 @@ export async function render(container) {
       return;
     }
 
+    const maxTokensKey = isMiMoApi(fullUrl) ? 'max_completion_tokens' : 'max_tokens';
     const body = {
       model: model || 'deepseek-v4-flash',
       messages: [{ role: 'user', content: '回复"连接成功"' }],
-      max_tokens: 20
+      [maxTokensKey]: 20
     };
     if (thinking) {
       body.thinking = { type: 'enabled', reasoning_effort: effort };
@@ -191,10 +193,7 @@ export async function render(container) {
       result.textContent = `测试中... (${fullUrl})`;
       const res = await fetch(fullUrl, {
         method: 'POST',
-        headers: proxy ? { 'Content-Type': 'application/json' } : {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${key}`
-        },
+        headers: buildTestHeaders({ url: fullUrl, key, proxy }),
         body: JSON.stringify(body)
       });
       if (!res.ok) {
@@ -210,6 +209,18 @@ export async function render(container) {
       result.style.color = 'var(--accent)';
     }
   };
+}
+
+function buildTestHeaders({ url, key, proxy }) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (proxy || !key) return headers;
+  if (isMiMoApi(url)) headers['api-key'] = key;
+  else headers.Authorization = `Bearer ${key}`;
+  return headers;
+}
+
+function isMiMoApi(url) {
+  return String(url || '').includes('xiaomimimo.com');
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
