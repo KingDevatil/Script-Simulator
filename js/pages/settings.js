@@ -3,25 +3,23 @@ import { navigate } from '../router.js';
 import { showAlert } from '../modules/dialog.js';
 
 const MODEL_PRESETS = [
-  { id: '', label: '自定义配置', url: '', model: '', thinking: null, effort: 'high', temperature: 0.85, proxy: false },
-  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-flash', thinking: false, effort: 'high', temperature: 0.85, proxy: false },
-  { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-pro', thinking: true, effort: 'high', temperature: 0.85, proxy: false },
-  { id: 'mimo-v2.5', label: 'Xiaomi MiMo V2.5', url: 'https://api.xiaomimimo.com/v1/chat/completions', model: 'mimo-v2.5', thinking: false, effort: 'high', temperature: 1.0, proxy: false },
-  { id: 'mimo-v2.5-pro', label: 'Xiaomi MiMo V2.5 Pro', url: 'https://api.xiaomimimo.com/v1/chat/completions', model: 'mimo-v2.5-pro', thinking: false, effort: 'high', temperature: 1.0, proxy: false },
-  { id: 'openai-gpt-4o-mini', label: 'OpenAI GPT-4o mini', url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini', thinking: false, effort: 'high', temperature: 0.7, proxy: false },
-  { id: 'proxy', label: '后端代理', url: '/api/chat/completions', model: 'deepseek-v4-flash', thinking: false, effort: 'high', temperature: 0.85, proxy: true }
+  { id: '', label: '自定义配置', url: '', model: '', thinking: null, effort: 'high', temperature: 0.85 },
+  { id: 'deepseek-v4-flash', label: 'DeepSeek V4 Flash', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-flash', thinking: false, effort: 'high', temperature: 0.85 },
+  { id: 'deepseek-v4-pro', label: 'DeepSeek V4 Pro', url: 'https://api.deepseek.com/chat/completions', model: 'deepseek-v4-pro', thinking: true, effort: 'high', temperature: 0.85 },
+  { id: 'mimo-v2.5', label: 'Xiaomi MiMo V2.5', url: 'https://api.xiaomimimo.com/v1/chat/completions', model: 'mimo-v2.5', thinking: false, effort: 'high', temperature: 1.0 },
+  { id: 'mimo-v2.5-pro', label: 'Xiaomi MiMo V2.5 Pro', url: 'https://api.xiaomimimo.com/v1/chat/completions', model: 'mimo-v2.5-pro', thinking: false, effort: 'high', temperature: 1.0 },
+  { id: 'openai-gpt-4o-mini', label: 'OpenAI GPT-4o mini', url: 'https://api.openai.com/v1/chat/completions', model: 'gpt-4o-mini', thinking: false, effort: 'high', temperature: 0.7 }
 ];
 
 export async function render(container) {
-  const [apiUrl, apiKey, apiModel, memoryInterval, thinkingEnabled, reasoningEffort, temperature, apiProxyEnabled] = await Promise.all([
+  const [apiUrl, apiKey, apiModel, memoryInterval, thinkingEnabled, reasoningEffort, temperature] = await Promise.all([
     getSetting('api_url'), getSetting('api_key'),
     getSetting('api_model'), getSetting('memory_interval'),
     getSetting('thinking_enabled'), getSetting('reasoning_effort'),
-    getSetting('temperature'), getSetting('api_proxy_enabled')
+    getSetting('temperature')
   ]);
 
   const isThinking = thinkingEnabled !== false; // 默认开启
-  const isProxy = !!apiProxyEnabled;
 
   container.innerHTML = `
     <div class="header">
@@ -42,15 +40,8 @@ export async function render(container) {
           <input class="form-input" id="f-url" value="${esc(apiUrl || 'https://api.deepseek.com/chat/completions')}" placeholder="https://api.deepseek.com/chat/completions">
         </div>
         <div class="form-group">
-          <label class="form-label" style="display:flex;align-items:center;gap:8px;cursor:pointer">
-            <input type="checkbox" id="f-proxy" ${isProxy ? 'checked' : ''} style="width:16px;height:16px">
-            使用后端代理模式（前端不保存 API Key）
-          </label>
-          <p style="font-size:12px;color:var(--text-dim);margin-top:4px">生产环境建议使用代理或 token broker，由后端保存长期密钥。</p>
-        </div>
-        <div class="form-group">
           <label class="form-label">API Key</label>
-          <input class="form-input" id="f-key" type="password" value="${esc(isProxy ? '' : (apiKey || ''))}" placeholder="sk-..." ${isProxy ? 'disabled' : ''}>
+          <input class="form-input" id="f-key" type="password" value="${esc(apiKey || '')}" placeholder="sk-...">
         </div>
         <div class="form-group">
           <label class="form-label">模型名称</label>
@@ -105,18 +96,11 @@ export async function render(container) {
     container.querySelector('#effort-group').style.display = on ? '' : 'none';
     container.querySelector('#temp-group').style.display = on ? 'none' : '';
   };
-  container.querySelector('#f-proxy').onchange = e => {
-    const keyInput = container.querySelector('#f-key');
-    keyInput.disabled = e.target.checked;
-    if (e.target.checked) keyInput.value = '';
-  };
   container.querySelector('#f-preset').onchange = e => {
     const preset = MODEL_PRESETS.find(p => p.id === e.target.value);
     if (!preset || !preset.id) return;
     container.querySelector('#f-url').value = preset.url;
     container.querySelector('#f-model').value = preset.model;
-    container.querySelector('#f-proxy').checked = preset.proxy;
-    container.querySelector('#f-proxy').dispatchEvent(new Event('change'));
     if (preset.thinking !== null) {
       container.querySelector('#f-thinking').checked = preset.thinking;
       container.querySelector('#f-thinking').dispatchEvent(new Event('change'));
@@ -140,8 +124,8 @@ export async function render(container) {
     try {
       await Promise.all([
         setSetting('api_url', container.querySelector('#f-url').value.trim()),
-        setSetting('api_key', container.querySelector('#f-proxy').checked ? '' : container.querySelector('#f-key').value.trim()),
-        setSetting('api_proxy_enabled', container.querySelector('#f-proxy').checked),
+        setSetting('api_key', container.querySelector('#f-key').value.trim()),
+        setSetting('api_proxy_enabled', false),
         setSetting('api_model', container.querySelector('#f-model').value.trim()),
         setSetting('memory_interval', parseInt(container.querySelector('#f-memory').value) || 10),
         setSetting('thinking_enabled', container.querySelector('#f-thinking').checked),
@@ -171,13 +155,12 @@ export async function render(container) {
 
     const url = container.querySelector('#f-url').value.trim();
     const key = container.querySelector('#f-key').value.trim();
-    const proxy = container.querySelector('#f-proxy').checked;
     const model = container.querySelector('#f-model').value.trim();
     const thinking = container.querySelector('#f-thinking').checked;
     const effort = container.querySelector('#f-effort').value;
 
-    if (!url || (!proxy && !key)) {
-      result.textContent = '✗ 请先填写 API 地址和 Key，或启用后端代理模式';
+    if (!url || !key) {
+      result.textContent = '✗ 请先填写 API 地址和 Key';
       result.style.color = 'var(--accent)';
       testBtn.textContent = originalText;
       testBtn.disabled = false;
@@ -199,7 +182,7 @@ export async function render(container) {
       result.textContent = `测试中... (${fullUrl})`;
       const res = await fetchWithTimeout(fullUrl, {
         method: 'POST',
-        headers: buildTestHeaders({ url: fullUrl, key, proxy }),
+        headers: buildTestHeaders({ url: fullUrl, key }),
         body: JSON.stringify(body)
       }, 20000);
       if (!res.ok) {
@@ -220,9 +203,8 @@ export async function render(container) {
   };
 }
 
-function buildTestHeaders({ url, key, proxy }) {
+function buildTestHeaders({ url, key }) {
   const headers = { 'Content-Type': 'application/json' };
-  if (proxy || !key) return headers;
   if (isMiMoApi(url)) headers['api-key'] = key;
   else headers.Authorization = `Bearer ${key}`;
   return headers;

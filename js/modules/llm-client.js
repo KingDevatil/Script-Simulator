@@ -1,17 +1,16 @@
 import { getSetting } from '../db.js';
 
 async function getApiConfig() {
-  const [url, key, model, thinkingEnabled, reasoningEffort, temperature, proxyEnabled] = await Promise.all([
+  const [url, key, model, thinkingEnabled, reasoningEffort, temperature] = await Promise.all([
     getSetting('api_url'), getSetting('api_key'), getSetting('api_model'),
-    getSetting('thinking_enabled'), getSetting('reasoning_effort'), getSetting('temperature'),
-    getSetting('api_proxy_enabled')
+    getSetting('thinking_enabled'), getSetting('reasoning_effort'), getSetting('temperature')
   ]);
   if (!url) throw new Error('请先在设置中配置 LLM API 地址');
-  if (!proxyEnabled && !key) throw new Error('请先在设置中配置 LLM API Key，或启用后端代理模式');
+  if (!key) throw new Error('请先在设置中配置 LLM API Key');
   // 自动补全 URL
   const fullUrl = url.endsWith('/chat/completions') ? url : url.replace(/\/+$/, '') + '/chat/completions';
   return {
-    url: fullUrl, key, proxyEnabled: !!proxyEnabled,
+    url: fullUrl, key,
     model: model || 'deepseek-v4-flash',
     thinking: thinkingEnabled !== false,
     effort: reasoningEffort || 'high',
@@ -150,10 +149,8 @@ export async function summarize(messages, { signal, timeoutMs = 30000, retries =
 
 function authHeaders(config) {
   const headers = { 'Content-Type': 'application/json' };
-  if (!config.proxyEnabled && config.key) {
-    if (isMiMoApi(config.url)) headers['api-key'] = config.key;
-    else headers.Authorization = `Bearer ${config.key}`;
-  }
+  if (isMiMoApi(config.url)) headers['api-key'] = config.key;
+  else headers.Authorization = `Bearer ${config.key}`;
   return headers;
 }
 
