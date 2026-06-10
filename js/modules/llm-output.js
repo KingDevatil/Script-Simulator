@@ -355,6 +355,37 @@ export function extractCharacterNames(text, script, existingNames = {}) {
   return names;
 }
 
+export function buildCharacterNameExtractionPrompt(sourceText, characters) {
+  return [
+    '请从下面的剧情正文中识别角色真实姓名。',
+    '只输出一个 JSON 对象，不要 Markdown，不要解释。',
+    'JSON 的 key 必须使用给定角色 id，value 是该角色的人名。无法确定时不要输出该 key。',
+    '不要把身份称谓、官职、性格描述当成人名。',
+    '',
+    '待识别角色：',
+    ...(characters || []).map(c => `- ${c.id}: ${c.name}`),
+    '',
+    '剧情正文：',
+    sourceText
+  ].join('\n');
+}
+
+export function parseCharacterNameExtraction(rawText, characters) {
+  const allowedIds = new Set((characters || []).map(c => c.id));
+  const balanced = String(rawText || '').match(/\{[\s\S]*\}/)?.[0] || '{}';
+  try {
+    const parsed = JSON.parse(balanced);
+    const names = {};
+    for (const [id, name] of Object.entries(parsed || {})) {
+      const value = String(name || '').trim();
+      if (allowedIds.has(id) && /^[\u4e00-\u9fa5]{2,4}$/.test(value)) names[id] = value;
+    }
+    return names;
+  } catch {
+    return {};
+  }
+}
+
 function extractBracketNames(text, label) {
   const escaped = escapeRegExp(label);
   const regex = new RegExp(`(?:^|[\\s，。；、：:！!？?《》“”"'])(?:${NAME_PREFIX_SOURCE})?(${CHINESE_NAME_SOURCE})[（(]${escaped}[）)]`, 'g');
@@ -363,7 +394,7 @@ function extractBracketNames(text, label) {
 
 function extractTitlePrefixNames(text, label) {
   const aliases = getRoleLabelAliases(label).map(escapeRegExp).join('|');
-  const boundary = '(?=年|是|为|乃|，|。|、|；|：|:|！|!|？|\\?|\\s|$)';
+  const boundary = '(?=年|是|为|乃|带|捧|领|走|来|去|入|进|出|至|到|向|朝|对|问|道|说|低|躬|跪|站|坐|看|望|笑|叹|，|。|、|；|：|:|！|!|？|\\?|\\s|$)';
   const regex = new RegExp(`(?:^|[\\s，。；、：:！!？?《》“”"'])(?:${aliases})(${CHINESE_NAME_SOURCE})${boundary}`, 'g');
   return [...text.matchAll(regex)].map(match => match[1]);
 }

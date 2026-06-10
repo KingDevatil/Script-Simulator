@@ -1,6 +1,6 @@
-import { summarize } from './llm-client.js';
+import { summarize as defaultSummarize } from './llm-client.js';
 
-export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}) {
+export function createMemoryManager({ autoInterval = 10, maxMemories = 10, summarizeFn = defaultSummarize } = {}) {
   let memories = [];
   let turnCount = 0;
   let pendingMessages = [];
@@ -20,14 +20,19 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
     if (pendingMessages.length === 0) return null;
     const msgs = pendingMessages.splice(0);
     try {
-      const summary = await summarize(msgs.map(m => ({
+      const summary = await summarizeFn(msgs.map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content
       })));
+      if (!isValidSummary(summary)) {
+        pendingMessages.unshift(...msgs);
+        return null;
+      }
       memories.push(summary);
       compressIfNeeded();
       return summary;
     } catch {
+      pendingMessages.unshift(...msgs);
       return null;
     }
   }
@@ -35,10 +40,11 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
   async function manualSummarize(recentMessages) {
     if (!recentMessages?.length) return null;
     try {
-      const summary = await summarize(recentMessages.map(m => ({
+      const summary = await summarizeFn(recentMessages.map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content
       })));
+      if (!isValidSummary(summary)) return null;
       memories.push(summary);
       compressIfNeeded();
       return summary;
@@ -51,10 +57,14 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
     if (pendingMessages.length === 0) return null;
     const msgs = pendingMessages.splice(0);
     try {
-      const summary = await summarize(msgs.map(m => ({
+      const summary = await summarizeFn(msgs.map(m => ({
         role: m.role === 'player' ? 'user' : 'assistant',
         content: m.content
       })));
+      if (!isValidSummary(summary)) {
+        pendingMessages.unshift(...msgs);
+        return null;
+      }
       memories.push(summary);
       compressIfNeeded();
       return summary;
@@ -68,8 +78,8 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
     if (memories.length <= maxMemories) return;
     const excess = memories.length - maxMemories;
     const toMerge = memories.splice(0, Math.max(excess, 2));
-    const merged = toMerge.join('；');
-    memories.unshift(merged);
+    const merged = toMerge.map(m => String(m || '').trim()).filter(Boolean).join('；');
+    if (merged) memories.unshift(merged);
   }
 
   function getMemories() { return [...memories]; }
@@ -79,7 +89,7 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
   }
 
   function loadState(state) {
-    memories = state.memories || [];
+    memories = (state.memories || []).filter(isValidSummary);
     turnCount = state.turnCount || 0;
     pendingMessages = state.pendingMessages || [];
   }
@@ -89,4 +99,8 @@ export function createMemoryManager({ autoInterval = 10, maxMemories = 10 } = {}
   }
 
   return { addTurn, autoSummarize, manualSummarize, summarizePending, flushPending, getMemories, getState, loadState };
+}
+
+function isValidSummary(summary) {
+  return typeof summary === 'string' && summary.trim().length > 0;
 }

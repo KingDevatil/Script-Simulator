@@ -4,10 +4,11 @@ import { chat } from '../modules/llm-client.js';
 import { createGameEngine } from '../modules/session.js';
 import { buildPrompt } from '../modules/prompt-builder.js';
 import { addEventEffects, advanceStage, checkEnding, checkEventTriggers, extractNarrative, extractValues, processEffects } from '../modules/script-engine.js';
-import { buildRepairPrompt, extractCharacterNames, formatTurnForStorage, getMessageTurn, parseLLMTurn } from '../modules/llm-output.js';
+import { buildCharacterNameExtractionPrompt, buildRepairPrompt, extractCharacterNames, formatTurnForStorage, getMessageTurn, parseCharacterNameExtraction, parseLLMTurn } from '../modules/llm-output.js';
 let engine = null;
 let sidebarOpen = false;
 let prevValues = {};
+let characterEditOpen = false;
 const FALLBACK_OPTIONS = [
   { label: 'A', text: '先观察局势，再决定下一步。', value: '先观察局势，再决定下一步。' },
   { label: 'B', text: '主动开口试探对方的反应。', value: '主动开口试探对方的反应。' },
@@ -375,11 +376,20 @@ export async function render(container, { sessionId }) {
 
     const memoryBtn = panel.querySelector('#btn-generate-memory');
     if (memoryBtn) memoryBtn.onclick = () => generateIncrementalMemory(memoryBtn);
+    const identifyBtn = panel.querySelector('#btn-identify-characters');
+    if (identifyBtn) identifyBtn.onclick = () => identifyCharacterNamesWithAI(identifyBtn);
+    const editBtn = panel.querySelector('#btn-edit-characters');
+    if (editBtn) editBtn.onclick = () => { characterEditOpen = true; renderSidebar(); };
+    const cancelEditBtn = panel.querySelector('#btn-cancel-character-edit');
+    if (cancelEditBtn) cancelEditBtn.onclick = () => { characterEditOpen = false; renderSidebar(); };
+    const saveEditBtn = panel.querySelector('#btn-save-character-edit');
+    if (saveEditBtn) saveEditBtn.onclick = () => saveCharacterNames(panel);
   }
 
   function renderCharacterModule() {
     const characterNames = s.characterNames || {};
     const chars = script.characters || [];
+    const unresolvedCount = chars.filter(c => c.id !== 'player' && !characterNames[c.id]).length;
     const rows = chars
       .filter(c => c.id !== 'player')
       .map(c => {
@@ -394,9 +404,49 @@ export async function render(container, { sessionId }) {
       });
 
     return `<section class="sidebar-module">
-      <div class="sidebar-module-title">角色信息</div>
-      ${rows.length ? rows.join('') : '<p class="sidebar-empty">暂无角色信息</p>'}
+      <div class="sidebar-module-title-row">
+        <div class="sidebar-module-title">角色信息</div>
+        <div class="sidebar-title-actions">
+          ${unresolvedCount ? `<span class="sidebar-badge">${unresolvedCount} 个未揭示</span>` : ''}
+          <button class="sidebar-link-btn" id="btn-edit-characters">${characterEditOpen ? '编辑中' : '修改'}</button>
+        </div>
+      </div>
+      ${characterEditOpen ? renderCharacterEditor(chars, characterNames) : (rows.length ? rows.join('') : '<p class="sidebar-empty">暂无角色信息</p>')}
+      ${characterEditOpen ? '' : (unresolvedCount ? '<button class="btn btn-secondary btn-block btn-sm sidebar-module-action" id="btn-identify-characters">AI 识别角色名</button>' : '')}
     </section>`;
+  }
+
+  function renderCharacterEditor(chars, characterNames) {
+    const rows = chars
+      .filter(c => c.id !== 'player')
+      .map(c => `<label class="character-edit-row">
+        <span>${esc(c.name || c.id)}</span>
+        <input class="form-input character-edit-input" data-character-id="${esc(c.id)}" value="${esc(characterNames[c.id] || '')}" placeholder="未揭示">
+      </label>`)
+      .join('');
+    return `<div class="character-edit-list">
+      ${rows || '<p class="sidebar-empty">暂无角色信息</p>'}
+      <div class="character-edit-actions">
+        <button class="btn btn-secondary btn-sm" id="btn-cancel-character-edit">取消</button>
+        <button class="btn btn-primary btn-sm" id="btn-save-character-edit">保存</button>
+      </div>
+    </div>`;
+  }
+
+  async function saveCharacterNames(panel) {
+    const nextNames = { ...(s.characterNames || {}) };
+    panel.querySelectorAll('.character-edit-input').forEach(input => {
+      const id = input.dataset.characterId;
+      const value = input.value.trim();
+      if (!id) return;
+      if (value) nextNames[id] = value;
+      else delete nextNames[id];
+    });
+    s.characterNames = nextNames;
+    characterEditOpen = false;
+    await engine.save();
+    renderSidebar();
+    showSystemMessage('角色信息已更新');
   }
 
   function renderValueModule() {
@@ -441,11 +491,19 @@ export async function render(container, { sessionId }) {
       </div>
       <div class="memory-list">
         ${memories.length
-          ? memories.map((memory, idx) => `<div class="memory-item"><div class="memory-index">记忆 ${idx + 1}</div><p>${esc(memory)}</p></div>`).join('')
+          ? memories.map((memory, idx) => renderMemoryItem(memory, idx)).join('')
           : '<p class="sidebar-empty">当前会话暂无记忆</p>'}
       </div>
       <button class="btn btn-secondary btn-block btn-sm" id="btn-generate-memory" ${pendingCount ? '' : 'disabled'}>增量生成记忆</button>
     </section>`;
+  }
+
+  function renderMemoryItem(memory, idx) {
+    const text = String(memory ?? '').trim();
+    return `<details class="memory-item" open>
+      <summary class="memory-index">记忆 ${idx + 1}</summary>
+      <p>${esc(text)}</p>
+    </details>`;
   }
 
   async function generateIncrementalMemory(button) {
@@ -463,6 +521,51 @@ export async function render(container, { sessionId }) {
     engine._summarizingMemory = false;
     renderSidebar();
     showSystemMessage(summary ? '记忆已更新' : '记忆生成失败，请稍后重试');
+  }
+
+  async function identifyCharacterNamesWithAI(button) {
+    if (engine._identifyingCharacters) return;
+    const unresolved = (script.characters || []).filter(c => c.id !== 'player' && !s.characterNames?.[c.id]);
+    if (!unresolved.length) return;
+    const sourceText = collectCharacterEvidenceText();
+    if (!sourceText) {
+      showSystemMessage('暂无可用于识别角色名的会话正文');
+      return;
+    }
+
+    engine._identifyingCharacters = true;
+    button.disabled = true;
+    button.textContent = '识别中...';
+    try {
+      const prompt = buildCharacterNameExtractionPrompt(sourceText, unresolved);
+      const response = await chat([{ role: 'user', content: prompt }], { timeoutMs: 30000, retries: 0 });
+      const names = parseCharacterNameExtraction(response, unresolved);
+      if (Object.keys(names).length) {
+        s.characterNames = { ...(s.characterNames || {}), ...names };
+        await engine.save();
+        renderSidebar();
+        showSystemMessage('角色名已更新');
+      } else {
+        showSystemMessage('未能识别出新的角色名');
+      }
+    } catch (err) {
+      showSystemMessage('角色名识别失败: ' + err.message);
+    } finally {
+      engine._identifyingCharacters = false;
+      renderSidebar();
+    }
+  }
+
+  function collectCharacterEvidenceText() {
+    return (s.messages || [])
+      .filter(message => message.role === 'ai')
+      .map(message => {
+        const turn = getMessageTurn(message, script);
+        return turn.narrative || extractNarrative(message.content) || message.content;
+      })
+      .filter(Boolean)
+      .join('\n\n')
+      .slice(-6000);
   }
 
   function renderOptions() {

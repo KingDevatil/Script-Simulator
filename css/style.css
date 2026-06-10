@@ -839,10 +839,54 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
   color: var(--text-dim);
   font-size: 11px;
 }
+.sidebar-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.sidebar-link-btn {
+  min-height: 26px;
+  padding: 3px 9px;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+  background: rgba(255,255,255,0.055);
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+}
+.sidebar-link-btn:hover {
+  border-color: rgba(255, 122, 89, 0.5);
+  background: rgba(255, 95, 109, 0.12);
+}
 .sidebar-empty {
   color: var(--text-dim);
   font-size: 12px;
   line-height: 1.55;
+}
+.character-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.character-edit-row {
+  display: grid;
+  grid-template-columns: minmax(72px, 0.45fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  color: var(--text-dim);
+  font-size: 12px;
+}
+.character-edit-input {
+  min-height: 36px;
+  padding: 8px 10px;
+  font-size: 13px;
+}
+.character-edit-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 4px;
 }
 .memory-list {
   display: flex;
@@ -860,13 +904,35 @@ textarea.form-input { line-height: 1.55; resize: vertical; }
   margin-bottom: 4px;
   color: var(--text-muted);
   font-size: 11px;
+  cursor: pointer;
+  list-style: none;
+}
+.memory-index::-webkit-details-marker {
+  display: none;
+}
+.memory-index::after {
+  content: "展开";
+  float: right;
+  color: var(--text-muted);
+}
+.memory-item[open] .memory-index::after {
+  content: "收起";
 }
 .memory-item p {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.06);
   color: var(--text);
   font-size: 12px;
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+.memory-empty {
+  color: var(--warning) !important;
+}
+.sidebar-module-action {
+  margin-top: 10px;
 }
 
 /* ===== Numerical Panel ===== */

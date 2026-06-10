@@ -162,6 +162,10 @@ export async function render(container) {
 
   container.querySelector('#btn-test').onclick = async () => {
     const result = container.querySelector('#test-result');
+    const testBtn = container.querySelector('#btn-test');
+    testBtn.disabled = true;
+    const originalText = testBtn.textContent;
+    testBtn.textContent = '测试中...';
     result.textContent = '测试中...';
     result.style.color = 'var(--text-dim)';
 
@@ -175,27 +179,29 @@ export async function render(container) {
     if (!url || (!proxy && !key)) {
       result.textContent = '✗ 请先填写 API 地址和 Key，或启用后端代理模式';
       result.style.color = 'var(--accent)';
+      testBtn.textContent = originalText;
+      testBtn.disabled = false;
       return;
-    }
-
-    const maxTokensKey = isMiMoApi(fullUrl) ? 'max_completion_tokens' : 'max_tokens';
-    const body = {
-      model: model || 'deepseek-v4-flash',
-      messages: [{ role: 'user', content: '回复"连接成功"' }],
-      [maxTokensKey]: 20
-    };
-    if (thinking) {
-      body.thinking = { type: 'enabled', reasoning_effort: effort };
     }
 
     try {
       const fullUrl = url.endsWith('/chat/completions') ? url : url.replace(/\/+$/, '') + '/chat/completions';
+      const maxTokensKey = isMiMoApi(fullUrl) ? 'max_completion_tokens' : 'max_tokens';
+      const body = {
+        model: model || 'deepseek-v4-flash',
+        messages: [{ role: 'user', content: '回复"连接成功"' }],
+        [maxTokensKey]: 20
+      };
+      if (thinking && !isMiMoApi(fullUrl)) {
+        body.thinking = { type: 'enabled', reasoning_effort: effort };
+      }
+
       result.textContent = `测试中... (${fullUrl})`;
-      const res = await fetch(fullUrl, {
+      const res = await fetchWithTimeout(fullUrl, {
         method: 'POST',
         headers: buildTestHeaders({ url: fullUrl, key, proxy }),
         body: JSON.stringify(body)
-      });
+      }, 20000);
       if (!res.ok) {
         const errText = await res.text();
         throw new Error(`${res.status} ${res.statusText}: ${errText.slice(0, 200)}`);
@@ -205,8 +211,11 @@ export async function render(container) {
       result.textContent = '✓ 连接成功' + (reply ? ` - "${reply.slice(0, 50)}"` : '');
       result.style.color = '#4caf50';
     } catch (err) {
-      result.textContent = '✗ ' + err.message;
+      result.textContent = '✗ ' + formatTestError(err);
       result.style.color = 'var(--accent)';
+    } finally {
+      testBtn.textContent = originalText;
+      testBtn.disabled = false;
     }
   };
 }
@@ -221,6 +230,32 @@ function buildTestHeaders({ url, key, proxy }) {
 
 function isMiMoApi(url) {
   return String(url || '').includes('xiaomimimo.com');
+}
+
+async function fetchWithTimeout(url, options, timeoutMs) {
+  const controller = new AbortController();
+  let timeout = null;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeout = setTimeout(() => {
+      controller.abort();
+      reject(new Error('测试请求超时'));
+    }, timeoutMs);
+  });
+  try {
+    return await Promise.race([
+      fetch(url, { ...options, signal: controller.signal }),
+      timeoutPromise
+    ]);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function formatTestError(err) {
+  if (err?.name === 'AbortError' || err?.message === '测试请求超时') {
+    return '测试请求超时，请检查网络、API 地址、Key 或服务商是否允许浏览器直连';
+  }
+  return err?.message || String(err);
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }

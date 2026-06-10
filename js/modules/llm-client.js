@@ -26,7 +26,7 @@ function buildBody(config, messages, { stream = false, maxTokens = 2048 } = {}) 
     stream,
     [isMiMoApi(config.url) ? 'max_completion_tokens' : 'max_tokens']: maxTokens
   };
-  if (config.thinking) {
+  if (config.thinking && !isMiMoApi(config.url)) {
     body.thinking = { type: 'enabled', reasoning_effort: config.effort };
   } else {
     body.temperature = config.temperature;

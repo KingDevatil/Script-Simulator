@@ -3,7 +3,7 @@ import { navigate } from '../router.js';
 import { chat } from '../modules/llm-client.js';
 import { createSession, createGameEngine } from '../modules/session.js';
 import { buildSetupPrompt } from '../modules/prompt-builder.js';
-import { buildRepairPrompt, extractCharacterNames, formatTurnForStorage, parseLLMTurn } from '../modules/llm-output.js';
+import { buildCharacterNameExtractionPrompt, buildRepairPrompt, extractCharacterNames, formatTurnForStorage, parseCharacterNameExtraction, parseLLMTurn } from '../modules/llm-output.js';
 import { advanceStage, checkEnding } from '../modules/script-engine.js';
 
 export async function render(container, { scriptId }) {
@@ -125,8 +125,10 @@ export async function render(container, { scriptId }) {
 
       // 从开场场景提取角色名
       const extractedNames = extractCharacterNames(displayOpening, script);
-      if (Object.keys(extractedNames).length) {
-        session.characterNames = extractedNames;
+      const assistedNames = await identifyOpeningCharacterNames(displayOpening, script, extractedNames);
+      const characterNames = { ...extractedNames, ...assistedNames };
+      if (Object.keys(characterNames).length) {
+        session.characterNames = characterNames;
       }
       const newVals = parsedResult.turn.values && Object.keys(parsedResult.turn.values).length ? parsedResult.turn.values : null;
       if (newVals) engine.updateValues(newVals);
@@ -153,6 +155,19 @@ export async function render(container, { scriptId }) {
   }
 
   renderStep();
+}
+
+async function identifyOpeningCharacterNames(displayOpening, script, knownNames = {}) {
+  const unresolved = (script.characters || []).filter(c => c.id !== 'player' && !knownNames[c.id]);
+  if (!unresolved.length || !displayOpening) return {};
+  try {
+    const prompt = buildCharacterNameExtractionPrompt(displayOpening, unresolved);
+    const response = await chat([{ role: 'user', content: prompt }], { timeoutMs: 30000, retries: 0 });
+    return parseCharacterNameExtraction(response, unresolved);
+  } catch (err) {
+    console.warn('Opening character name identification failed:', err);
+    return {};
+  }
 }
 
 function needsOutputRepair(result) {

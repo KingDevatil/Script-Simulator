@@ -9,8 +9,9 @@ import {
   evaluateCondition,
   initializeValues
 } from '../js/modules/script-engine.js';
-import { extractCharacterNames, getMessageTurn, parseLLMTurn } from '../js/modules/llm-output.js';
+import { buildCharacterNameExtractionPrompt, extractCharacterNames, getMessageTurn, parseCharacterNameExtraction, parseLLMTurn } from '../js/modules/llm-output.js';
 import { createGameEngine, createSession } from '../js/modules/session.js';
+import { createMemoryManager } from '../js/modules/memory.js';
 import { substituteMacros } from '../js/modules/prompt-builder.js';
 
 const script = {
@@ -161,6 +162,18 @@ test('character name extraction ignores title followed by description words', ()
   });
 });
 
+test('character name extraction supports title name followed by action verbs', () => {
+  const palaceScript = {
+    characters: [
+      { id: 'eunuch', name: '太监总管' }
+    ]
+  };
+  const opening = '午后，日光斜照，太监总管李瑾带着两名小太监，捧着卷册，悄然步入偏殿。';
+  assert.deepEqual(extractCharacterNames(opening, palaceScript), {
+    eunuch: '李瑾'
+  });
+});
+
 test('macro substitution reads characters, stages and dimensions', () => {
   const text = substituteMacros('{{target}} {{stage}} {{dim:trust}}', {
     script,
@@ -182,4 +195,23 @@ test('session snapshots restore values, messages and event state', () => {
   assert.equal(session.messages.length, 1);
   assert.equal(session.values.trust, engine.session.snapshots.at(-1).values.trust);
   assert.deepEqual(session.eventState, {});
+});
+
+test('memory manager does not store empty summaries', async () => {
+  const memoryMgr = createMemoryManager({ summarizeFn: async () => '   ' });
+  memoryMgr.addTurn('player', 'a');
+  const result = await memoryMgr.summarizePending();
+  const state = memoryMgr.getState();
+  assert.equal(result, null);
+  assert.deepEqual(state.memories, []);
+  assert.equal(state.pendingMessages.length, 1);
+});
+
+test('character name extraction prompt and parser use allowed role ids', () => {
+  const chars = [{ id: 'eunuch', name: '太监总管' }];
+  const prompt = buildCharacterNameExtractionPrompt('太监总管李瑾带着两名小太监。', chars);
+  assert.equal(prompt.includes('eunuch: 太监总管'), true);
+  assert.deepEqual(parseCharacterNameExtraction('```json\n{"eunuch":"李瑾","other":"张三"}\n```', chars), {
+    eunuch: '李瑾'
+  });
 });
