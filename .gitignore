@@ -3,3 +3,4 @@ index.standalone.js
 .DS_Store
 # 剧本内容文件，不上传
 data/scripts/*.json
+/.workbuddy

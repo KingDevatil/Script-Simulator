@@ -96,4 +96,15 @@ self.addEventListener('fetch', e => {
 });
 `;
   fs.writeFileSync(path.join(base, 'sw.js'), sw, 'utf8');
+  fs.writeFileSync(path.join(docsDir, 'sw.js'), sw, 'utf8');
 }
+
+// 复制静态资源到 docs/
+fs.copyFileSync(path.join(base, 'manifest.json'), path.join(docsDir, 'manifest.json'));
+['icon-192.png', 'icon-512.png'].forEach(f => {
+  const src = path.join(base, 'assets', f);
+  const dst = path.join(docsDir, 'assets', f);
+  if (!fs.existsSync(path.dirname(dst))) fs.mkdirSync(path.dirname(dst), { recursive: true });
+  fs.copyFileSync(src, dst);
+});
+console.log('Copied: manifest.json, assets/ to docs/');
